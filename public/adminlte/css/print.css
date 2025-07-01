@@ -1,0 +1,142 @@
+/* أنماط الطباعة */
+@page {
+    size: A4 landscape; /* تنسيق أفقي A4 مع هوامش */
+    margin: 10mm;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.4;
+    color: #000;
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+    -webkit-print-color-adjust: exact; /* لطباعة الألوان والخلفيات */
+    color-adjust: exact;
+    width: 100%;
+    min-width: 0 !important;
+}
+
+/* إخفاء عناصر AdminLTE عند الطباعة - استخدام !important لضمان الإخفاء */
+.main-header,
+.main-sidebar,
+.main-footer,
+.content-header,
+.control-sidebar,
+.preloader,
+.wrapper > .content-wrapper,
+.card-tools,
+.card-header .card-tools,
+.form-filters-print,
+.dataTables_filter,
+.dataTables_paginate,
+.dataTables_info,
+.dataTables_length,
+.btn,
+.column-control-card {
+    display: none !important;
+}
+
+/* إظهار محتوى الطباعة فقط وتنسيقه */
+.wrapper, .content-wrapper, .main-panel, .content-wrapper .container-fluid {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    float: none !important;
+    overflow: visible !important;
+}
+
+.card {
+    border: none !important;
+    box-shadow: none !important;
+    margin-bottom: 0 !important;
+}
+
+.card-header, .card-body {
+    padding: 0 !important;
+}
+
+.container-print {
+    border: 1px solid #000 !important; /* تأكيد الإطار عند الطباعة */
+    width: 100% !important;
+    max-width: 100% !important; /* استخدم 100% من عرض الطباعة المتاح */
+    padding: 5mm !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+}
+
+table {
+    font-size: 10px; /* تصغير حجم خط الجدول عند الطباعة */
+    page-break-inside: auto;
+    margin-bottom: 5px;
+    table-layout: fixed; /* هام: لجعل المتصفح يحترم عروض الأعمدة */
+    width: 100%; /* تأكد أن الجدول يأخذ 100% من المساحة المتاحة */
+}
+
+th, td {
+    padding: 2px; /* هام: تقليل الحشوة لتصغير عرض الأعمدة */
+    border: 1px solid #000; /* حدود واضحة */
+    word-break: break-all; /* كسر الكلمات الطويلة لتجنب تجاوز العمود */
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* تحديد عروض الأعمدة عند الطباعة لضبط التوزيع - تم تعديل النسب */
+table#resourcesTable th:nth-child(1),
+table#resourcesTable td:nth-child(1) { width: 9%; } /* التاريخ */
+table#resourcesTable th:nth-child(2),
+table#resourcesTable td:nth-child(2) { width: 14%; } /* الوحدة */
+table#resourcesTable th:nth-child(3),
+table#resourcesTable td:nth-child(3) { width: 14%; } /* نوع المهمة */
+table#resourcesTable th:nth-child(4),
+table#resourcesTable td:nth-child(4) { width: 18%; } /* المورد */
+table#resourcesTable th:nth-child(5),
+table#resourcesTable td:nth-child(5) { width: 8%; } /* الكمية */
+table#resourcesTable th:nth-child(6),
+table#resourcesTable td:nth-child(6) { width: 10%; } /* وحدة المورد */
+table#resourcesTable th:nth-child(7),
+table#resourcesTable td:nth-child(7) { width: 27%; } /* ملاحظات - تم زيادة عرضها لاستيعاب النصوص الطويلة */
+
+
+.header-print {
+    margin-bottom: 10px;
+    display: flex !important; /* ضمان ظهور الرأس عند الطباعة */
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+.header-print .logo {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    margin-left: 15px;
+}
+.header-print .text-content {
+    flex-grow: 1;
+    text-align: center;
+}
+.title-print { font-size: 18px; font-weight: bold; margin: 0; color: #000; }
+.subtitle-print { font-size: 14px; margin: 3px 0; color: #333; }
+
+.table-title {
+    font-size: 14px;
+    margin-top: 8px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 3px;
+    text-align: right; /* ضمان المحاذاة لليمين */
+}
+
+.total-summary {
+    font-size: 14px;
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    background-color: #f8f9fa;
+    color: #000;
+    border-radius: 5px;
+}
+.total-summary .h4 {
+    font-size: 16px;
+    color: #000;
+}
