@@ -35,6 +35,7 @@ return new class extends Migration
 
                 $table->rememberToken();
                 $table->timestamps();
+                $table->softDeletes(); // تم إضافة هذا السطر هنا لتفعيل الحذف الناعم
             });
         }
     }

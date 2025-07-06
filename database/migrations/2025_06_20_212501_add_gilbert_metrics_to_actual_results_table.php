@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB; 
 
 return new class extends Migration
 {
@@ -25,7 +26,7 @@ return new class extends Migration
             $table->index(['efficiency']);
             $table->index(['relevance']);
             $table->index(['overall_performance_score']);
-            $table->index(['unit_id', 'date']);
+            $table->index(['unit_id', 'date']); 
         });
     }
 
@@ -34,13 +35,28 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // تعطيل التحقق من المفاتيح الأجنبية مؤقتًا للسماح بإسقاط الفهرس
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
         Schema::table('actual_results', function (Blueprint $table) {
-            // حذف الفهارس أولاً
-            $table->dropIndex(['effectiveness']);
-            $table->dropIndex(['efficiency']);
-            $table->dropIndex(['relevance']);
-            $table->dropIndex(['overall_performance_score']);
-            $table->dropIndex(['unit_id', 'date']);
+            // حذف الفهارس أولاً بعد التحقق من وجودها
+            // يجب تحديد اسم الفهرس كما ينشئه Laravel بشكل افتراضي (اسم_الجدول_اسم_العمود_index)
+            // أو (اسم_الجدول_اسم_العمود1_اسم_العمود2_index) للفهارس المركبة
+            if (Schema::hasIndex('actual_results', 'actual_results_effectiveness_index')) {
+                $table->dropIndex(['effectiveness']);
+            }
+            if (Schema::hasIndex('actual_results', 'actual_results_efficiency_index')) {
+                $table->dropIndex(['efficiency']);
+            }
+            if (Schema::hasIndex('actual_results', 'actual_results_relevance_index')) {
+                $table->dropIndex(['relevance']);
+            }
+            if (Schema::hasIndex('actual_results', 'actual_results_overall_performance_score_index')) {
+                $table->dropIndex(['overall_performance_score']);
+            }
+            if (Schema::hasIndex('actual_results', 'actual_results_unit_id_date_index')) {
+                $table->dropIndex(['unit_id', 'date']);
+            }
             
             // حذف الحقول
             $table->dropColumn([
@@ -52,5 +68,8 @@ return new class extends Migration
                 'notes',
             ]);
         });
+
+        // إعادة تفعيل التحقق من المفاتيح الأجنبية
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 };

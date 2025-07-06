@@ -1,6 +1,6 @@
 {{-- resources/views/photo_reports/create.blade.php --}}
 
-@extends('layouts.adminlte')
+@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', 'إنشاء تقرير مصور جديد')
 

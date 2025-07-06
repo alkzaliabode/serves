@@ -1,4 +1,4 @@
-@extends('layouts.adminlte') {{-- استخدام تخطيط AdminLTE كقالب رئيسي --}}
+@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', 'تعديل المستخدم') {{-- تعريف عنوان الصفحة --}}
 

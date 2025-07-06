@@ -9,8 +9,9 @@ Route::middleware('guest')->group(function () {
     Volt::route('register', 'pages.auth.register')
         ->name('register');
 
-    Volt::route('login', 'pages.auth.login')
-        ->name('login');
+    // ✅ تم استبدال مسار تسجيل الدخول الخاص بـ Livewire بمسار Laravel قياسي
+    Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('login', [AuthenticatedSessionController::class, 'store']); // ✅ إضافة مسار POST لتقديم النموذج
 
     Volt::route('forgot-password', 'pages.auth.forgot-password')
         ->name('password.request');

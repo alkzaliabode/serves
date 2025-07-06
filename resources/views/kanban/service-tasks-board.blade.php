@@ -1,6 +1,6 @@
 {{-- resources/views/kanban/service-tasks-board.blade.php --}}
 
-@extends('layouts.adminlte')
+@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', 'لوحة مهام الشُعبة الخدمية')
 

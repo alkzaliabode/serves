@@ -1,4 +1,4 @@
-@extends('layouts.adminlte') {{-- استخدام تخطيط AdminLTE كقالب رئيسي --}}
+@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', 'إدارة المستخدمين') {{-- تعريف عنوان الصفحة --}}
 
@@ -17,11 +17,11 @@
                     <h3 class="card-title">قائمة المستخدمين</h3>
                     <div class="card-tools">
                         {{-- زر إضافة مستخدم جديد - يظهر فقط إذا كان لدى المستخدم صلاحية 'create users' --}}
-                        @can('create users')
-                            <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus"></i> إضافة مستخدم جديد
-                            </a>
-                        @endcan
+                       {{-- @can('create users') --}}
+    <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus"></i> إضافة مستخدم جديد
+    </a>
+{{-- @endcan --}}
                     </div>
                 </div>
                 <div class="card-body p-0"> {{-- p-0 لإزالة الحشوة الزائدة من البطاقة حول الجدول --}}

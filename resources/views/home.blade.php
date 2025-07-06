@@ -1,4 +1,4 @@
-@extends('layouts.adminlte')
+@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', 'الرئيسية - لوحة التحكم')
 
@@ -12,18 +12,33 @@
     <div class="container-fluid py-4">
 
         {{-- قسم الهدف الرئيسي للمدينة (جديد ومميز) --}}
-        <div class="row mb-5 animate__animated animate__fadeInDown animate__fast">
+        <div class="row mb-5" data-animate-section="main-goal"> {{-- أضفنا data-animate-section --}}
             <div class="col-12">
                 <div class="card main-goal-banner text-white shadow-lg border-0 rounded-xl overflow-hidden" style="background: linear-gradient(135deg, #0A1931 0%, #1A4D6F 100%);">
-                    <div class="card-body p-4 p-md-5 d-flex flex-column flex-md-row align-items-center justify-content-center text-center text-md-center">
-                        <i class="fas fa-mosque fa-6x text-white-75 opacity-25 mb-4 mb-md-0 ml-md-4 animate__animated animate__tada animate__infinite" style="--animate-duration: 3s;"></i>
-                        <div class="flex-grow-1">
+                    <div class="card-body p-4 p-md-5 d-flex flex-column flex-md-row align-items-center justify-content-center text-center text-md-center main-goal-content">
+
+                        {{-- أيقونة الهدف/السهم على اليسار (الجديدة) --}}
+                        {{-- استخدام SVG بدلاً من Font Awesome للتحكم الكامل --}}
+                        <div class="icon-wrapper main-goal-icon-left" id="mainGoalIcon">
+                            <svg width="100px" height="100px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.25"/>
+                                <path d="M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.25"/>
+                                <path d="M12 12H12.01" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+
+                        <div class="flex-grow-1 text-content-wrapper">
                             <h1 class="display-4 font-weight-bold mb-2 text-white-glow main-goal-title">
                                 الهدف الرئيسي للمدينة
                             </h1>
                             <p class="lead mb-0 text-white-75 main-goal-text">
-                                تقديم أفضل الخدمات كماً ونوعاً للزائرين الكرام خلال السنة         .
+                                تقديم أفضل الخدمات كماً ونوعاً للزائرين الكرام خلال السنة.
                             </p>
+                        </div>
+
+                        {{-- أيقونة المسجد على اليمين --}}
+                        <div class="icon-wrapper main-goal-icon-right d-none d-md-flex">
+                            <i class="fas fa-mosque fa-6x text-white-75 opacity-25" id="mosqueIcon"></i> {{-- أضفنا ID --}}
                         </div>
                     </div>
                 </div>
@@ -31,11 +46,11 @@
         </div>
 
         {{-- قسم الترحيب المتحرك --}}
-        <div class="row mb-4 animate__animated animate__fadeInDown">
+        <div class="row mb-4" data-animate-section="welcome-card"> {{-- أضفنا data-animate-section --}}
             <div class="col-12">
                 <div class="card bg-gradient-dark text-white shadow-lg border-0 rounded-xl" style="background: linear-gradient(135deg, rgba(30, 39, 46, 0.9) 0%, rgba(60, 70, 80, 0.9) 100%);">
                     <div class="card-body p-4 p-md-5 d-flex align-items-center justify-content-between">
-                        <div>
+                        <div class="welcome-text-content"> {{-- أضفنا كلاس لسهولة الاستهداف --}}
                             <h2 class="display-4 font-weight-bold mb-2">
                                 <span id="greeting-text">مرحباً</span>، {{ Auth::user()->name ?? 'الزائر' }}!
                             </h2>
@@ -43,7 +58,7 @@
                                 نظرة سريعة على أداء اليوم وأهداف الشُعب والوحدات.
                             </p>
                         </div>
-                        <i class="fas fa-chart-area fa-5x text-white-50 opacity-25 animate__animated animate__pulse animate__infinite" style="--animate-duration: 2s;"></i>
+                        <i class="fas fa-chart-area fa-5x text-white-50 opacity-25 welcome-icon" id="welcomeChartIcon"></i> {{-- أضفنا ID --}}
                     </div>
                 </div>
             </div>
@@ -51,14 +66,14 @@
 
         {{-- قسم موجز الأداء العام والمكتمل --}}
         <div class="row">
-            <div class="col-lg-6 col-md-12 mb-4 animate__animated animate__fadeInUp animate__delay-0.5s">
-                <div class="card bg-gradient-info text-white shadow-lg border-0 rounded-xl hover-lift-effect" style="background: linear-gradient(45deg, #17a2b8, #20c997) !important;">
+            <div class="col-lg-6 col-md-12 mb-4">
+                <div class="card bg-gradient-info text-white shadow-lg border-0 rounded-xl hover-lift-effect performance-card" style="background: linear-gradient(45deg, #17a2b8, #20c997) !important;" data-animate-card-id="1"> {{-- أضفنا data-animate-card-id --}}
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h4 class="mb-0 text-white-75">الأداء العام لليوم</h4>
-                                <h1 class="display-4 font-weight-bold mb-0 text-white">{{ round($todayOverallPerformance, 1) }}%</h1>
-                                <p class="mb-0 text-white-50">
+                                <h4 class="mb-0 text-white-75 performance-title">الأداء العام لليوم</h4>
+                                <h1 class="display-4 font-weight-bold mb-0 text-white performance-value">{{ round($todayOverallPerformance, 1) }}%</h1>
+                                <p class="mb-0 text-white-50 performance-comparison">
                                     @if ($todayOverallPerformance >= $yesterdayOverallPerformance)
                                         <i class="fas fa-arrow-up text-success-light"></i> أفضل من أمس
                                     @else
@@ -67,19 +82,19 @@
                                     ({{ round($yesterdayOverallPerformance, 1) }}% أمس)
                                 </p>
                             </div>
-                            <i class="fas fa-chart-line fa-4x text-white-50 opacity-25"></i>
+                            <i class="fas fa-chart-line fa-4x text-white-50 opacity-25 performance-icon"></i>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-6 col-md-12 mb-4 animate__animated animate__fadeInUp animate__delay-0.7s">
-                <div class="card bg-gradient-success text-white shadow-lg border-0 rounded-xl hover-lift-effect" style="background: linear-gradient(45deg, #28a745, #20c997) !important;">
+            <div class="col-lg-6 col-md-12 mb-4">
+                <div class="card bg-gradient-success text-white shadow-lg border-0 rounded-xl hover-lift-effect performance-card" style="background: linear-gradient(45deg, #28a745, #20c997) !important;" data-animate-card-id="2"> {{-- أضفنا data-animate-card-id --}}
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h4 class="mb-0 text-white-75">متوسط تقييم الجودة اليومي</h4>
-                                <h1 class="display-4 font-weight-bold mb-0 text-white">{{ round($todayQualityRating, 1) }} <small class="text-white-50">/ 5</small></h1>
-                                <p class="mb-0 text-white-50">
+                                <h4 class="mb-0 text-white-75 performance-title">متوسط تقييم الجودة اليومي</h4>
+                                <h1 class="display-4 font-weight-bold mb-0 text-white performance-value">{{ round($todayQualityRating, 1) }} <small class="text-white-50">/ 5</small></h1>
+                                <p class="mb-0 text-white-50 performance-comparison">
                                     @if ($todayQualityRating >= $yesterdayQualityRating)
                                         <i class="fas fa-arrow-up text-success-light"></i> أفضل من أمس
                                     @else
@@ -88,7 +103,7 @@
                                     ({{ round($yesterdayQualityRating, 1) }} / 5 أمس)
                                 </p>
                             </div>
-                            <i class="fas fa-star fa-4x text-white-50 opacity-25"></i>
+                            <i class="fas fa-star fa-4x text-white-50 opacity-25 performance-icon"></i>
                         </div>
                     </div>
                 </div>
@@ -96,14 +111,13 @@
         </div>
 
         {{-- قسم أهداف الشعبة --}}
-        <div class="card card-outline card-primary shadow-lg rounded-xl mt-4 animate__animated animate__fadeInUp animate__delay-1s">
+        <div class="card card-outline card-primary shadow-lg rounded-xl mt-4" data-animate-section="department-goals"> {{-- أضفنا data-animate-section --}}
             <div class="card-header border-0 pb-0">
                 <h3 class="card-title font-weight-bold text-primary">
                     <i class="fas fa-sitemap mr-2"></i> أهداف الشعبة
                 </h3>
             </div>
             <div class="card-body p-4">
-                {{-- ✅ عرض أهداف الشعبة من مصفوفة ثابتة مع ألوان وأيقونات محسنة --}}
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                     @php
                         $departmentGoalsList = [
@@ -180,8 +194,8 @@
                         ];
                     @endphp
                     @foreach ($departmentGoalsList as $index => $goal)
-                        <div class="col mb-4" data-aos="fade-up" data-aos-delay="{{ $index * 100 }}">
-                            <div class="card h-100 text-white shadow-md border rounded-lg animated-card {{ $goal['color_class'] }}">
+                        <div class="col mb-4">
+                            <div class="card h-100 text-white shadow-md border rounded-lg animated-card {{ $goal['color_class'] }}" data-aos="fade-up" data-aos-delay="{{ $index * 100 }}"> {{-- AOS هنا لتحريك البطاقات بشكل فردي --}}
                                 <div class="card-body d-flex flex-column">
                                     <h5 class="card-title mb-2 font-weight-bold text-white-glow text-xxl">
                                         <i class="{{ $goal['icon'] }} mr-2 card-icon"></i> {{ $goal['text'] }}
@@ -191,7 +205,7 @@
                                         <small class="text-white-75">تاريخ الإنشاء: {{ $goal['date'] }}</small>
                                     </p>
                                     <div class="text-right mt-auto">
-                                        <i class="{{ $goal['icon'] }} fa-3x text-white-50 opacity-25"></i>
+                                        <i class="{{ $goal['icon'] }} fa-3x text-white-50 opacity-25 card-bg-icon"></i> {{-- أضفنا كلاس لتمييز الأيقونة الخلفية --}}
                                     </div>
                                 </div>
                             </div>
@@ -202,7 +216,7 @@
         </div>
 
         {{-- قسم أحدث أهداف الوحدات --}}
-        <div class="card card-outline card-info shadow-lg rounded-xl mt-4 animate__animated animate__fadeInUp animate__delay-1.2s">
+        <div class="card card-outline card-info shadow-lg rounded-xl mt-4" data-animate-section="unit-goals"> {{-- أضفنا data-animate-section --}}
             <div class="card-header border-0 pb-0">
                 <h3 class="card-title font-weight-bold text-info">
                     <i class="fas fa-tasks mr-2"></i> أحدث أهداف الوحدات
@@ -214,7 +228,6 @@
                 </div>
             </div>
             <div class="card-body p-4">
-                {{-- ✅ عرض أهداف الوحدات من مصفوفة ثابتة مع ألوان وأيقونات محسنة --}}
                 <div class="row row-cols-1 row-cols-md-2 g-4">
                     @php
                         $unitGoalsList = [
@@ -293,8 +306,8 @@
                         ];
                     @endphp
                     @foreach ($unitGoalsList as $index => $goal)
-                        <div class="col mb-4" data-aos="fade-up" data-aos-delay="{{ $index * 100 }}">
-                            <div class="card h-100 text-white shadow-md border rounded-lg animated-card {{ $goal['color_class'] }}">
+                        <div class="col mb-4">
+                            <div class="card h-100 text-white shadow-md border rounded-lg animated-card {{ $goal['color_class'] }}" data-aos="fade-up" data-aos-delay="{{ $index * 100 }}"> {{-- AOS هنا لتحريك البطاقات بشكل فردي --}}
                                 <div class="card-body">
                                     <h5 class="card-title font-weight-bold mb-3 text-white-glow text-xl">
                                         <i class="{{ $goal['icon'] }} mr-2 card-icon"></i> هدف الوحدة: {{ Str::limit($goal['text'], 200) }}
@@ -578,6 +591,7 @@
         }
 
         /* Animations for sections */
+        /* هذه سيتم استبدالها بـ GSAP أو AOS */
         .animate-fade-in-down { animation: fadeInDown 1s ease-out forwards; opacity: 0; position: relative; z-index: 2; }
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -586,7 +600,7 @@
 
         .animate-scale-in { animation: scaleIn 1s ease-out 0.6s forwards; opacity: 0; transform: scale(0.8); position: relative; z-index: 2; }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-        
+
         /* New Animated Card Styles */
         .animated-card {
             position: relative;
@@ -628,6 +642,21 @@
         }
         .animated-card:hover .card-icon {
             transform: scale(1.1); /* Slightly enlarge icon on hover */
+        }
+
+        /* Background icon in cards */
+        .card-bg-icon {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            font-size: 4rem !important; /* حجم أكبر لأيقونة الخلفية */
+            color: rgba(255, 255, 255, 0.1); /* لون خافت جداً */
+            pointer-events: none; /* لضمان عدم تداخلها مع عناصر النقر */
+            transition: transform 0.4s ease-out;
+        }
+
+        .animated-card:hover .card-bg-icon {
+            transform: scale(1.2) rotate(10deg); /* تكبير ودوران بسيط عند التحويم */
         }
 
         /* Font sizes for titles and text within animated cards */
@@ -676,42 +705,132 @@
         .main-goal-banner {
             margin-bottom: 3.5rem !important; /* مسافة أكبر أسفل البانر */
         }
+        .main-goal-banner .main-goal-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-around; /* توزيع متساوٍ للمسافة بين العناصر */
+            flex-wrap: wrap; /* للسماح بالعناصر بالانتقال إلى سطر جديد في الشاشات الصغيرة */
+            gap: 20px; /* مسافة بين العناصر */
+        }
+
         .main-goal-banner .main-goal-title {
             font-size: 3.5rem; /* حجم خط كبير جداً للعنوان */
             font-weight: 900 !important; /* سمك خط فائق */
             text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.9); /* ظل نص قوي */
+            text-align: center; /* التأكد من توسيط العنوان */
+            flex-grow: 1; /* للسماح للعنوان بأخذ المساحة المتاحة */
+            min-width: 300px; /* ضمان ألا يتقلص العنوان كثيرًا */
         }
         .main-goal-banner .main-goal-text {
             font-size: 1.8rem; /* حجم خط كبير للنص */
             line-height: 1.5;
             text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8); /* ظل نص أقل قوة */
+            flex-basis: 100%; /* النص يأخذ سطرًا كاملاً تحت العنوان والأيقونات */
+            margin-top: 15px; /* مسافة أعلى النص */
         }
-        .main-goal-banner .fas.fa-mosque {
+
+        .main-goal-banner .icon-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 120px; /* تحديد عرض لـ wrapper */
+            height: 120px; /* تحديد ارتفاع لـ wrapper */
+            /* خلفية بسيطة لتبرز الأيقونات بشكل أفضل */
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            overflow: hidden; /* لمنع أي تجاوز */
+        }
+
+        .main-goal-banner .fas {
             filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5)); /* توهج للأيقونة */
+            z-index: 2; /* تأكد أن الأيقونة فوق أي عناصر وهمية */
         }
+
+        /* تحديد حركة أيقونة الهدف (اليسرى) بشكل أكثر جاذبية - سيتم التحكم بها بـ GSAP */
+        .main-goal-icon-left svg {
+            width: 120px;
+            height: 120px;
+            transform-origin: center center;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+        }
+        .main-goal-icon-left svg path {
+            stroke: #00eaff;
+            stroke-width: 2;
+            fill: transparent;
+        }
+        .main-goal-icon-left svg path:last-child {
+            fill: #00eaff;
+        }
+
+
+        /* حركة أيقونة المسجد (اليمنى) - سيتم التحكم بها بـ GSAP */
+        .main-goal-icon-right i {
+            color: rgba(255, 255, 255, 0.15); /* لون خافت جداً للمسجد ليكون كخلفية */
+            filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+        }
+
+        /* تأثير سهم وهمي لأيقونة الهدف (اختياري) - أزلتها لأن GSAP سيكون أفضل للتحكم بـ SVG */
+        /*
+        .main-goal-icon-left::before, .main-goal-icon-left::after {
+            display: none;
+        }
+        @keyframes arrowFly {
+            0% { left: -50px; opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+        */
+
         @media (max-width: 768px) {
+            .main-goal-banner .main-goal-content {
+                flex-direction: column; /* ترتيب العناصر عموديًا على الشاشات الصغيرة */
+                gap: 15px; /* تقليل المسافة بين العناصر على الجوال */
+            }
             .main-goal-banner .main-goal-title {
                 font-size: 2.5rem; /* تصغير العنوان على الشاشات الصغيرة */
+                margin: 0; /* إزالة الهوامش الإضافية */
+                min-width: unset; /* إزالة الحد الأدنى للعرض */
             }
             .main-goal-banner .main-goal-text {
                 font-size: 1.3rem; /* تصغير النص على الشاشات الصغيرة */
+                margin-top: 10px; /* تعديل المسافة */
             }
-            .main-goal-banner .fas.fa-mosque {
-                font-size: 4.5rem !important; /* تصغير الأيقونة على الشاشات الصغيرة */
-                margin-left: 0 !important; /* إزالة الهامش على الشاشات الصغيرة */
+            .main-goal-banner .icon-wrapper {
+                width: 90px; /* تصغير حجم الـ wrapper على الشاشات الصغيرة */
+                height: 90px;
+                margin-bottom: 15px; /* مسافة سفلية لكل أيقونة */
             }
+            .main-goal-banner .fas {
+                font-size: 4rem !important; /* تصغير الأيقونات على الشاشات الصغيرة */
+            }
+            /* ترتيب الأيقونات والنص عمودياً على الجوال */
+            .main-goal-banner .main-goal-icon-right { order: 1; }
+            .main-goal-banner .flex-grow-1 { order: 2; width: 100%; } /* العنوان والنص */
+            .main-goal-banner .main-goal-icon-left { order: 3; }
+
+            /* تعطيل تأثير السهم على الجوال إذا كان يسبب مشاكل في الأداء أو العرض */
+            /* هذه لم تعد ذات صلة بعد إزالة الـ pseudo-elements */
+            /*
+            .main-goal-icon-left::before, .main-goal-icon-left::after {
+                display: none;
+            }
+            */
         }
     </style>
-    <!-- AOS Animate On Scroll CSS -->
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
 @endsection
 
 @section('scripts')
-    <!-- AOS Animate On Scroll JS -->
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // دالة لتحديث نص الترحيب بناءً على الوقت
+            // تحديث نص الترحيب
             function updateGreeting() {
                 const hour = new Date().getHours();
                 let greeting;
@@ -724,14 +843,133 @@
                 }
                 document.getElementById('greeting-text').innerText = greeting;
             }
+            updateGreeting();
 
-            updateGreeting(); // استدعاء الدالة عند تحميل الصفحة
-            
+            // تهيئة AOS (سنستخدمها لبطاقات أهداف الشعبة والوحدات)
             AOS.init({
-                once: true, // يظهر الانيميشن مرة واحدة فقط
-                duration: 1000, // مدة أطول للانيميشن
-                easing: 'ease-in-out',
-                delay: 100, // تأخير عام لبدء AOS
+                once: true,
+                duration: 800, // مدة أطول للانيميشن
+                easing: 'ease-out-back', // تأثير سلس للدخول
+                delay: 100,
+            });
+
+            // تسجيل ScrollTrigger plugin
+            gsap.registerPlugin(ScrollTrigger);
+
+            // -----------------------------------------------------------
+            // تحريكات قسم الهدف الرئيسي للمدينة (باستخدام GSAP)
+            // -----------------------------------------------------------
+            const mainGoalSection = document.querySelector('[data-animate-section="main-goal"]');
+            const mainGoalIcon = document.getElementById('mainGoalIcon');
+            const mainGoalTitle = mainGoalSection.querySelector('.main-goal-title');
+            const mainGoalText = mainGoalSection.querySelector('.main-goal-text');
+            const mosqueIcon = document.getElementById('mosqueIcon');
+
+            // إعداد الحالة الأولية (مخفية وجاهزة للظهور)
+            gsap.set([mainGoalIcon, mainGoalTitle, mainGoalText, mosqueIcon], { autoAlpha: 0, y: 50 });
+
+            const mainGoalTimeline = gsap.timeline({
+                scrollTrigger: {
+                    trigger: mainGoalSection,
+                    start: "top center+=100", // يبدأ التحريك عندما يكون الجزء العلوي للقسم 100px فوق مركز الشاشة
+                    toggleActions: "play reverse play reverse", // تشغيل عند الدخول والخروج، وعكس عند الرجوع
+                    // markers: true, // لتصحيح الأخطاء
+                }
+            });
+
+            mainGoalTimeline
+                .to(mainGoalIcon, {
+                    autoAlpha: 1, y: 0, duration: 1, ease: "power3.out",
+                    filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.7))',
+                    scale: 1.1,
+                    rotation: 360,
+                    repeat: -1, yoyo: true, repeatDelay: 5 // حركة متكررة
+                }, 0) // يبدأ الأنميشن في نفس الوقت (الموقع 0 في الجدول الزمني)
+                .to(mainGoalIcon.querySelector('svg path:last-child'), { // تحريك النقطة المركزية لـ SVG
+                    fill: '#90CAF9', duration: 1, ease: "power3.out",
+                    repeat: -1, yoyo: true, repeatDelay: 5
+                }, 0)
+                .to(mainGoalIcon.querySelectorAll('svg path:not(:last-child)'), { // تحريك الدوائر الخارجية لـ SVG
+                    stroke: '#90CAF9', duration: 1, ease: "power3.out",
+                    repeat: -1, yoyo: true, repeatDelay: 5
+                }, 0)
+                .to([mainGoalTitle, mainGoalText], {
+                    autoAlpha: 1, y: 0, duration: 1.2, ease: "power3.out", stagger: 0.2,
+                    textShadow: '0 0 15px rgba(0, 255, 255, 0.6), 0 0 25px rgba(0, 255, 255, 0.4)', // تأثير توهج للنص
+                    color: '#ffffff', // التأكد من لون النص الأصلي
+                }, 0.3) // يبدأ النص بعد الأيقونة بـ 0.3 ثانية
+                .to(mosqueIcon, {
+                    autoAlpha: 0.25, y: 0, duration: 1, ease: "power3.out",
+                    rotation: 15,
+                    repeat: -1, yoyo: true, repeatDelay: 6 // حركة خفيفة للمسجد
+                }, 0.5); // يبدأ المسجد بعد 0.5 ثانية
+
+            // -----------------------------------------------------------
+            // تحريكات قسم الترحيب (باستخدام GSAP)
+            // -----------------------------------------------------------
+            const welcomeCard = document.querySelector('[data-animate-section="welcome-card"] .card');
+            const welcomeTextContent = welcomeCard.querySelector('.welcome-text-content');
+            const welcomeChartIcon = document.getElementById('welcomeChartIcon');
+
+            gsap.set(welcomeCard, { autoAlpha: 0, y: 50 });
+            gsap.set(welcomeChartIcon, { autoAlpha: 0.25, scale: 0.8 }); // أيقونة تبدأ أصغر وأكثر شفافية
+
+            gsap.timeline({
+                scrollTrigger: {
+                    trigger: welcomeCard,
+                    start: "top center+=100",
+                    toggleActions: "play reverse play reverse",
+                    // markers: true,
+                }
+            })
+            .to(welcomeCard, { autoAlpha: 1, y: 0, duration: 1, ease: "power3.out" })
+            .from(welcomeTextContent.children, {
+                autoAlpha: 0, y: 20, duration: 0.8, stagger: 0.15, ease: "power2.out"
+            }, "<0.2") // تبدأ بعد قليل من ظهور البطاقة
+            .to(welcomeChartIcon, {
+                autoAlpha: 0.5, scale: 1, rotation: 360, duration: 1.5, ease: "elastic.out(1, 0.5)",
+                repeat: -1, yoyo: true, repeatDelay: 4 // حركة نبضية ودوران
+            }, "<0.4"); // تبدأ بعد قليل من ظهور النص
+
+            // -----------------------------------------------------------
+            // تحريكات بطاقات موجز الأداء (باستخدام GSAP)
+            // -----------------------------------------------------------
+            document.querySelectorAll('.performance-card').forEach((card, index) => {
+                gsap.set(card, { autoAlpha: 0, y: 50, scale: 0.9 });
+
+                gsap.timeline({
+                    scrollTrigger: {
+                        trigger: card,
+                        start: "top center+=100",
+                        toggleActions: "play none none reverse", // تشغيل مرة واحدة عند الدخول
+                        // markers: true,
+                    }
+                })
+                .to(card, { autoAlpha: 1, y: 0, scale: 1, duration: 0.8, ease: "back.out(1.7)", delay: index * 0.1 }) // تأخير بين البطاقات
+                .from(card.querySelectorAll('.performance-title, .performance-value, .performance-comparison, .performance-icon'), {
+                    autoAlpha: 0, y: 20, duration: 0.6, stagger: 0.05, ease: "power2.out"
+                }, "<0.3"); // تبدأ العناصر الداخلية بالتحرك بعد قليل من ظهور البطاقة
+            });
+
+            // -----------------------------------------------------------
+            // تحريكات أشرطة التقدم داخل بطاقات الوحدات (GSAP)
+            // -----------------------------------------------------------
+            document.querySelectorAll('.unit-goals-list .progress-bar').forEach(progressBar => {
+                const percentage = parseInt(progressBar.getAttribute('aria-valuenow'));
+                gsap.fromTo(progressBar,
+                    { width: 0 },
+                    {
+                        width: `${percentage}%`,
+                        duration: 1.5,
+                        ease: "power2.out",
+                        scrollTrigger: {
+                            trigger: progressBar,
+                            start: "top bottom", // عندما يكون الشريط في الأسفل من منطقة العرض
+                            toggleActions: "play none none reverse",
+                            // markers: true,
+                        }
+                    }
+                );
             });
         });
     </script>

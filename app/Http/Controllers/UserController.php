@@ -20,10 +20,10 @@ class UserController extends Controller
      */
     public function __construct()
     {
-        // تم تعليق هذا السطر مؤقتًا لتجاوز مشكلة "Target class [permission] does not exist."
-        // إذا عملت الصفحة بعد تعليقه، فالمشكلة في تسجيل الـ middleware أو تهيئة Spatie.
-        // يجب إعادة تفعيله بمجرد حل المشكلة الأساسية.
-        // $this->middleware('permission:manage users'); // تتطلب صلاحية "manage users" للوصول إلى هذا المتحكم
+        // تم تفعيل هذا السطر لحماية المتحكم بصلاحية "manage users".
+        // هذا يضمن أن المستخدمين الذين لديهم دور "super_admin" أو أي دور آخر يمتلك صلاحية "manage users"
+        // يمكنهم الوصول إلى هذا المتحكم.
+        $this->middleware('permission:manage users'); // تتطلب صلاحية "manage users" للوصول إلى هذا المتحكم
     }
 
     /**

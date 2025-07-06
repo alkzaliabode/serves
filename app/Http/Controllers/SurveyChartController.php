@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Survey;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Carbon; // لإدارة التواريخ
+use Illuminate\Support\Carbon; // تم التأكد من استيراد Carbon
 
 class SurveyChartController extends Controller
 {
@@ -20,20 +20,26 @@ class SurveyChartController extends Controller
 
     /**
      * دالة مساعدة لتطبيق فلاتر التاريخ على الاستعلام.
+     * تم تحديثها لاستخدام Carbon لضمان شمولية اليوم بالكامل.
      */
     protected function applyDateFilters(Request $request, $query)
     {
         if ($request->filled('from_date')) {
-            $query->whereDate('created_at', '>=', $request->input('from_date'));
+            // تحويل التاريخ المدخل إلى كائن Carbon وتعيين الوقت إلى بداية اليوم (00:00:00)
+            $fromDate = Carbon::parse($request->input('from_date'))->startOfDay();
+            $query->where('created_at', '>=', $fromDate);
         }
         if ($request->filled('to_date')) {
-            $query->whereDate('created_at', '<=', $request->input('to_date'));
+            // تحويل التاريخ المدخل إلى كائن Carbon وتعيين الوقت إلى نهاية اليوم (23:59:59)
+            $toDate = Carbon::parse($request->input('to_date'))->endOfDay();
+            $query->where('created_at', '<=', $toDate);
         }
         return $query;
     }
 
     /**
      * دالة مساعدة لترجمة قيم الاستبيان.
+     * (لم يتم تغييرها، فهي صحيحة)
      */
     protected function translateSurveyValue(string $key, string $value): string
     {
@@ -74,6 +80,7 @@ class SurveyChartController extends Controller
 
     /**
      * جلب بيانات مخطط توزيع الرضا العام (دائري).
+     * (تم تطبيق دالة applyDateFilters المحدثة)
      */
     public function getSatisfactionPieChartData(Request $request)
     {
@@ -92,7 +99,7 @@ class SurveyChartController extends Controller
             'datasets' => [
                 [
                     'data' => $data->values()->toArray(),
-                    'backgroundColor' => ['#4CAF50', '#2196F3', '#FFC107', '#F44336'], // ألوان افتراضية، سيتم تجاوزها بـ JS
+                    'backgroundColor' => ['#4CAF50', '#2196F3', '#FFC107', '#F44336'], // ألوان افتراضية
                 ],
             ],
             'labels' => $data->keys()->toArray(),
@@ -101,6 +108,7 @@ class SurveyChartController extends Controller
 
     /**
      * جلب بيانات مخطط نظافة القاعات (شريطي).
+     * (تم تطبيق دالة applyDateFilters المحدثة)
      */
     public function getHallCleanlinessChartData(Request $request)
     {
@@ -115,11 +123,10 @@ class SurveyChartController extends Controller
                 return [$this->translateSurveyValue('hall_cleanliness', $item->hall_cleanliness) => $item->count];
             })
             ->sortKeysUsing(function ($keyA, $keyB) {
-                // ترتيب مخصص للقيم لضمان ترتيب منطقي (ممتازة، جيدة جدا، ..., سيئة)
+                // ترتيب مخصص للقيم لضمان ترتيب منطقي
                 $order = ['نظيفة جدًا', 'نظيفة', 'تحتاج إلى تحسين', 'غير نظيفة'];
                 return array_search($keyA, $order) <=> array_search($keyB, $order);
             });
-
 
         return response()->json([
             'labels' => $data->keys()->toArray(),
@@ -137,6 +144,7 @@ class SurveyChartController extends Controller
 
     /**
      * جلب بيانات مخطط نظافة ترامز الماء (شريطي).
+     * (تم تطبيق دالة applyDateFilters المحدثة)
      */
     public function getWaterTramsCleanlinessChartData(Request $request)
     {
@@ -171,6 +179,7 @@ class SurveyChartController extends Controller
 
     /**
      * جلب بيانات مخطط نظافة المرافق (دورات المياه والساحات - شريطي).
+     * (تم تطبيق دالة applyDateFilters المحدثة)
      */
     public function getFacilitiesCleanlinessChartData(Request $request)
     {
@@ -178,6 +187,9 @@ class SurveyChartController extends Controller
         $query = Survey::query();
         $query = $this->applyDateFilters($request, $query);
 
+        // مهم: يجب استخدام clone() عند استخدام نفس كائن الـ query لأكثر من استعلام
+        // للحفاظ على الاستعلام الأصلي دون تطبيق التغييرات عليه في الاستعلامات اللاحقة.
+        // هنا تم استخدام clone() بشكل صحيح
         $toiletData = $query->clone()->selectRaw('toilet_cleanliness, COUNT(*) as count')
             ->groupBy('toilet_cleanliness')
             ->get()

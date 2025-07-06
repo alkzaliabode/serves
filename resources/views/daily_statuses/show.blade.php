@@ -1,4 +1,4 @@
-@extends('layouts.adminlte') {{-- تعديل ليرث تخطيط AdminLTE الجديد --}}
+@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', 'تفاصيل الموقف اليومي - ' . \Carbon\Carbon::parse($dailyStatus->date)->format('Y-m-d')) {{-- تحديد عنوان الصفحة في المتصفح --}}
 

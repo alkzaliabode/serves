@@ -1,4 +1,4 @@
-@extends('layouts.adminlte') {{-- تأكد من أن هذا يشير إلى ملف الـ layout الصحيح لديك --}}
+@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', 'تعديل بيانات موظف') {{-- عنوان الصفحة في المتصفح --}}
 

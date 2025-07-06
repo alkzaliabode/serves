@@ -52,6 +52,7 @@ return [
     | the Artisan command line tool. You should set this to the root of
     | the application so that it's available within Artisan commands.
     |
+    |
     */
 
     'url' => env('APP_URL', 'http://localhost'),
@@ -67,10 +68,10 @@ return [
     | will be used by the PHP date and date-time functions. The timezone
     | is set to "UTC" by default as it is suitable for most use cases.
     |
+    |
     */
 
-    'timezone' => 'UTC',
-
+    'timezone' => 'Asia/Baghdad',
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
@@ -79,6 +80,7 @@ return [
     | The application locale determines the default locale that will be used
     | by Laravel's translation / localization methods. This option can be
     | set to any locale for which you plan to have translation strings.
+    |
     |
     */
 
@@ -96,6 +98,7 @@ return [
     | This key is utilized by Laravel's encryption services and should be set
     | to a random, 32 character string to ensure that all encrypted values
     | are secure. You should do this prior to deploying the application.
+    |
     |
     */
 
@@ -148,6 +151,9 @@ return [
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
+
+        // تم إزالة Spatie\Permission\PermissionServiceProvider::class من هنا
+        // لأنه سيتم تحميله من ملف bootstrap/providers.php في Laravel 12.
 
         /*
          * Package Service Providers...

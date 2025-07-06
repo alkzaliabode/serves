@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ServiceTask;
 use App\Models\Employee;
+use App\Models\User; // استيراد نموذج المستخدم لإرسال الإشعارات
+use App\Notifications\TaskUpdatedNotification; // استيراد الإشعار المخصص
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log; // استيراد Log للتحقق
 
 class ServiceTasksBoardController extends Controller
 {
@@ -59,7 +62,7 @@ class ServiceTasksBoardController extends Controller
     public function updateStatusAndOrder(Request $request, ServiceTask $task)
     {
         // Log the raw request body for debugging
-        \Log::info('Raw Request Body for updateStatusAndOrder:', [$request->getContent()]);
+        Log::info('Raw Request Body for updateStatusAndOrder:', [$request->getContent()]);
         // Validate the request data from the JSON body
         $validator = Validator::make($request->json()->all(), [
             'newStatus' => ['required', 'string', Rule::in(array_keys(ServiceTask::STATUSES))],
@@ -68,7 +71,7 @@ class ServiceTasksBoardController extends Controller
         ]);
 
         if ($validator->fails()) {
-            \Log::error('Validation failed for updateStatusAndOrder:', $validator->errors()->toArray());
+            Log::error('Validation failed for updateStatusAndOrder:', $validator->errors()->toArray());
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
 
@@ -76,6 +79,9 @@ class ServiceTasksBoardController extends Controller
         $newOrder = $request->json('newOrder'); // Array of task IDs in the new order
 
         try {
+            // حفظ الحالة القديمة للمهمة قبل التحديث
+            $oldStatus = $task->status;
+
             // Update task status
             $task->status = $newStatus;
             $task->save();
@@ -103,10 +109,29 @@ class ServiceTasksBoardController extends Controller
                 'priority_icon'   // NEW: Append priority icon accessor
             ]);
 
+            // إرسال إشعار للمشرفين بعد تحديث المهمة
+            $supervisors = User::whereHas('roles', function ($query) {
+                $query->where('name', 'supervisor'); // افترض أن لديك دور 'supervisor'
+            })->get();
+
+            foreach ($supervisors as $supervisor) {
+                // يمكنك تخصيص رسالة الإشعار هنا بناءً على تغيير الحالة
+                $actionMessage = 'تم تحديث حالة المهمة "' . $task->title . '" من "' . ServiceTask::STATUSES[$oldStatus] . '" إلى "' . ServiceTask::STATUSES[$newStatus] . '".';
+                $supervisor->notify(new TaskUpdatedNotification($task, 'updated', $actionMessage));
+            }
+
+            // إرسال إشعار للموظف المعين إذا تغيرت حالة المهمة
+            if ($task->assignedTo) {
+                $assignedUser = User::where('employee_id', $task->assignedTo->id)->first();
+                if ($assignedUser) {
+                    $assignedUser->notify(new TaskUpdatedNotification($task, 'status_changed', 'تم تحديث حالة مهمتك "' . $task->title . '" إلى: ' . ServiceTask::STATUSES[$newStatus]));
+                }
+            }
+
 
             return response()->json(['success' => true, 'message' => 'تم تحديث حالة المهمة والترتيب بنجاح.', 'task' => $task->toArray()]);
         } catch (\Exception $e) {
-            \Log::error('Failed to update task status and order: ' . $e->getMessage());
+            Log::error('Failed to update task status and order: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'فشل تحديث المهمة: ' . $e->getMessage()], 500);
         }
     }
@@ -121,7 +146,7 @@ class ServiceTasksBoardController extends Controller
     public function store(Request $request)
     {
         // Log the raw request body for debugging
-        \Log::info('Raw Request Body for store:', [$request->getContent()]);
+        Log::info('Raw Request Body for store:', [$request->getContent()]);
         $validator = Validator::make($request->json()->all(), [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -132,7 +157,7 @@ class ServiceTasksBoardController extends Controller
         ]);
 
         if ($validator->fails()) {
-            \Log::error('Validation failed for store:', $validator->errors()->toArray());
+            Log::error('Validation failed for store:', $validator->errors()->toArray());
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
@@ -150,6 +175,23 @@ class ServiceTasksBoardController extends Controller
                 'priority_icon'   // NEW: Append priority icon accessor
             ]);
 
+            // إرسال إشعار للمشرفين بعد إنشاء المهمة
+            $supervisors = User::whereHas('roles', function ($query) {
+                $query->where('name', 'supervisor');
+            })->get();
+
+            foreach ($supervisors as $supervisor) {
+                $supervisor->notify(new TaskUpdatedNotification($task, 'created'));
+            }
+
+            // إرسال إشعار للموظف المعين (إذا كان لديه حساب مستخدم)
+            if ($task->assignedTo) {
+                $assignedUser = User::where('employee_id', $task->assignedTo->id)->first();
+                if ($assignedUser) {
+                    $assignedUser->notify(new TaskUpdatedNotification($task, 'assigned', 'تم تعيين مهمة جديدة لك: ' . $task->title . ' (الرجاء المراجعة)'));
+                }
+            }
+
             // Return the new task data including accessors for frontend rendering
             return response()->json([
                 'success' => true,
@@ -158,7 +200,7 @@ class ServiceTasksBoardController extends Controller
                 // 'taskHtml' is not needed if the frontend creates the element from 'task' object
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to create task: ' . $e->getMessage());
+            Log::error('Failed to create task: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'فشل إنشاء المهمة: ' . $e->getMessage()], 500);
         }
     }
@@ -174,7 +216,7 @@ class ServiceTasksBoardController extends Controller
     public function update(Request $request, ServiceTask $task)
     {
         // Log the raw request body for debugging
-        \Log::info('Raw Request Body for update:', [$request->getContent()]);
+        Log::info('Raw Request Body for update:', [$request->getContent()]);
         $validator = Validator::make($request->json()->all(), [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -186,11 +228,13 @@ class ServiceTasksBoardController extends Controller
         ]);
 
         if ($validator->fails()) {
-            \Log::error('Validation failed for update:', $validator->errors()->toArray());
+            Log::error('Validation failed for update:', $validator->errors()->toArray());
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
         try {
+            $oldAssignedTo = $task->assigned_to; // حفظ الموظف المعين القديم
+
             $task->update($validator->validated());
             $task->load('assignedTo'); // Reload the relation to get assignedTo_name
             // Dynamically append accessors
@@ -204,6 +248,30 @@ class ServiceTasksBoardController extends Controller
                 'priority_icon'   // NEW: Append priority icon accessor
             ]);
 
+            // إرسال إشعار للمشرفين بعد تحديث المهمة
+            $supervisors = User::whereHas('roles', function ($query) {
+                $query->where('name', 'supervisor');
+            })->get();
+
+            foreach ($supervisors as $supervisor) {
+                $supervisor->notify(new TaskUpdatedNotification($task, 'updated'));
+            }
+
+            // إرسال إشعار للموظف المعين إذا تغير التعيين أو تم تحديث المهمة
+            if ($task->assignedTo) {
+                $assignedUser = User::where('employee_id', $task->assignedTo->id)->first();
+                if ($assignedUser) {
+                    if ($task->assigned_to != $oldAssignedTo) {
+                        // إذا تغير التعيين
+                        $assignedUser->notify(new TaskUpdatedNotification($task, 'assigned', 'تم تعيين مهمة جديدة لك أو تغيير تعيينها: ' . $task->title . ' (الرجاء المراجعة)'));
+                    } else {
+                        // إذا تم تحديث المهمة ولكن التعيين لم يتغير
+                        $assignedUser->notify(new TaskUpdatedNotification($task, 'updated', 'تم تحديث تفاصيل مهمتك: ' . $task->title));
+                    }
+                }
+            }
+
+
             return response()->json([
                 'success' => true,
                 'message' => 'تم تحديث المهمة بنجاح.',
@@ -211,7 +279,7 @@ class ServiceTasksBoardController extends Controller
                 // 'taskHtml' is not needed if the frontend creates the element from 'task' object
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to update task: ' . $e->getMessage());
+            Log::error('Failed to update task: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'فشل تحديث المهمة: ' . $e->getMessage()], 500);
         }
     }
@@ -229,7 +297,7 @@ class ServiceTasksBoardController extends Controller
             $task->delete();
             return response()->json(['success' => true, 'message' => 'تم حذف المهمة بنجاح.']);
         } catch (\Exception $e) {
-            \Log::error('Failed to delete task: ' . $e->getMessage());
+            Log::error('Failed to delete task: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'فشل حذف المهمة: ' . $e->getMessage()], 500);
         }
     }

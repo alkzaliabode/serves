@@ -6,19 +6,21 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes; // تم إضافة هذا السطر
 
 class Employee extends Authenticatable
 {
+    use SoftDeletes; // تم إضافة هذا السطر
+
     protected $fillable = [
-         'name',
-    'email',
-    'password',
-    'job_title',
-    'unit_id',
-    'role',
-    'is_active',
-    'employee_number',
-        
+        'name',
+        'email',
+        'password',
+        'job_title',
+        'unit_id',
+        'role',
+        'is_active',
+        'employee_number',
     ];
 
     protected $hidden = [

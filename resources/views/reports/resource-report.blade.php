@@ -8,7 +8,7 @@
     ملاحظة: تم نقل محتوى الطباعة إلى ملف 'resources/views/reports/resource-report-print.blade.php'.
 --}}
 
-@extends('layouts.adminlte') {{-- تعديل ليرث تخطيط AdminLTE --}}
+@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', 'تقرير الموارد') {{-- تحديد عنوان الصفحة --}}
 

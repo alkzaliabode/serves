@@ -65,18 +65,19 @@ class TaskImageReport extends Model
             return [];
         }
 
-        return collect($images)->map(function ($image) {
+        return collect($images)->map(function ($imagePath) { // تم تغيير اسم المتغير إلى imagePath ليتناسب مع الاستخدام
             // تنظيف المسار من أي إشارة إلى storage/public
-            $cleanPath = str_replace(['storage/', 'public/'], '', $image);
+            $cleanPath = str_replace(['storage/', 'public/'], '', $imagePath);
             
             // التحقق من وجود الصورة
             $exists = Storage::disk('public')->exists($cleanPath);
             
             return [
                 'url' => $exists ? Storage::disk('public')->url($cleanPath) : null,
-                'path' => $cleanPath,
+                'path' => $cleanPath, // المسار النسبي داخل storage/app/public
                 'exists' => $exists,
-                'absolute_path' => $exists ? Storage::disk('public')->path($cleanPath) : null
+                // المسار المطلق اللازم لـ Dompdf
+                'absolute_path_for_pdf' => $exists ? public_path('storage/' . $cleanPath) : null
             ];
         })->toArray();
     }

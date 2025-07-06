@@ -1,32 +1,96 @@
-<div class="repeater-item grid grid-cols-1 md:grid-cols-5 gap-4 items-end mb-4 p-4 bg-gray-100 rounded-lg border border-gray-200">
-    <div>
-        <label class="label">اسم الموظف</label>
-        <select name="{{ $name_prefix }}[{{ $index }}][employee_id]" class="input-field employee-select"
-                onchange="updateEmployeeDetails(this, '{{ $name_prefix }}', {{ $index }})" required>
-            <option value="">اختر موظفاً</option>
-            @foreach($employees as $employee)
-                <option value="{{ $employee->id }}" {{ (isset($leave['employee_id']) && $leave['employee_id'] == $employee->id) ? 'selected' : '' }}>
-                    {{ $employee->name }}
-                </option>
-            @endforeach
-        </select>
+{{-- resources/views/daily_statuses/partials/dated_leave_item.blade.php --}}
+{{-- يستخدم هذا الملف الجزئي للإجازات التي تعتمد على تاريخ بداية وعدد أيام (مثل المرضية، الطويلة، الغياب) --}}
+
+<div class="row mb-2 align-items-center border p-2 rounded bg-light">
+    <div class="col-md-4">
+        <div class="form-group mb-0">
+            <label for="{{ $type }}_{{ $index }}_employee_id">الموظف:</label>
+            <select name="{{ $type }}[{{ $index }}][employee_id]"
+                    id="{{ $type }}_{{ $index }}_employee_id"
+                    class="form-control form-control-sm employee-select select2"
+                    required>
+                <option value="">اختر موظفاً</option>
+                @foreach($employees as $employee)
+                    <option value="{{ $employee->id }}"
+                            data-name="{{ $employee->name }}"
+                            {{ old($type . '.' . $index . '.employee_id', $leave['employee_id'] ?? '') == $employee->id ? 'selected' : '' }}>
+                        {{ $employee->name }} ({{ $employee->employee_number }})
+                    </option>
+                @endforeach
+            </select>
+            {{-- حقل مخفي لحفظ اسم الموظف --}}
+            <input type="hidden"
+                   name="{{ $type }}[{{ $index }}][employee_name]"
+                   class="employee-name-input"
+                   value="{{ old($type . '.' . $index . '.employee_name', $leave['employee_name'] ?? '') }}">
+            {{-- حقل مخفي لحفظ الرقم الوظيفي --}}
+            <input type="hidden"
+                   name="{{ $type }}[{{ $index }}][employee_number]"
+                   class="employee-number-input"
+                   value="{{ old($type . '.' . $index . '.employee_number', $leave['employee_number'] ?? '') }}">
+            @error($type . '.' . $index . '.employee_id')
+                <span class="text-danger">{{ $message }}</span>
+            @enderror
+        </div>
     </div>
-    <div>
-        <label class="label">الرقم الوظيفي</label>
-        <input type="text" name="{{ $name_prefix }}[{{ $index }}][employee_number]" class="input-field employee-number-input bg-gray-200" readonly value="{{ $leave['employee_number'] ?? '' }}" required>
+    <div class="col-md-3">
+        <div class="form-group mb-0">
+            <label for="{{ $type }}_{{ $index }}_start_date">تاريخ البداية:</label>
+            <input type="date"
+                   name="{{ $type }}[{{ $index }}][start_date]"
+                   id="{{ $type }}_{{ $index }}_start_date"
+                   class="form-control form-control-sm"
+                   value="{{ old($type . '.' . $index . '.start_date', $leave['start_date'] ?? '') }}"
+                   required>
+            @error($type . '.' . $index . '.start_date')
+                <span class="text-danger">{{ $message }}</span>
+            @enderror
+        </div>
     </div>
-    <input type="hidden" name="{{ $name_prefix }}[{{ $index }}][employee_name]" class="employee-name-input" value="{{ $leave['employee_name'] ?? '' }}">
-    <div>
-        <label class="label">من تاريخ</label>
-        <input type="date" name="{{ $name_prefix }}[{{ $index }}][from_date]" class="input-field" value="{{ $leave['from_date'] ?? '' }}" required>
+    <div class="col-md-3">
+        <div class="form-group mb-0">
+            <label for="{{ $type }}_{{ $index }}_total_days">عدد الأيام الكلي:</label>
+            <input type="number"
+                   name="{{ $type }}[{{ $index }}][total_days]"
+                   id="{{ $type }}_{{ $index }}_total_days"
+                   class="form-control form-control-sm"
+                   value="{{ old($type . '.' . $index . '.total_days', $leave['total_days'] ?? '') }}"
+                   min="1"
+                   required>
+            @error($type . '.' . $index . '.total_days')
+                <span class="text-danger">{{ $message }}</span>
+            @enderror
+        </div>
     </div>
-    <div>
-        <label class="label">إلى تاريخ</label>
-        <input type="date" name="{{ $name_prefix }}[{{ $index }}][to_date]" class="input-field" value="{{ $leave['to_date'] ?? '' }}" required>
-    </div>
-    <div class="flex justify-end col-span-full md:col-span-1">
-        <button type="button" onclick="removeRepeaterItem(this)" class="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-            إزالة
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="button" class="btn btn-danger btn-sm remove-item w-100">
+            <i class="fas fa-trash"></i> إزالة
         </button>
     </div>
 </div>
+
+<script>
+    // عند تحميل الصفحة أو إضافة عنصر جديد، قم بتهيئة Select2 وتحديث اسم ورقم الموظف
+    $(document).ready(function() {
+        var selectElement = $('#{{ $type }}_{{ $index }}_employee_id');
+        selectElement.select2({
+            placeholder: "اختر موظفاً",
+            allowClear: true,
+            dir: "rtl"
+        });
+
+        // تحديث اسم ورقم الموظف المخفي عند اختيار موظف
+        selectElement.on('change', function() {
+            var selectedOption = $(this).find('option:selected');
+            var employeeName = selectedOption.data('name');
+            var employeeNumber = selectedOption.data('employee_number'); // تأكد من وجود هذا الـ data attribute في الـ option
+            $(this).closest('.row').find('.employee-name-input').val(employeeName);
+            $(this).closest('.row').find('.employee-number-input').val(employeeNumber);
+        });
+
+        // تشغيل حدث التغيير لملء الحقول المخفية بالقيم الأولية إذا كانت موجودة
+        if (selectElement.val()) {
+            selectElement.trigger('change');
+        }
+    });
+</script>

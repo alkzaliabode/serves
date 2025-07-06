@@ -1,5 +1,5 @@
 {{-- resources/views/admin/background-settings.blade.php --}}
-@extends('layouts.adminlte') {{-- ليرث تخطيط AdminLTE --}}
+@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', 'إعدادات الخلفية') {{-- تحديد عنوان الصفحة في المتصفح --}}
 

@@ -6,9 +6,12 @@ use App\Models\GeneralCleaningTask;
 use App\Models\Unit; // افتراض أن لديك نموذج Unit
 use App\Models\UnitGoal; // افتراض أن لديك نموذج UnitGoal
 use App\Models\Employee; // افتراض أن لديك نموذج Employee
+use App\Models\User; // استيراد نموذج المستخدم لإرسال الإشعارات
+use App\Notifications\TaskUpdatedNotification; // استيراد الإشعار المخصص
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage; // لاستخدام تخزين الملفات
+use Illuminate\Support\Facades\Log; // لاستخدام Log للتحقق
 
 class GeneralCleaningTaskController extends Controller
 {
@@ -24,14 +27,14 @@ class GeneralCleaningTaskController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('location', 'like', '%' . $search . '%')
-                  ->orWhere('task_type', 'like', '%' . $search . '%')
-                  ->orWhere('status', 'like', '%' . $search . '%')
-                  ->orWhereHas('relatedGoal', function ($sq) use ($search) {
-                      $sq->where('goal_text', 'like', '%' . $search . '%');
-                  })
-                  ->orWhereHas('creator', function ($sq) use ($search) {
-                      $sq->where('name', 'like', '%' . $search . '%');
-                  });
+                    ->orWhere('task_type', 'like', '%' . $search . '%')
+                    ->orWhere('status', 'like', '%' . $search . '%')
+                    ->orWhereHas('relatedGoal', function ($sq) use ($search) {
+                        $sq->where('goal_text', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('creator', function ($sq) use ($search) {
+                        $sq->where('name', 'like', '%' . $search . '%');
+                    });
             });
         }
 
@@ -106,7 +109,22 @@ class GeneralCleaningTaskController extends Controller
                     'employee_id' => $employeeTaskData['employee_id'],
                     'employee_rating' => $employeeTaskData['employee_rating'],
                 ]);
+
+                // إرسال إشعار للموظف المعين (إذا كان لديه حساب مستخدم)
+                $assignedUser = User::where('employee_id', $employeeTaskData['employee_id'])->first();
+                if ($assignedUser) {
+                    $assignedUser->notify(new TaskUpdatedNotification($task, 'assigned', 'تم تعيين مهمة جديدة لك: ' . $task->location . ' - ' . $task->task_type));
+                }
             }
+        }
+
+        // إرسال إشعار للمشرفين بعد إنشاء المهمة
+        $supervisors = User::whereHas('roles', function ($query) {
+            $query->where('name', 'supervisor'); // افترض أن لديك دور 'supervisor'
+        })->get();
+
+        foreach ($supervisors as $supervisor) {
+            $supervisor->notify(new TaskUpdatedNotification($task, 'created'));
         }
 
         return redirect()->route('general-cleaning-tasks.index')->with('success', 'تم إنشاء مهمة النظافة بنجاح!');
@@ -147,7 +165,7 @@ class GeneralCleaningTaskController extends Controller
                 $beforeImagePaths[] = $path;
             }
         } else if ($request->input('remove_before_images') == '1') { // إذا أرسل المستخدم طلب حذف كل الصور
-             foreach ($beforeImagePaths as $oldPath) {
+            foreach ($beforeImagePaths as $oldPath) {
                 Storage::disk('public')->delete($oldPath);
             }
             $beforeImagePaths = [];
@@ -167,7 +185,7 @@ class GeneralCleaningTaskController extends Controller
                 $afterImagePaths[] = $path;
             }
         } else if ($request->input('remove_after_images') == '1') { // إذا أرسل المستخدم طلب حذف كل الصور
-             foreach ($afterImagePaths as $oldPath) {
+            foreach ($afterImagePaths as $oldPath) {
                 Storage::disk('public')->delete($oldPath);
             }
             $afterImagePaths = [];
@@ -184,14 +202,37 @@ class GeneralCleaningTaskController extends Controller
         ]));
 
         // تحديث الموظفين والتقييمات
+        // الحصول على قائمة معرفات الموظفين المعينين حاليًا قبل الحذف
+        $oldAssignedEmployeeIds = $generalCleaningTask->employeeTasks->pluck('employee_id')->toArray();
         $generalCleaningTask->employeeTasks()->delete(); // حذف الكل وإعادة الإضافة
+        $newAssignedEmployeeIds = [];
+
         if ($request->has('employeeTasks')) {
             foreach ($request->input('employeeTasks') as $employeeTaskData) {
                 $generalCleaningTask->employeeTasks()->create([
                     'employee_id' => $employeeTaskData['employee_id'],
                     'employee_rating' => $employeeTaskData['employee_rating'],
                 ]);
+                $newAssignedEmployeeIds[] = $employeeTaskData['employee_id'];
+
+                // إرسال إشعار للموظف المعين (إذا كان لديه حساب مستخدم)
+                // إذا كان الموظف جديدًا على المهمة أو تم تحديث المهمة
+                if (!in_array($employeeTaskData['employee_id'], $oldAssignedEmployeeIds)) {
+                    $assignedUser = User::where('employee_id', $employeeTaskData['employee_id'])->first();
+                    if ($assignedUser) {
+                        $assignedUser->notify(new TaskUpdatedNotification($generalCleaningTask, 'assigned', 'تم تعيين مهمة جديدة لك أو تحديثها: ' . $generalCleaningTask->location . ' - ' . $generalCleaningTask->task_type));
+                    }
+                }
             }
+        }
+        
+        // إرسال إشعار للمشرفين بعد تحديث المهمة
+        $supervisors = User::whereHas('roles', function ($query) {
+            $query->where('name', 'supervisor');
+        })->get();
+
+        foreach ($supervisors as $supervisor) {
+            $supervisor->notify(new TaskUpdatedNotification($generalCleaningTask, 'updated'));
         }
 
         return redirect()->route('general-cleaning-tasks.index')->with('success', 'تم تحديث مهمة النظافة بنجاح!');

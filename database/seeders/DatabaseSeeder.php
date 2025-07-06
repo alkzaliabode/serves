@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-// لا حاجة لاستيراد User, Hash, Role, Permission هنا، لأنها تُستخدم داخل Seeders المُستدعاة
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,27 +12,28 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            SuperAdminSeeder::class, // *** هذا هو الـ Seeder الرئيسي لإنشاء المستخدم المسؤول والأدوار والصلاحيات ***
+            // 1. الأدوار يجب أن تأتي أولاً لأن الصلاحيات والمستخدمين يعتمدون عليها.
+            RolesSeeder::class,
 
-            // ... Seeders الأخرى التي لا تعتمد على الصلاحيات أو الأدوار
+            // 2. الصلاحيات تأتي بعد الأدوار لأنها تربط الصلاحيات بالأدوار.
+            PermissionsSeeder::class,
+
+            // 3. المستخدمين (خاصة الـ Super Admin) يأتي بعد الأدوار لأننا نُعيّن له الدور.
+            UserSeeder::class,
+
+            // 4. Seeders الأخرى التي لا تعتمد على الأدوار والصلاحيات (أو تعتمد على المستخدمين بعد إنشائهم)
+            // قم بترتيب هذه الـ Seeders حسب أي تبعيات محددة بينها.
+            // على سبيل المثال، إذا كانت GoalSeeder تحتاج إلى بيانات من DepartmentSeeder، ضع DepartmentSeeder أولاً.
             MainGoalSeeder::class,
             DepartmentGoalSeeder::class,
             UnitSeeder::class,
             UnitGoalSeeder::class,
             MonthlyGeneralCleaningSummarySeeder::class,
             MonthlySanitationSummarySeeder::class,
-            EmployeeSeeder::class,
+            EmployeeSeeder::class, // إذا كان الموظفين سيتم ربطهم بالمستخدمين أو الأدوار، ففكر في ترتيبهم.
             DailyStatusSeeder::class,
             TaskSeeder::class,
             ServiceTaskSeeder::class,
-            // لا تقم باستدعاء DatabaseSeeder::class هنا لتجنب الحلقة اللانهائية
-            // لا تقم باستدعاء PermissionSeeder::class هنا إذا كان SuperAdminSeeder ينشئ كل الصلاحيات
         ]);
-
-        // التعليقات الموجودة أدناه في كودك الأصلي صحيحة،
-        // يجب إزالة أي كود لإنشاء مستخدم Super Admin هنا
-        // إذا كان SuperAdminSeeder يقوم بذلك بالفعل.
-        // $user = User::factory()->create([...]);
-        // $user->assignRole('Super Admin');
     }
 }

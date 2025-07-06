@@ -1,4 +1,4 @@
-@extends('layouts.adminlte') {{-- تعديل ليرث تخطيط AdminLTE الجديد --}}
+@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', 'إنشاء مهمة منشأة صحية') {{-- تحديد عنوان الصفحة في المتصفح --}}
 
@@ -440,11 +440,11 @@
                                                 <label class="form-label">تقييم الأداء</label>
                                                 <select class="form-select" name="employeeTasks[{{ $index }}][employee_rating]" required>
                                                     <option value="">اختر التقييم</option>
-                                                    <option value="ممتاز" {{ ($employeeTask['employee_rating'] ?? '') == 'ممتاز' ? 'selected' : '' }}>ممتاز</option>
-                                                    <option value="جيد جدا" {{ ($employeeTask['employee_rating'] ?? '') == 'جيد جدا' ? 'selected' : '' }}>جيد جدا</option>
-                                                    <option value="جيد" {{ ($employeeTask['employee_rating'] ?? '') == 'جيد' ? 'selected' : '' }}>جيد</option>
-                                                    <option value="مقبول" {{ ($employeeTask['employee_rating'] ?? '') == 'مقبول' ? 'selected' : '' }}>مقبول</option>
-                                                    <option value="ضعيف" {{ ($employeeTask['employee_rating'] ?? '') == 'ضعيف' ? 'selected' : '' }}>ضعيف</option>
+                                                    <option value="1" {{ (isset($employeeTask['employee_rating']) && $employeeTask['employee_rating'] == '1') ? 'selected' : '' }}>ضعيف</option>
+                                                    <option value="2" {{ (isset($employeeTask['employee_rating']) && $employeeTask['employee_rating'] == '2') ? 'selected' : '' }}>مقبول</option>
+                                                    <option value="3" {{ (isset($employeeTask['employee_rating']) && $employeeTask['employee_rating'] == '3') ? 'selected' : '' }}>جيد</option>
+                                                    <option value="4" {{ (isset($employeeTask['employee_rating']) && $employeeTask['employee_rating'] == '4') ? 'selected' : '' }}>جيد جدا</option>
+                                                    <option value="5" {{ (isset($employeeTask['employee_rating']) && $employeeTask['employee_rating'] == '5') ? 'selected' : '' }}>ممتاز</option>
                                                 </select>
                                             </div>
                                             <div class="col-md-1 d-flex align-items-end mb-3 mb-md-0"><button type="button" class="btn btn-danger remove-employee-task"><i class="fas fa-trash"></i></button></div>
@@ -456,6 +456,8 @@
                                 <i class="fas fa-user-plus"></i> إضافة منفذ جديد
                             </button>
 
+                            {{-- تم حذف حقل تقييم المشرف العام --}}
+                            {{--
                             <div class="mb-4 mt-4">
                                 <label for="supervisor_rating" class="form-label">تقييم المشرف العام للمهمة</label>
                                 <select class="form-select" id="supervisor_rating" name="supervisor_rating" required>
@@ -468,6 +470,7 @@
                                 </select>
                                 <div class="form-text">تقييم المشرف لأداء المهمة بشكل عام.</div>
                             </div>
+                            --}}
 
                             <div class="mb-4">
                                 <label for="notes" class="form-label">ملاحظات إضافية</label>
@@ -483,137 +486,148 @@
                             <div class="mb-4">
                                 <label for="after_images" class="form-label">صور بعد التنفيذ</label>
                                 <input type="file" class="form-control" id="after_images" name="after_images[]" multiple accept="image/*">
-                                <div class="form-text">يمكنك رفع عدة صور توضح حالة الموقع بعد انتهاء المهمة.</div>
+                                <div class="form-text">يمكنك رفع عدة صور توضح حالة الموقع بعد الانتهاء من المهمة.</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-end mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg me-2">
-                            <i class="fas fa-save"></i> حفظ مهمة المنشآت الصحية
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> حفظ المهمة
                         </button>
-                        <a href="{{ route('sanitation-facility-tasks.index') }}" class="btn btn-secondary btn-lg">
-                            <i class="fas fa-times"></i> إلغاء
+                        <a href="{{ route('sanitation-facility-tasks.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-ban"></i> إلغاء
                         </a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-@endsection {{-- نهاية قسم المحتوى --}}
+@endsection
 
-@section('scripts') {{-- لربط السكربتات الخاصة بهذه الصفحة --}}
+@section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Logic to show/hide equipment details based on task type
             const taskTypeSelect = document.getElementById('task_type');
             const equipmentDetailsFieldset = document.getElementById('equipment-details-fieldset');
-            const prefixes = document.querySelectorAll('.prefix');
-            const suffixes = document.querySelectorAll('.suffix');
 
-            // Function to reset all fields in a given element
-            function resetFields(element) {
-                element.querySelectorAll('input[type="number"]').forEach(input => input.value = 0);
-                element.querySelectorAll('textarea').forEach(textarea => textarea.value = '');
-            }
-
-            function toggleEquipmentFields() {
-                const taskType = taskTypeSelect.value;
-                // Reset fields before toggling display
-                resetFields(equipmentDetailsFieldset);
-
-                if (taskType) {
+            function toggleEquipmentDetails() {
+                if (taskTypeSelect.value === 'صيانة') {
                     equipmentDetailsFieldset.style.display = 'block';
-                    const prefixText = 'عدد'; // Prefix is always 'عدد' as per Filament
-                    const suffixText = taskType === 'إدامة' ? 'المدامة' : 'المصانة';
-
-                    prefixes.forEach(el => el.textContent = prefixText);
-                    suffixes.forEach(el => el.textContent = suffixText);
+                    // Make fields required for 'صيانة'
+                    equipmentDetailsFieldset.querySelectorAll('input[type="number"]').forEach(input => {
+                        input.setAttribute('required', 'required');
+                    });
                 } else {
                     equipmentDetailsFieldset.style.display = 'none';
+                    // Remove required attribute if not 'صيانة'
+                    equipmentDetailsFieldset.querySelectorAll('input[type="number"]').forEach(input => {
+                        input.removeAttribute('required');
+                        input.value = 0; // Reset values when hidden
+                    });
                 }
             }
 
-            taskTypeSelect.addEventListener('change', toggleEquipmentFields);
-            toggleEquipmentFields(); // Initial call to set correct visibility based on old input
+            taskTypeSelect.addEventListener('change', toggleEquipmentDetails);
+            toggleEquipmentDetails(); // Call on load to set initial state
 
-            // Resource Repeater Logic
-            let resourceIndex = {{ old('resources_used') ? count(old('resources_used')) : 0 }};
+            // Repeater for Resources Used
             const resourcesRepeater = document.getElementById('resources-repeater');
             const addResourceButton = document.getElementById('add-resource-button');
+            let resourceIndex = resourcesRepeater.children.length; // Start index from existing items
 
-            addResourceButton.addEventListener('click', function() {
-                const newItem = document.createElement('div');
-                newItem.classList.add('row', 'mb-3', 'resource-item');
-                newItem.innerHTML = `
-                    <div class="col-md-5 mb-3 mb-md-0"><label class="form-label">اسم المورد</label><input type="text" class="form-control" name="resources_used[${resourceIndex}][name]" required></div>
-                    <div class="col-md-3 mb-3 mb-md-0"><label class="form-label">الكمية</label><input type="number" class="form-control" name="resources_used[${resourceIndex}][quantity]" min="0" value="0" required></div>
+            function addResourceItem(name = '', quantity = '', unit = '') {
+                const newResourceItem = document.createElement('div');
+                newResourceItem.classList.add('row', 'mb-3', 'resource-item');
+                newResourceItem.innerHTML = `
+                    <div class="col-md-5 mb-3 mb-md-0"><label class="form-label">اسم المورد</label><input type="text" class="form-control" name="resources_used[${resourceIndex}][name]" value="${name}" required></div>
+                    <div class="col-md-3 mb-3 mb-md-0"><label class="form-label">الكمية</label><input type="number" class="form-control" name="resources_used[${resourceIndex}][quantity]" min="0" value="${quantity}" required></div>
                     <div class="col-md-3 mb-3 mb-md-0"><label class="form-label">وحدة القياس</label>
                         <select class="form-select" name="resources_used[${resourceIndex}][unit]" required>
-                            <option value="قطعة">قطعة</option>
-                            <option value="كرتون">كرتون</option>
-                            <option value="رول">رول</option>
-                            <option value="لتر">لتر</option>
-                            <option value="عبوة">عبوة</option>
-                            <option value="أخرى">أخرى</option>
+                            <option value="قطعة" ${unit === 'قطعة' ? 'selected' : ''}>قطعة</option>
+                            <option value="كرتون" ${unit === 'كرتون' ? 'selected' : ''}>كرتون</option>
+                            <option value="رول" ${unit === 'رول' ? 'selected' : ''}>رول</option>
+                            <option value="لتر" ${unit === 'لتر' ? 'selected' : ''}>لتر</option>
+                            <option value="عبوة" ${unit === 'عبوة' ? 'selected' : ''}>عبوة</option>
+                            <option value="أخرى" ${unit === 'أخرى' ? 'selected' : ''}>أخرى</option>
                         </select>
                     </div>
                     <div class="col-md-1 d-flex align-items-end mb-3 mb-md-0"><button type="button" class="btn btn-danger remove-resource"><i class="fas fa-trash"></i></button></div>
                 `;
-                resourcesRepeater.appendChild(newItem);
+                resourcesRepeater.appendChild(newResourceItem);
                 resourceIndex++;
+            }
+
+            addResourceButton.addEventListener('click', function() {
+                addResourceItem();
             });
 
             resourcesRepeater.addEventListener('click', function(e) {
                 if (e.target.classList.contains('remove-resource') || e.target.closest('.remove-resource')) {
-                    const button = e.target.closest('.remove-resource');
-                    button.closest('.resource-item').remove();
+                    e.target.closest('.resource-item').remove();
                 }
             });
 
-            // Employee Repeater Logic
-            let employeeIndex = {{ old('employeeTasks') ? count(old('employeeTasks')) : 0 }};
+            // Repeater for Employees and Ratings
             const employeesRepeater = document.getElementById('employees-repeater');
-            const addEmployeeButton = document.getElementById('add-employee-task-button');
-            const employees = @json($employees); // Pass employees data from PHP to JS
+            const addEmployeeTaskButton = document.getElementById('add-employee-task-button');
+            let employeeTaskIndex = employeesRepeater.children.length; // Start index from existing items
 
-            addEmployeeButton.addEventListener('click', function() {
-                const newItem = document.createElement('div');
-                newItem.classList.add('row', 'mb-3', 'employee-task-item');
-                let employeeOptions = '<option value="">اختر الموظف</option>';
-                employees.forEach(employee => {
-                    employeeOptions += `<option value="${employee.id}">${employee.name}</option>`;
-                });
-
-                newItem.innerHTML = `
+            function addEmployeeTaskItem(employeeId = '', rating = '') {
+                const newEmployeeTaskItem = document.createElement('div');
+                newEmployeeTaskItem.classList.add('row', 'mb-3', 'employee-task-item');
+                newEmployeeTaskItem.innerHTML = `
                     <div class="col-md-6 mb-3 mb-md-0">
                         <label class="form-label">الموظف</label>
-                        <select class="form-select" name="employeeTasks[${employeeIndex}][employee_id]" required>
-                            ${employeeOptions}
+                        <select class="form-select" name="employeeTasks[${employeeTaskIndex}][employee_id]" required>
+                            <option value="">اختر الموظف</option>
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee->id }}" ${employeeId == {{ $employee->id }} ? 'selected' : ''}>{{ $employee->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="col-md-4 mb-3 mb-md-0">
                         <label class="form-label">تقييم الأداء</label>
-                        <select class="form-select" name="employeeTasks[${employeeIndex}][employee_rating]" required>
+                        <select class="form-select" name="employeeTasks[${employeeTaskIndex}][employee_rating]" required>
                             <option value="">اختر التقييم</option>
-                            <option value="ممتاز">ممتاز</option>
-                            <option value="جيد جدا">جيد جدا</option>
-                            <option value="جيد">جيد</option>
-                            <option value="مقبول">مقبول</option>
-                            <option value="ضعيف">ضعيف</option>
+                            <option value="1" ${rating == '1' ? 'selected' : ''}>ضعيف</option>
+                            <option value="2" ${rating == '2' ? 'selected' : ''}>مقبول</option>
+                            <option value="3" ${rating == '3' ? 'selected' : ''}>جيد</option>
+                            <option value="4" ${rating == '4' ? 'selected' : ''}>جيد جدا</option>
+                            <option value="5" ${rating == '5' ? 'selected' : ''}>ممتاز</option>
                         </select>
                     </div>
                     <div class="col-md-1 d-flex align-items-end mb-3 mb-md-0"><button type="button" class="btn btn-danger remove-employee-task"><i class="fas fa-trash"></i></button></div>
                 `;
-                employeesRepeater.appendChild(newItem);
-                employeeIndex++;
+                employeesRepeater.appendChild(newEmployeeTaskItem);
+                employeeTaskIndex++;
+            }
+
+            addEmployeeTaskButton.addEventListener('click', function() {
+                addEmployeeTaskItem();
             });
 
             employeesRepeater.addEventListener('click', function(e) {
                 if (e.target.classList.contains('remove-employee-task') || e.target.closest('.remove-employee-task')) {
-                    const button = e.target.closest('.remove-employee-task');
-                    button.closest('.employee-task-item').remove();
+                    e.target.closest('.employee-task-item').remove();
                 }
             });
+
+            // Handle old input for repeaters
+            @if (old('resources_used'))
+                // No need to re-add, they are already rendered by Blade
+            @else
+                // Add one empty resource item if no old input exists
+                // addResourceItem(); // Commented out to avoid adding an empty row by default
+            @endif
+
+            @if (old('employeeTasks'))
+                // No need to re-add, they are already rendered by Blade
+            @else
+                // Add one empty employee task item if no old input exists
+                addEmployeeTaskItem(); // Keep one empty employee task row by default
+            @endif
         });
     </script>
 @endsection

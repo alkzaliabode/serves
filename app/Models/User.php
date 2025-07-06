@@ -9,6 +9,8 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles; // لاستخدام صلاحيات Spatie
 use Illuminate\Support\Facades\Storage; // لاستخدام Storage facade
+use Illuminate\Database\Eloquent\Relations\BelongsTo; // *** NEW: تم إضافة هذا السطر لاستخدام BelongsTo ***
+use App\Models\Employee; // تم إضافته: للعلاقة employees()
 
 class User extends Authenticatable // تأكد من أنك لا تستخدم MustVerifyEmail إذا لم تكن بحاجة لها
 {
@@ -27,7 +29,7 @@ class User extends Authenticatable // تأكد من أنك لا تستخدم Mus
         'job_title',   // حقل جديد
         'unit',        // حقل جديد
         'is_active',   // حقل جديد
-        'profile_photo_path', // *** NEW: تم إضافة هذا الحقل ***
+        'profile_photo_path', // تم إضافة هذا الحقل
     ];
 
     /**
@@ -66,5 +68,15 @@ class User extends Authenticatable // تأكد من أنك لا تستخدم Mus
         // إذا لم تكن هناك صورة، يمكنك إرجاع صورة افتراضية
         // يمكنك تغيير هذه الصورة الافتراضية إلى مسار صورة افتراضية أخرى في تطبيقك
         return 'https://placehold.co/150x150/cccccc/ffffff?text=U';
+    }
+
+    /**
+     * Get the employee associated with the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'employee_id');
     }
 }

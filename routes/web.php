@@ -20,9 +20,21 @@ use App\Http\Controllers\ResourceTrackingController;
 use App\Http\Controllers\GilbertTriangleController;
 use App\Http\Controllers\UnitGoalController;
 use App\Http\Controllers\SurveyController;
-use App\Http\Controllers\SurveyChartController;
-use App\Http\Controllers\UserProfilePhotoController; // *** NEW: تم إضافة هذا السطر الجديد ***
+use App\Http\Controllers\SurveyChartController; // تأكد من استيراد هذا المتحكم
+use App\Http\Controllers\UserProfilePhotoController;
+use App\Http\Controllers\NotificationController;
 
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| هنا يمكنك تسجيل مسارات الويب لتطبيقك. يتم تحميل هذه المسارات بواسطة
+| RouteServiceProvider وسيتم تعيينها جميعًا إلى مجموعة برمجيات "web" الوسيطة.
+| اجعلها رائعة!
+|
+*/
 
 // المسار الرئيسي لتطبيقك
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -40,39 +52,44 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // *** NEW: مسارات الصورة الشخصية ***
+    // مسارات الصورة الشخصية
     Route::put('/user/profile-photo', [UserProfilePhotoController::class, 'update'])->name('user-profile-photo.update');
     Route::delete('/user/profile-photo', [UserProfilePhotoController::class, 'destroy'])->name('user-profile-photo.destroy');
-    // *** نهاية مسارات الصورة الشخصية ***
 
     // مسارات الموقف اليومي
     Route::resource('daily-statuses', DailyStatusController::class);
-    // مسار طباعة الموقف اليومي
     Route::get('daily-statuses/{daily_status}/print', [DailyStatusController::class, 'print'])->name('daily-statuses.print');
+    // إضافة المسار الجديد لـ printStandalone
+    Route::get('/daily-statuses/{dailyStatus}/print-standalone', [DailyStatusController::class, 'printStandalone'])->name('daily-statuses.print.standalone');
 
-    // مسار لتقرير الموارد
+
+    // مسارات AJAX لجلب عناصر الإجازات/الغيابات والتاريخ
+    Route::get('/daily-statuses/get-employee-leave-item', [DailyStatusController::class, 'getEmployeeLeaveItem'])->name('daily-statuses.get-employee-leave-item');
+    Route::get('/daily-statuses/get-eid-leave-item', [DailyStatusController::class, 'getEidLeaveItem'])->name('daily-statuses.get-eid-leave-item');
+    Route::get('/daily-statuses/get-temporary-leave-item', [DailyStatusController::class, 'getTemporaryLeaveItem'])->name('daily-statuses.get-temporary-leave-item');
+    Route::get('/daily-statuses/get-dated-leave-item', [DailyStatusController::class, 'getDatedLeaveItem'])->name('daily-statuses.get-dated-leave-item');
+    Route::get('/daily-statuses/get-custom-usage-item', [DailyStatusController::class, 'getCustomUsageItem'])->name('daily-statuses.get-custom-usage-item');
+    Route::get('/daily-statuses/get-hijri-date-and-day', [DailyStatusController::class, 'getHijriDateAndDay'])->name('daily-statuses.get-hijri-date-and-day');
+
+
+    // مسارات تقرير الموارد
     Route::get('/resource-report', [ResourceReportController::class, 'index'])->name('resource-report.index');
-    // مسار الطباعة لتقرير الموارد
     Route::get('/resource-report/print', [ResourceReportController::class, 'print'])->name('resource-report.print');
 
     // مسارات تقرير النظافة العامة الشهري
     Route::get('/monthly-cleaning-report', [MonthlyCleaningReportController::class, 'index'])->name('monthly-cleaning-report.index');
     Route::get('/monthly-cleaning-report/print', [MonthlyCleaningReportController::class, 'print'])->name('monthly-cleaning-report.print');
-    // *** NEW: مسارات التعديل والحذف لتقرير النظافة العامة الشهري ***
     Route::get('/monthly-cleaning-report/{id}/edit', [MonthlyCleaningReportController::class, 'edit'])->name('monthly-cleaning-report.edit');
     Route::put('/monthly-cleaning-report/{id}', [MonthlyCleaningReportController::class, 'update'])->name('monthly-cleaning-report.update');
     Route::delete('/monthly-cleaning-report/{id}', [MonthlyCleaningReportController::class, 'destroy'])->name('monthly-cleaning-report.destroy');
-    // *** نهاية مسارات التعديل والحذف ***
 
     // مسارات تقرير المنشآت الصحية الشهري
     Route::get('/monthly-sanitation-report', [MonthlySanitationReportController::class, 'index'])->name('monthly-sanitation-report.index');
     Route::get('/monthly-sanitation-report/export', [MonthlySanitationReportController::class, 'export'])->name('monthly-sanitation-report.export');
     Route::get('/monthly-sanitation-report/print', [MonthlySanitationReportController::class, 'print'])->name('monthly-sanitation-report.print');
-    // *** NEW: مسارات التعديل والحذف لتقرير المنشآت الصحية الشهري ***
     Route::get('/monthly-sanitation-report/{id}/edit', [MonthlySanitationReportController::class, 'edit'])->name('monthly-sanitation-report.edit');
     Route::put('/monthly-sanitation-report/{id}', [MonthlySanitationReportController::class, 'update'])->name('monthly-sanitation-report.update');
     Route::delete('/monthly-sanitation-report/{id}', [MonthlySanitationReportController::class, 'destroy'])->name('monthly-sanitation-report.destroy');
-    // *** نهاية مسارات التعديل والحذف ***
 
     // مسارات إدارة الموظفين
     Route::get('employees/print', [EmployeeController::class, 'print'])->name('employees.print');
@@ -80,15 +97,28 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('employees', EmployeeController::class);
 
     // مسارات التقارير المصورة الاحترافية
-    Route::resource('photo_reports', ImageReportController::class);
-    // مسار الطباعة المخصص لتقارير الصور
+    // مسارات التقارير المصورة الاحترافية
+
+    // **ضع المسارات المحددة أولاً لتجنب التضارب مع مسار الموارد (resource)**
+
+    // المسار لعرض نموذج فلترة التقرير الشهري
+    Route::get('/photo_reports/monthly-report', [ImageReportController::class, 'showMonthlyReportForm'])->name('photo_reports.monthly_report_form');
+
+    // المسار لتوليد تقرير PDF الشهري (يجب أن يكون POST)
+    Route::post('/photo_reports/generate-monthly-report', [ImageReportController::class, 'generateMonthlyReport'])->name('photo_reports.generate_monthly_report');
+
+    // مسار طباعة تقرير مصور واحد (إذا كان هذا المسار يخص طباعة واحدة وليس شهري)
     Route::get('photo_reports/{photo_report}/print', [ImageReportController::class, 'print'])->name('photo_reports.print');
+
+    // ثم ضع مسار الموارد (resource)
+    Route::resource('photo_reports', ImageReportController::class);
+
 
     // مسارات إدارة إعدادات الخلفية
     Route::get('/admin/background-settings', [BackgroundSettingController::class, 'index'])->name('background-settings.index');
     Route::post('/admin/background-settings', [BackgroundSettingController::class, 'update'])->name('background-settings.update');
 
-    // NEW: مسارات لوحة مهام الشُعبة الخدمية (Kanban Board)
+    // مسارات لوحة مهام الشُعبة الخدمية (Kanban Board)
     Route::prefix('service-tasks')->name('service-tasks.')->group(function () {
         Route::get('/board', [ServiceTasksBoardController::class, 'index'])->name('board.index');
         Route::post('/', [ServiceTasksBoardController::class, 'store'])->name('store');
@@ -165,6 +195,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/hall-cleanliness-data', [SurveyChartController::class, 'getHallCleanlinessChartData'])->name('hall-cleanliness-data');
         Route::get('/water-trams-cleanliness-data', [SurveyChartController::class, 'getWaterTramsCleanlinessChartData'])->name('water-trams-cleanliness-data');
         Route::get('/facilities-cleanliness-data', [SurveyChartController::class, 'getFacilitiesCleanlinessChartData'])->name('facilities-cleanliness-data');
+        // هذا هو المسار الذي كان مفقودًا:
+        Route::get('/speed-accuracy-data', [SurveyChartController::class, 'getSpeedAccuracyData'])->name('speed-accuracy-data');
     });
 
     // مسارات مخطط جلبرت (Gilbert Triangle Chart)
@@ -174,12 +206,22 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // مسارات إدارة المستخدمين
-    Route::resource('users', UserController::class);
+    Route::middleware(['permission:manage users'])->group(function () {
+        Route::resource('users', UserController::class);
+    });
 
     // مسارات إدارة الأدوار
-    Route::resource('roles', RoleController::class);
+    Route::middleware(['permission:manage roles'])->group(function () {
+        Route::resource('roles', RoleController::class);
+    });
 
-    // مسار الملف الشخصي موجود بالفعل في الأعلى
+    // مسارات الإشعارات
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/count', [NotificationController::class, 'unreadCount'])->name('count');
+        Route::post('/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
+        Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-as-read');
+    });
 });
 
 // هذا السطر ضروري جداً لتحميل جميع مسارات المصادقة (login, register, logout, etc.)

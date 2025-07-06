@@ -1,4 +1,4 @@
-@extends('layouts.adminlte') {{-- تعديل ليرث تخطيط AdminLTE الجديد --}}
+@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', __('الملف الشخصي')) {{-- تحديد عنوان الصفحة في المتصفح --}}
 

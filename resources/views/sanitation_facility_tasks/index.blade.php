@@ -1,4 +1,4 @@
-@extends('layouts.adminlte')
+@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', 'قائمة مهام المنشآت الصحية')
 @section('page_title', 'مهام المنشآت الصحية')

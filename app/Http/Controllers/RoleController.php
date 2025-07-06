@@ -11,10 +11,17 @@ class RoleController extends Controller
 {
     /**
      * قم بحماية هذا المتحكم باستخدام صلاحية "manage roles".
+     * تأكد من أن middleware 'permission' مسجل بشكل صحيح في Kernel.php
      *
      * @return void
      */
-    
+    public function __construct()
+    {
+        // تم تفعيل هذا السطر لحماية المتحكم بصلاحية "manage roles".
+        // هذا يضمن أن المستخدمين الذين لديهم دور "super_admin" أو أي دور آخر يمتلك صلاحية "manage roles"
+        // يمكنهم الوصول إلى هذا المتحكم.
+        $this->middleware('permission:manage roles'); // تتطلب صلاحية "manage roles" للوصول إلى هذا المتحكم
+    }
 
     /**
      * عرض قائمة بجميع الأدوار.

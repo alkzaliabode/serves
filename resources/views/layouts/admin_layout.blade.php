@@ -1,3 +1,7 @@
+{{-- resources/views/layouts/admin_layout.blade.php --}}
+{{-- هذا هو ملف التخطيط الرئيسي (Master Layout) الذي يجمع جميع الأجزاء. --}}
+{{-- يجب على جميع صفحات المحتوى أن "تمدد" هذا التخطيط باستخدام @extends('layouts.admin_layout') --}}
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="rtl">
 <head>
@@ -5,23 +9,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    {{-- عنوان الصفحة: يتم تحديده بواسطة @section('title', 'عنوانك') في الصفحات الفرعية --}}
     <title>{{ config('app.name', 'Laravel') }} | @yield('title', 'لوحة التحكم')</title>
 
+    {{-- خطوط Google Fonts (Cairo, Noto Sans Arabic) و Source Sans 3 --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css" integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q=" crossorigin="anonymous">
-    {{-- تم استبدال Inter بخطوط أكثر جمالية وتنوعاً لتناسب التصميم الاحترافي --}}
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Noto+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet" />
 
+    {{-- أيقونات Font Awesome و Bootstrap Icons --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.min.css">
+
+    {{-- OverlayScrollbars (لأشرطة التمرير المخصصة) --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.3.0/styles/overlayscrollbars.min.css">
 
+    {{-- ملفات AdminLTE CSS الأساسية --}}
     <link rel="stylesheet" href="{{ asset('adminlte/css/adminlte.min.css') }}">
     <link rel="stylesheet" href="{{ asset('adminlte/css/adminlte.rtl.min.css') }}">
 
+    {{-- مكتبات الرسوم البيانية والخرائط (ApexCharts, jsVectorMap) --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.css" integrity="sha256-4MX+61mt9NVvvuPjUWdUdyfZfxSB1/Rf9WtqRHgG5S0=" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css" integrity="sha256-+uGLJmmTKOqBr+2E6KDYs/NRsHxSkONXFHUL0fy2O/4=" crossorigin="anonymous">
 
-    @yield('styles') {{-- لربط ملفات CSS إضافية خاصة بالصفحة --}}
+    {{-- مكان لحقن أنماط CSS إضافية خاصة بالصفحة. استخدم @section('styles') في الصفحات الفرعية --}}
+    @yield('styles')
+
+    {{-- الأنماط المخصصة (يمكن نقلها إلى ملف app.css أو ملف CSS مخصص آخر للحفاظ على التنظيم) --}}
     <style>
         /* الخطوط */
         body {
@@ -32,15 +45,15 @@
         body {
             /* جلب مسار الصورة من إعدادات التطبيق (المعبأة بواسطة AppServiceProvider) */
             background-image: url('{{ config('app.background_image_url') }}');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed; /* Keep background fixed when scrolling */
-            position: relative; /* Needed for pseudo-elements and z-index */
+            background-size: cover; /* تغطية كاملة للمساحة */
+            background-position: center; /* توسيط الصورة */
+            background-repeat: no-repeat; /* عدم تكرار الصورة */
+            background-attachment: fixed; /* لتثبيت الصورة أثناء التمرير (تأثير البارالاكس) */
+            position: relative; /* لجعل الطبقة الشفافة تعمل بشكل صحيح */
             background-color: #2c3e50; /* Fallback color for areas not covered or if image fails */
         }
 
-        /* Overlay for body background image to improve text readability */
+        /* طبقة تراكب لجعل النص أكثر وضوحاً على الصورة الخلفية مع شفافية أقل */
         body::before {
             content: '';
             position: fixed; /* Fixed to cover the whole viewport */
@@ -49,7 +62,7 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5); /* طبقة تعتيم أغمق لتحسين وضوح النص */
-            z-index: -1; /* Ensure it's behind content */
+            z-index: -1; /* وضعها خلف المحتوى الرئيسي */
         }
 
         /* Ensure the main content wrapper of AdminLTE is transparent */
@@ -131,7 +144,7 @@
 
         /* تنسيق الخط وحجمه وروابط القائمة */
         .nav-sidebar > .nav-item > .nav-link {
-            font-size: 1.35rem; /* حجم أكبر بشكل ملحوظ */
+            font-size: 1.6rem; /* حجم أكبر بشكل ملحوظ لعناوين الصفحات */
             font-weight: 600; /* سمك خط متوسط */
             color: #ecf0f1 !important; /* لون أبيض مائل للرمادي فاتح */
             transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* انتقال أكثر سلاسة */
@@ -145,9 +158,9 @@
         }
 
         .nav-sidebar > .nav-item > .nav-link .nav-icon {
-            font-size: 1.5rem; /* حجم أكبر للأيقونات */
+            font-size: 2rem; /* حجم أكبر للأيقونات */
             margin-left: 15px; /* مسافة بين الأيقونة والنص */
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* انتقال أكثر سلاسة */
         }
 
         /* عند تحويم الماوس: تكبير وتحريك ولون */
@@ -159,7 +172,7 @@
         }
 
         .nav-sidebar > .nav-item > .nav-link:hover .nav-icon {
-            transform: scale(1.1); /* تكبير الأيقونة عند التحويم */
+            transform: scale(1.2) rotate(10deg); /* تكبير ودوران الأيقونة عند التحويم */
             color: #72efdd !important; /* لون الأيقونة عند التحويم */
         }
 
@@ -293,199 +306,214 @@
         .bi {
             vertical-align: -0.125em; /* محاذاة أفضل للأيقونات */
         }
+
+        /* أنماط الإشعارات */
+        .notification-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            padding: 3px 7px;
+            border-radius: 50%;
+            background-color: #dc3545; /* أحمر */
+            color: white;
+            font-size: 0.75em;
+            font-weight: bold;
+            display: none; /* مخفي افتراضياً */
+        }
+
+        .notifications-dropdown-menu {
+            width: 300px; /* عرض ثابت للقائمة المنسدلة */
+            max-height: 400px; /* أقصى ارتفاع */
+            overflow-y: auto; /* شريط تمرير إذا تجاوز الارتفاع */
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+            padding: 10px;
+        }
+
+        .notifications-dropdown-menu .dropdown-header,
+        .notifications-dropdown-menu .dropdown-item {
+            color: #333;
+            padding: 8px 15px;
+            white-space: normal; /* السماح بتعدد الأسطر */
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .notifications-dropdown-menu .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .notifications-dropdown-menu .dropdown-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .notification-item.unread {
+            background-color: rgba(255, 255, 0, 0.1); /* خلفية خفيفة للإشعارات غير المقروءة */
+            font-weight: bold;
+        }
+
+        .notification-item .notification-time {
+            font-size: 0.8em;
+            color: #666;
+            display: block;
+            margin-top: 5px;
+        }
+
+        /* أنماط مخصصة للحفاظ على تدرجات البطاقات وتأثيرات التحويم مع شفافية محسنة وتأثير 3D خفيف */
+        .card-dashboard {
+            border-radius: 20px; /* حواف مستديرة أكثر */
+            color: white;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* انتقال أكثر سلاسة */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); /* ظل أوضح وأكثر انتشاراً */
+            border: 1px solid rgba(255, 255, 255, 0.2); /* حدود خفيفة */
+            overflow: hidden; /* لضمان عدم خروج الظل عند التحويم */
+            perspective: 1000px; /* لتمكين تأثير 3D على العناصر الأبناء */
+            backdrop-filter: blur(10px); /* تأثير الزجاج المتجمد أقوى للبطاقات الفردية */
+        }
+
+        .card-dashboard:hover {
+            transform: translateY(-10px) scale(1.05) rotateX(5deg); /* حركة أكبر وتكبير ودوران 3D خفيف */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); /* ظل أقوى عند التحويم */
+            border-color: rgba(114, 239, 221, 0.5); /* تغيير لون الحدود عند التحويم */
+        }
+
+        /* ألوان البطاقات - تم تقليل الشفافية إلى 0.75 */
+        .card-general-cleaning {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.75), rgba(142, 68, 173, 0.75));
+        }
+
+        .card-sanitation-facility {
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.75), rgba(231, 76, 60, 0.75));
+        }
+
+        .card-daily-status {
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.75), rgba(241, 196, 15, 0.75));
+        }
+
+        .card-resource-report {
+            background: linear-gradient(135deg, rgba(52, 73, 94, 0.75), rgba(127, 140, 141, 0.75));
+        }
+
+        .card-monthly-cleaning-report {
+            background: linear-gradient(135deg, rgba(230, 126, 34, 0.75), rgba(211, 84, 0, 0.75));
+        }
+
+        .card-monthly-sanitation-report {
+            background: linear-gradient(135deg, rgba(26, 188, 156, 0.75), rgba(39, 174, 96, 0.75));
+        }
+
+        .card-employees {
+            background: linear-gradient(135deg, rgba(109, 40, 217, 0.75), rgba(75, 0, 130, 0.75));
+        }
+
+        .card-visitor-survey {
+            background: linear-gradient(135deg, rgba(10, 207, 131, 0.75), rgba(0, 172, 193, 0.75)); /* Light blue/green gradient */
+        }
+
+        /* NEW CARDS GRADIENTS - Added specific gradients for new cards for variety */
+        .card-photo-reports {
+            background: linear-gradient(135deg, rgba(255, 165, 0, 0.75), rgba(255, 99, 71, 0.75)); /* Orange to Tomato */
+        }
+        .card-background-settings {
+            background: linear-gradient(135deg, rgba(128, 0, 128, 0.75), rgba(75, 0, 130, 0.75)); /* Purple to Indigo */
+        }
+        .card-service-tasks-board {
+            background: linear-gradient(135deg, rgba(0, 128, 128, 0.75), rgba(0, 139, 139, 0.75)); /* Teal to DarkCyan */
+        }
+        .card-actual-results {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.75), rgba(178, 34, 34, 0.75)); /* Red to FireBrick */
+        }
+        .card-resource-tracking {
+            background: linear-gradient(135deg, rgba(0, 128, 0, 0.75), rgba(34, 139, 34, 0.75)); /* Green to ForestGreen */
+        }
+        .card-unit-goals {
+            background: linear-gradient(135deg, rgba(70, 130, 180, 0.75), rgba(100, 149, 237, 0.75)); /* SteelBlue to CornflowerBlue */
+        }
+        .card-gilbert-triangle {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.75), rgba(218, 165, 32, 0.75)); /* Gold to Goldenrod */
+        }
+        .card-users {
+            background: linear-gradient(135deg, rgba(65, 105, 225, 0.75), rgba(0, 0, 205, 0.75)); /* RoyalBlue to MediumBlue */
+        }
+        .card-roles {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.75), rgba(75, 0, 130, 0.75)); /* BlueViolet to Indigo */
+        }
+        .card-survey-charts {
+            background: linear-gradient(135deg, rgba(255, 105, 180, 0.75), rgba(255, 20, 147, 0.75)); /* HotPink to DeepPink */
+        }
+
+        /* أنماط لأزرار الإدارة داخل البطاقات */
+        .btn-card-action {
+            background-color: rgba(255, 255, 255, 0.98); /* شفافية أعلى قليلاً للأزرار */
+            color: #34495e; /* لون نص داكن مناسب للخلفية الفاتحة */
+            border-radius: 50px; /* rounded-full */
+            font-weight: bold;
+            padding: 0.6rem 1.8rem; /* حشوة أكبر */
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2); /* ظل أوضح للأزرار */
+            transition: all 0.3s ease;
+            font-size: 1.05rem; /* حجم خط أكبر قليلاً */
+        }
+        .btn-card-action:hover {
+            background-color: rgba(255, 255, 255, 1);
+            color: #1a1a1a;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4); /* ظل أقوى عند التحويم */
+            transform: translateY(-2px); /* رفع الزر قليلاً */
+        }
+
+        /* أنماط لرسالة الترحيب */
+        .welcome-title {
+            animation: fadeIn 1.5s ease-out forwards; /* مدة أطول للظهور */
+            color: #ffffff; /* لون أبيض لعنوان الترحيب */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.8); /* ظل أقوى لعنوان الترحيب */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .typing-message {
+            color: #ffffff; /* لون أبيض لرسالة الترحيب لتكون واضحة على الخلفية الداكنة */
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.6); /* إضافة ظل خفيف للنص */
+            font-size: 1.2rem; /* حجم أكبر لرسالة الكتابة */
+            font-weight: 500; /* سمك خط متوسط */
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        .animate-blink {
+            animation: blink 1s step-end infinite;
+        }
+
+        /* تحسينات عامة على الخطوط والعناصر */
+        .h3 {
+            font-size: 1.8rem; /* حجم أكبر لعناوين البطاقات */
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+        }
+        .text-white.fs-1.opacity-75 {
+            font-size: 3.5rem !important; /* أيقونات أكبر */
+            opacity: 0.85 !important;
+            transition: transform 0.3s ease;
+        }
+        .card-dashboard:hover .text-white.fs-1.opacity-75 {
+            transform: rotate(10deg) scale(1.1); /* دوران وتكبير للأيقونات عند التحويم */
+        }
+        .text-white.opacity-90 {
+            font-size: 1.05rem; /* حجم أكبر لوصف البطاقات */
+            line-height: 1.6; /* مسافة أسطر أفضل */
+        }
     </style>
 </head>
 {{-- تم تعديل classes هنا لضمان تثبيت الشريط الجانبي وحل مشكلة الارتفاع --}}
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="hold-transition sidebar-mini layout-fixed sidebar-collapse"> {{-- تم إضافة sidebar-collapse هنا لجعله يبدأ مغلقاً --}}
 <div class="app-wrapper">
 
-    <nav class="app-header navbar navbar-expand bg-body">
-        <div class="container-fluid">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button"><i class="bi bi-list"></i></a>
-                </li>
-                <li class="nav-item d-none d-md-block"> <a href="{{ route('home') }}" class="nav-link">الرئيسية</a> </li>
-                {{-- يمكنك إضافة روابط علوية أخرى هنا --}}
-            </ul>
+    {{-- تضمين شريط التنقل العلوي. يوجد الكود في resources/views/layouts/partials/_navbar.blade.php --}}
+    @include('layouts.partials._navbar')
 
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item dropdown user-menu">
-                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                        <img src="{{ Auth::user()->profile_photo_url ?? 'https://placehold.co/160x160/cccccc/ffffff?text=U' }}" class="user-image rounded-circle shadow" alt="User Image">
-                        <span class="d-none d-md-inline">{{ Auth::user()->name ?? 'الضيف' }}</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-                        <li class="user-header text-bg-primary">
-                            <img src="{{ Auth::user()->profile_photo_url ?? 'https://placehold.co/160x160/cccccc/ffffff?text=U' }}" class="rounded-circle shadow" alt="User Image">
-                            <p>
-                                {{ Auth::user()->name ?? 'الضيف' }} - {{ Auth::user()->email ?? '' }}
-                                <small>عضو منذ {{ (Auth::user()->created_at ?? now())->format('M. Y') }}</small>
-                            </p>
-                        </li>
-                        <li class="user-footer">
-                            <a href="{{ route('profile.edit') }}" class="btn btn-default btn-flat">الملف الشخصي</a>
-                            <form method="POST" action="{{ route('logout') }}" class="float-end">
-                                @csrf
-                                <button type="submit" class="btn btn-default btn-flat">تسجيل الخروج</button>
-                            </form>
-                        </li>
-                    </ul>
-                </li>
-                <li class="nav-item"> <a class="nav-link" href="#" data-lte-toggle="fullscreen"> <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i> <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none;"></i> </a> </li>
-            </ul>
-        </div>
-    </nav>
-    <aside class="app-sidebar shadow" data-bs-theme="dark"> {{-- ✅ تم إزالة bg-body-secondary --}}
-
-        <div class="sidebar-wrapper">
-            <nav class="mt-2">
-                <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
-                    <li class="nav-item">
-                        <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-home"></i>
-                            <p>الرئيسية</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-tachometer-alt"></i>
-                            <p>لوحة التحكم</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('general-cleaning-tasks.index') }}" class="nav-link {{ request()->routeIs('general-cleaning-tasks.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-broom"></i>
-                            <p>مهام النظافة العامة</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('sanitation-facility-tasks.index') }}" class="nav-link {{ request()->routeIs('sanitation-facility-tasks.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-hospital"></i>
-                            <p>مهام المنشآت الصحية</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('service-tasks.board.index') }}" class="nav-link {{ request()->routeIs('service-tasks.board.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-columns"></i> {{-- أيقونة Kanban --}}
-                            <p>لوحة مهام الشُعبة الخدمية</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('daily-statuses.index') }}" class="nav-link {{ request()->routeIs('daily-statuses.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-clipboard-list"></i>
-                            <p>الموقف اليومي</p>
-                        </a>
-                    </li>
-                    {{-- إضافة رابط لتقرير الموارد --}}
-                    <li class="nav-item">
-                        <a href="{{ route('resource-report.index') }}" class="nav-link {{ request()->routeIs('resource-report.index') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-chart-pie"></i> {{-- أيقونة مناسبة للتقارير --}}
-                            <p>تقرير الموارد</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('monthly-cleaning-report.index') }}" class="nav-link {{ request()->routeIs('monthly-cleaning-report.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-chart-bar"></i> {{-- أيقونة مناسبة --}}
-                            <p>تقرير النظافة العامة الشهري</p>
-                        </a>
-                    </li>
-                    {{-- NEW: إضافة رابط لتقرير المنشآت الصحية الشهري --}}
-                    <li class="nav-item">
-                        <a href="{{ route('monthly-sanitation-report.index') }}" class="nav-link {{ request()->routeIs('monthly-sanitation-report.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-file-medical"></i> {{-- أيقونة مناسبة للتقارير الطبية/الصحية --}}
-                            <p>تقرير المنشآت الصحية الشهري</p>
-                        </a>
-                    </li>
-                    {{-- NEW: إضافة رابط لصفحة إدارة الموظفين --}}
-                    <li class="nav-item">
-                        <a href="{{ route('employees.index') }}" class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-users"></i> {{-- أيقونة مناسبة للموظفين --}}
-                            <p>الموظفين</p>
-                        </a>
-                    </li>
-                    {{-- NEW: إضافة رابط لصفحة التقارير المصورة --}}
-                    <li class="nav-item">
-                        <a href="{{ route('photo_reports.index') }}" class="nav-link {{ request()->routeIs('photo_reports.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-images"></i> {{-- أيقونة مناسبة للصور والتقارير المرئية --}}
-                            <p>التقارير المصورة</p>
-                        </a>
-                    </li>
-                    {{-- NEW: إضافة رابط لصفحة إعدادات الخلفية --}}
-                    <li class="nav-item">
-                        <a href="{{ route('background-settings.index') }}" class="nav-link {{ request()->routeIs('background-settings.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-image"></i> {{-- أيقونة مناسبة لإعدادات الصور --}}
-                            <p>إعدادات الخلفية</p>
-                        </a>
-                    </li>
-
-                    {{-- NEW: روابط صفحات النتائج وتتبع الموارد ومخطط جلبرت --}}
-                    <li class="nav-header">إدارة الأداء والتحليلات</li>
-                    <li class="nav-item">
-                        <a href="{{ route('actual-results.index') }}" class="nav-link {{ request()->routeIs('actual-results.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-chart-line"></i> {{-- أيقونة مناسبة للنتائج --}}
-                            <p>النتائج الفعلية</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('resource-trackings.index') }}" class="nav-link {{ request()->routeIs('resource-trackings.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-boxes"></i> {{-- أيقونة مناسبة للموارد --}}
-                            <p>تتبع الموارد</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('unit-goals.index') }}" class="nav-link {{ request()->routeIs('unit-goals.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-bullseye"></i> {{-- أيقونة مناسبة للأهداف --}}
-                            <p>أهداف الوحدات</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('charts.gilbert-triangle.index') }}" class="nav-link {{ request()->routeIs('charts.gilbert-triangle.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-project-diagram"></i> {{-- أيقونة مناسبة للمخططات/النماذج --}}
-                            <p>مخطط جلبرت</p>
-                        </a>
-                    </li>
-                    {{-- NEW: رابط الاستبيانات --}}
-                    <li class="nav-item">
-                        <a href="{{ route('surveys.index') }}" class="nav-link {{ request()->routeIs('surveys.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-poll"></i> {{-- أيقونة مناسبة للاستبيانات --}}
-                            <p>استبيانات رضا الزائرين</p>
-                        </a>
-                    </li>
-                    {{-- NEW: رابط إحصائيات الاستبيانات (المخططات) --}}
-                    <li class="nav-item">
-                        <a href="{{ route('charts.surveys.index') }}" class="nav-link {{ request()->routeIs('charts.surveys.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-chart-line"></i> {{-- أيقونة مناسبة للرسوم البيانية --}}
-                            <p>إحصائيات الاستبيانات</p>
-                        </a>
-                    </li>
-                    {{-- نهاية روابط صفحات النتائج وتتبع الموارد ومخطط جلبرت --}}
-
-                    {{-- NEW: إضافة رابط لصفحة المستخدمين (Users) --}}
-                    {{-- يمكن وضعها ضمن قسم الإدارة إذا كان هناك قسم كهذا، أو كعنصر مستقل --}}
-                    <li class="nav-item">
-                        <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-user-shield"></i> {{-- أيقونة تشير إلى إدارة المستخدمين والصلاحيات --}}
-                            <p>إدارة المستخدمين</p>
-                        </a>
-                    </li>
-                    {{-- NEW: إضافة رابط لصفحة الأدوار (Roles) --}}
-                    <li class="nav-item">
-                        <a href="{{ route('roles.index') }}" class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-user-tag"></i> {{-- أيقونة مناسبة للأدوار --}}
-                            <p>إدارة الأدوار</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-user-circle"></i>
-                            <p>الملف الشخصي</p>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </aside>
+    {{-- تضمين الشريط الجانبي. يوجد الكود في resources/views/layouts/partials/_sidebar.blade.php --}}
+    @include('layouts.partials._sidebar')
 
     <main class="app-main">
         <div class="app-content-header">
@@ -512,6 +540,7 @@
     
     </aside>
     <footer class="app-footer">
+        @include('layouts.partials._footer')
     </footer>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -539,30 +568,17 @@
             sidebarWrapper &&
             typeof OverlayScrollbarsGlobal?.OverlayScrollbars !== "undefined"
         ) {
-            OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
-                scrollbars: {
-                    theme: Default.scrollbarTheme,
-                    autoHide: Default.scrollbarAutoHide,
-                    clickScroll: Default.scrollbarClickScroll,
-                },
-            });
+            // تهيئة OverlayScrollbars هنا
+            OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, Default); // تم تصحيح هذا السطر
+            console.log('OverlayScrollbars جاهز للتهيئة.');
+        } else {
+            console.warn('OverlayScrollbars غير متاح أو عنصر الشريط الجانبي غير موجود.');
         }
-    });
-
-    // SortableJS (for demo cards)
-    const connectedSortables = document.querySelectorAll(".connectedSortable");
-    connectedSortables.forEach((connectedSortable) => {
-        let sortable = new Sortable(connectedSortable, {
-            group: "shared",
-            handle: ".card-header",
-        });
-    });
-    const cardHeaders = document.querySelectorAll(".connectedSortables .card-header");
-    cardHeaders.forEach((cardHeader) => {
-        cardHeader.style.cursor = "move";
     });
 </script>
 
-@yield('scripts') {{-- لربط ملفات JavaScript إضافية خاصة بالصفحة --}}
+{{-- مكان لحقن سكريبتات JavaScript إضافية خاصة بالصفحة. استخدم @section('scripts') في الصفحات الفرعية. --}}
+@yield('scripts')
+
 </body>
 </html>

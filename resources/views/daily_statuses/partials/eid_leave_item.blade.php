@@ -1,33 +1,68 @@
-<div class="repeater-item grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4 p-4 bg-gray-100 rounded-lg border border-gray-200">
-    <div>
-        <label class="label">نوع العيد</label>
-        <select name="{{ $name_prefix }}[{{ $index }}][eid_type]" class="input-field" required>
-            <option value="">اختر نوع العيد</option>
-            <option value="eid_alfitr" {{ (isset($leave['eid_type']) && $leave['eid_type'] == 'eid_alfitr') ? 'selected' : '' }}>عيد الفطر</option>
-            <option value="eid_aladha" {{ (isset($leave['eid_type']) && $leave['eid_type'] == 'eid_aladha') ? 'selected' : '' }}>عيد الأضحى</option>
-            <option value="eid_algahdir" {{ (isset($leave['eid_type']) && $leave['eid_type'] == 'eid_algahdir') ? 'selected' : '' }}>عيد الغدير</option>
-        </select>
+{{-- resources/views/daily_statuses/partials/eid_leave_item.blade.php --}}
+{{-- يستخدم هذا الملف الجزئي لإجازات الأعياد --}}
+
+<div class="row mb-2 align-items-center border p-2 rounded bg-light repeater-item">
+    <div class="col-md-3">
+        <div class="form-group mb-0">
+            <label for="{{ $type }}_{{ $index }}_eid_type">نوع العيد:</label>
+            <select name="{{ $type }}[{{ $index }}][eid_type]"
+                    id="{{ $type }}_{{ $index }}_eid_type"
+                    class="form-control form-control-sm"
+                    required>
+                <option value="">اختر نوع العيد</option>
+                <option value="eid_alfitr" {{ old($type . '.' . $index . '.eid_type', $leave['eid_type'] ?? '') == 'eid_alfitr' ? 'selected' : '' }}>عيد الفطر</option>
+                <option value="eid_aladha" {{ old($type . '.' . $index . '.eid_type', $leave['eid_type'] ?? '') == 'eid_aladha' ? 'selected' : '' }}>عيد الأضحى</option>
+                <option value="eid_algahdir" {{ old($type . '.' . $index . '.eid_type', $leave['eid_type'] ?? '') == 'eid_algahdir' ? 'selected' : '' }}>عيد الغدير</option>
+            </select>
+            @error($type . '.' . $index . '.eid_type')
+                <span class="text-danger">{{ $message }}</span>
+            @enderror
+        </div>
     </div>
-    <div>
-        <label class="label">اسم الموظف</label>
-        <select name="{{ $name_prefix }}[{{ $index }}][employee_id]" class="input-field employee-select"
-                onchange="updateEmployeeDetails(this, '{{ $name_prefix }}', {{ $index }})" required>
-            <option value="">اختر موظفاً</option>
-            @foreach($employees as $employee)
-                <option value="{{ $employee->id }}" {{ (isset($leave['employee_id']) && $leave['employee_id'] == $employee->id) ? 'selected' : '' }}>
-                    {{ $employee->name }}
-                </option>
-            @endforeach
-        </select>
+    <div class="col-md-4">
+        <div class="form-group mb-0">
+            <label for="{{ $type }}_{{ $index }}_employee_id">الموظف:</label>
+            <select name="{{ $type }}[{{ $index }}][employee_id]"
+                    id="{{ $type }}_{{ $index }}_employee_id"
+                    class="form-control form-control-sm employee-select select2"
+                    required>
+                <option value="">اختر موظفاً</option>
+                @foreach($employees as $employee)
+                    <option value="{{ $employee->id }}"
+                            data-name="{{ $employee->name }}"
+                            data-employee_number="{{ $employee->employee_number }}"
+                            {{ old($type . '.' . $index . '.employee_id', $leave['employee_id'] ?? '') == $employee->id ? 'selected' : '' }}>
+                        {{ $employee->name }} ({{ $employee->employee_number }})
+                    </option>
+                @endforeach
+            </select>
+            {{-- حقل مخفي لحفظ اسم الموظف --}}
+            <input type="hidden"
+                   name="{{ $type }}[{{ $index }}][employee_name]"
+                   class="employee-name-input"
+                   value="{{ old($type . '.' . $index . '.employee_name', $leave['employee_name'] ?? '') }}">
+            {{-- حقل مخفي لحفظ الرقم الوظيفي --}}
+            <input type="hidden"
+                   name="{{ $type }}[{{ $index }}][employee_number]"
+                   class="employee-number-input"
+                   value="{{ old($type . '.' . $index . '.employee_number', $leave['employee_number'] ?? '') }}">
+            @error($type . '.' . $index . '.employee_id')
+                <span class="text-danger">{{ $message }}</span>
+            @enderror
+        </div>
     </div>
-    <div>
-        <label class="label">الرقم الوظيفي</label>
-        <input type="text" name="{{ $name_prefix }}[{{ $index }}][employee_number]" class="input-field employee-number-input bg-gray-200" readonly value="{{ $leave['employee_number'] ?? '' }}" required>
+    <div class="col-md-3">
+        <div class="form-group mb-0">
+            <label>الرقم الوظيفي:</label>
+            <input type="text"
+                   class="form-control form-control-sm employee-number-input"
+                   value="{{ old($type . '.' . $index . '.employee_number', $leave['employee_number'] ?? '') }}"
+                   readonly>
+        </div>
     </div>
-    <input type="hidden" name="{{ $name_prefix }}[{{ $index }}][employee_name]" class="employee-name-input" value="{{ $leave['employee_name'] ?? '' }}">
-    <div class="flex justify-end">
-        <button type="button" onclick="removeRepeaterItem(this)" class="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-            إزالة
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="button" class="btn btn-danger btn-sm remove-item w-100">
+            <i class="fas fa-trash"></i> إزالة
         </button>
     </div>
 </div>
