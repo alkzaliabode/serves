@@ -3,42 +3,40 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Models\Setting; // استيراد نموذج Setting
-use Illuminate\Support\Facades\Schema; // استيراد الواجهة Schema للتحقق من وجود الجدول
+use App\Models\Setting;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\App;
 
 class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
     public function register(): void
     {
-        //
+        // تجاوز MySQL وقت البناء باستخدام SQLite داخل الذاكرة
+        if (App::environment('production') && App::runningInConsole()) {
+            Config::set('database.default', 'sqlite');
+            Config::set('database.connections.sqlite.database', ':memory:');
+        }
     }
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
     public function boot(): void
     {
-        // تحميل إعدادات الخلفية من قاعدة البيانات إلى إعدادات التطبيق (config)
-        // يتم التحقق من وجود جدول 'settings' لتجنب الأخطاء أثناء تشغيل 'php artisan migrate' لأول مرة.
+        // تحميل إعدادات الخلفية فقط إذا كان جدول settings موجودًا
         if (Schema::hasTable('settings')) {
-            $backgroundImageUrl = Setting::get('background_image_url'); // استخدام الدالة المساعدة get من نموذج Setting
+            $backgroundImageUrl = Setting::get('background_image_url');
 
-            // إذا كان هناك مسار مخزن للخلفية، قم بتعيينه في إعدادات التطبيق
             if ($backgroundImageUrl) {
                 config(['app.background_image_url' => $backgroundImageUrl]);
             } else {
-                // إذا لم يتم العثور على مسار في قاعدة البيانات، استخدم المسار الافتراضي من asset
                 config(['app.background_image_url' => asset('images/dashboard-background.jpg')]);
             }
         } else {
-            // إذا كان جدول الإعدادات غير موجود بعد (مثلاً أثناء عملية الترحيل)، استخدم المسار الافتراضي مباشرة.
             config(['app.background_image_url' => asset('images/dashboard-background.jpg')]);
         }
     }
