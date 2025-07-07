@@ -2,13 +2,19 @@
 
 echo "Starting entrypoint.sh script..."
 echo "Current APP_ENV: $APP_ENV"
-echo "Attempting to connect to MySQL at $MYSQL_HOST:$MYSQL_PORT..."
+echo "Debugging MySQL connection variables:"
+echo "MYSQL_HOST: '$MYSQL_HOST'"
+echo "MYSQL_PORT: '$MYSQL_PORT'"
+echo "MYSQL_DATABASE: '$MYSQL_DATABASE'"
+echo "MYSQL_USER: '$MYSQL_USER'"
+echo "MYSQL_PASSWORD: '$MYSQL_PASSWORD'" # لا تطبع كلمات المرور الحقيقية في سجلات الإنتاج عادةً
 
+echo "Attempting to connect to MySQL database..."
 until php artisan migrate:status > /dev/null 2>&1
 do
   echo "Database is not yet ready or connection failed. Retrying in 3 seconds..."
-  # يمكن إضافة طباعة الخطأ هنا إذا أردت رؤية سبب فشل migrate:status
-  # php artisan migrate:status 2>&1 # لإظهار الخطأ
+  # يمكنك إلغاء التعليق على السطر التالي لترى سبب فشل migrate:status
+  # php artisan migrate:status
   sleep 3
 done
 echo "Database is ready! Running migrations and seeding..."
