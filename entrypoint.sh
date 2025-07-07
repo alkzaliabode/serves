@@ -1,29 +1,38 @@
 #!/bin/bash
 
-echo "Starting entrypoint.sh script..."
-echo "Current APP_ENV: $APP_ENV"
-echo "Debugging MySQL connection variables:"
-echo "MYSQL_HOST: '$MYSQL_HOST'"
-echo "MYSQL_PORT: '$MYSQL_PORT'"
-echo "MYSQL_DATABASE: '$MYSQL_DATABASE'"
-echo "MYSQL_USER: '$MYSQL_USER'"
-echo "MYSQL_PASSWORD: '$MYSQL_PASSWORD'" # لا تطبع كلمات المرور الحقيقية في سجلات الإنتاج عادةً
+echo "🔧 Starting entrypoint.sh script..."
+echo "🌍 Current APP_ENV: $APP_ENV"
 
-echo "Attempting to connect to MySQL database..."
+# تحميل المتغيرات من .env
+if [ -f .env ]; then
+    echo "📦 Loading environment variables from .env"
+    export $(cat .env | grep -v '^#' | xargs)
+fi
+
+# عرض معلومات الاتصال بقاعدة البيانات
+echo "📡 Checking DB connection..."
+echo "DB_HOST: '$DB_HOST'"
+echo "DB_PORT: '$DB_PORT'"
+echo "DB_DATABASE: '$DB_DATABASE'"
+echo "DB_USERNAME: '$DB_USERNAME'"
+# لا تطبع كلمة المرور
+
+# الانتظار حتى تصبح قاعدة البيانات جاهزة
+echo "⌛ Waiting for MySQL to be ready..."
 until php artisan migrate:status > /dev/null 2>&1
 do
-  echo "Database is not yet ready or connection failed. Retrying in 3 seconds..."
-  # يمكنك إلغاء التعليق على السطر التالي لترى سبب فشل migrate:status
-  # php artisan migrate:status
+  echo "❌ Database not ready. Retrying in 3 seconds..."
   sleep 3
 done
-echo "Database is ready! Running migrations and seeding..."
 
-# تشغيل الهجرات وملء البيانات
-php artisan config:clear # تأكد من مسح الكاش هنا أيضاً
-php artisan migrate --force --database=mysql
-php artisan db:seed --force --database=mysql
+echo "✅ Database is ready! Running migrations and seeders..."
 
-# تشغيل خادم Laravel
-echo "Starting Laravel server..."
-php artisan serve --host 0.0.0.0 --port $PORT
+# تجهيز Laravel
+php artisan config:clear
+php artisan config:cache
+php artisan migrate --force
+php artisan db:seed --force
+
+# بدء Laravel server
+echo "🚀 Starting Laravel server on port ${PORT:-8000}..."
+php artisan serve --host 0.0.0.0 --port ${PORT:-8000}
