@@ -33,6 +33,9 @@
 
     
     <?php echo $__env->yieldContent('styles'); ?>
+    
+    
+    <link rel="stylesheet" href="<?php echo e(asset('adminlte/css/dashboard_enhancements.css')); ?>">
 
     
     <style>
@@ -254,7 +257,7 @@
         /* أنماط البطاقات لتكون شفافة بالكامل مع تأثير زجاجي وخطوط بارزة - شفافية أعلى */
         .card {
             background-color: rgba(255, 255, 255, 0.05) !important; /* خلفية شبه شفافة جداً */
-            backdrop-filter: blur(15px) !important; /* تأثير الزجاج المتجمد أكثر قوة */
+            backdrop-filter: blur(10px) !important; /* تم تقليل التمويه قليلاً لزيادة وضوح الألوان */
             border-radius: 1.25rem !important; /* حواف مستديرة أكثر */
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important; /* ظل أنعم وأكثر انتشاراً */
             border: 1px solid rgba(255, 255, 255, 0.15) !important; /* حدود بارزة وواضحة جداً */
@@ -365,82 +368,82 @@
             border-radius: 20px; /* حواف مستديرة أكثر */
             color: white;
             transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* انتقال أكثر سلاسة */
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); /* ظل أوضح وأكثر انتشاراً */
-            border: 1px solid rgba(255, 255, 255, 0.2); /* حدود خفيفة */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); /* ظل أوضح وأكثر انتشاراً */
+            border: 1px solid rgba(255, 255, 255, 0.3); /* حدود خفيفة وأكثر وضوحًا */
             overflow: hidden; /* لضمان عدم خروج الظل عند التحويم */
             perspective: 1000px; /* لتمكين تأثير 3D على العناصر الأبناء */
-            backdrop-filter: blur(10px); /* تأثير الزجاج المتجمد أقوى للبطاقات الفردية */
+            backdrop-filter: blur(8px); /* تم تقليل التمويه قليلاً للبطاقات الفردية */
         }
 
         .card-dashboard:hover {
             transform: translateY(-10px) scale(1.05) rotateX(5deg); /* حركة أكبر وتكبير ودوران 3D خفيف */
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); /* ظل أقوى عند التحويم */
-            border-color: rgba(114, 239, 221, 0.5); /* تغيير لون الحدود عند التحويم */
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6); /* ظل أقوى عند التحويم */
+            border-color: rgba(114, 239, 221, 0.6); /* تغيير لون الحدود عند التحويم */
         }
 
-        /* ألوان البطاقات - تم تقليل الشفافية إلى 0.75 */
+        /* ألوان البطاقات - تم زيادة الشفافية إلى 0.85 */
         .card-general-cleaning {
-            background: linear-gradient(135deg, rgba(52, 152, 219, 0.75), rgba(142, 68, 173, 0.75));
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.85), rgba(142, 68, 173, 0.85));
         }
 
         .card-sanitation-facility {
-            background: linear-gradient(135deg, rgba(155, 89, 182, 0.75), rgba(231, 76, 60, 0.75));
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.85), rgba(231, 76, 60, 0.85));
         }
 
         .card-daily-status {
-            background: linear-gradient(135deg, rgba(46, 204, 113, 0.75), rgba(241, 196, 15, 0.75));
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.85), rgba(241, 196, 15, 0.85));
         }
 
         .card-resource-report {
-            background: linear-gradient(135deg, rgba(52, 73, 94, 0.75), rgba(127, 140, 141, 0.75));
+            background: linear-gradient(135deg, rgba(52, 73, 94, 0.85), rgba(127, 140, 141, 0.85));
         }
 
         .card-monthly-cleaning-report {
-            background: linear-gradient(135deg, rgba(230, 126, 34, 0.75), rgba(211, 84, 0, 0.75));
+            background: linear-gradient(135deg, rgba(230, 126, 34, 0.85), rgba(211, 84, 0, 0.85));
         }
 
         .card-monthly-sanitation-report {
-            background: linear-gradient(135deg, rgba(26, 188, 156, 0.75), rgba(39, 174, 96, 0.75));
+            background: linear-gradient(135deg, rgba(26, 188, 156, 0.85), rgba(39, 174, 96, 0.85));
         }
 
         .card-employees {
-            background: linear-gradient(135deg, rgba(109, 40, 217, 0.75), rgba(75, 0, 130, 0.75));
+            background: linear-gradient(135deg, rgba(109, 40, 217, 0.85), rgba(75, 0, 130, 0.85));
         }
 
         .card-visitor-survey {
-            background: linear-gradient(135deg, rgba(10, 207, 131, 0.75), rgba(0, 172, 193, 0.75)); /* Light blue/green gradient */
+            background: linear-gradient(135deg, rgba(10, 207, 131, 0.85), rgba(0, 172, 193, 0.85)); /* Light blue/green gradient */
         }
 
         /* NEW CARDS GRADIENTS - Added specific gradients for new cards for variety */
         .card-photo-reports {
-            background: linear-gradient(135deg, rgba(255, 165, 0, 0.75), rgba(255, 99, 71, 0.75)); /* Orange to Tomato */
+            background: linear-gradient(135deg, rgba(255, 165, 0, 0.85), rgba(255, 99, 71, 0.85)); /* Orange to Tomato */
         }
         .card-background-settings {
-            background: linear-gradient(135deg, rgba(128, 0, 128, 0.75), rgba(75, 0, 130, 0.75)); /* Purple to Indigo */
+            background: linear-gradient(135deg, rgba(128, 0, 128, 0.85), rgba(75, 0, 130, 0.85)); /* Purple to Indigo */
         }
         .card-service-tasks-board {
-            background: linear-gradient(135deg, rgba(0, 128, 128, 0.75), rgba(0, 139, 139, 0.75)); /* Teal to DarkCyan */
+            background: linear-gradient(135deg, rgba(0, 128, 128, 0.85), rgba(0, 139, 139, 0.85)); /* Teal to DarkCyan */
         }
         .card-actual-results {
-            background: linear-gradient(135deg, rgba(255, 0, 0, 0.75), rgba(178, 34, 34, 0.75)); /* Red to FireBrick */
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.85), rgba(178, 34, 34, 0.85)); /* Red to FireBrick */
         }
         .card-resource-tracking {
-            background: linear-gradient(135deg, rgba(0, 128, 0, 0.75), rgba(34, 139, 34, 0.75)); /* Green to ForestGreen */
+            background: linear-gradient(135deg, rgba(0, 128, 0, 0.85), rgba(34, 139, 34, 0.85)); /* Green to ForestGreen */
         }
         .card-unit-goals {
-            background: linear-gradient(135deg, rgba(70, 130, 180, 0.75), rgba(100, 149, 237, 0.75)); /* SteelBlue to CornflowerBlue */
+            background: linear-gradient(135deg, rgba(70, 130, 180, 0.85), rgba(100, 149, 237, 0.85)); /* SteelBlue to CornflowerBlue */
         }
         .card-gilbert-triangle {
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.75), rgba(218, 165, 32, 0.75)); /* Gold to Goldenrod */
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.85), rgba(218, 165, 32, 0.85)); /* Gold to Goldenrod */
         }
         .card-users {
-            background: linear-gradient(135deg, rgba(65, 105, 225, 0.75), rgba(0, 0, 205, 0.75)); /* RoyalBlue to MediumBlue */
+            background: linear-gradient(135deg, rgba(65, 105, 225, 0.85), rgba(0, 0, 205, 0.85)); /* RoyalBlue to MediumBlue */
         }
         .card-roles {
-            background: linear-gradient(135deg, rgba(138, 43, 226, 0.75), rgba(75, 0, 130, 0.75)); /* BlueViolet to Indigo */
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.85), rgba(75, 0, 130, 0.85)); /* BlueViolet to Indigo */
         }
         .card-survey-charts {
-            background: linear-gradient(135deg, rgba(255, 105, 180, 0.75), rgba(255, 20, 147, 0.75)); /* HotPink to DeepPink */
+            background: linear-gradient(135deg, rgba(255, 105, 180, 0.85), rgba(255, 20, 147, 0.85)); /* HotPink to DeepPink */
         }
 
         /* أنماط لأزرار الإدارة داخل البطاقات */
@@ -503,6 +506,7 @@
             font-size: 1.05rem; /* حجم أكبر لوصف البطاقات */
             line-height: 1.6; /* مسافة أسطر أفضل */
         }
+        
     </style>
 </head>
 
@@ -581,5 +585,4 @@
 <?php echo $__env->yieldContent('scripts'); ?>
 
 </body>
-</html>
-<?php /**PATH C:\xampp\htdocs\kadm-drgham\resources\views/layouts/admin_layout.blade.php ENDPATH**/ ?>
+</html><?php /**PATH C:\xampp\htdocs\kadm-drgham\resources\views/layouts/admin_layout.blade.php ENDPATH**/ ?>

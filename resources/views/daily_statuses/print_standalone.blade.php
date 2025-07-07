@@ -285,7 +285,7 @@
             <table>
                 <tr>
                     <td colspan="2">اليوم: <strong>{{ $dailyStatus->day_name }}</strong></td>
-                    <td colspan="2">التاريخ: <strong>{{ $dailyStatus->hijri_date }} ({{ \Carbon\Carbon::parse($dailyStatus->date)->format('d/m/Y') }})</strong></td>
+                    <td colspan="2">التاريخ: <strong> ({{ \Carbon\Carbon::parse($dailyStatus->date)->format('d/m/Y') }})</strong></td>
                 </tr>
             </table>
 
