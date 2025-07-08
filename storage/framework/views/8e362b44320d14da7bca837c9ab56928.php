@@ -61,7 +61,7 @@
 
                 
                 
-                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view resource report', 'view monthly cleaning report', 'view monthly sanitation report', 'view photo reports'])): ?>
+                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view resource report', 'view monthly cleaning report', 'view monthly sanitation report', 'view photo reports', 'view monthly summary'])): ?>
                     <li class="nav-header animated-nav-item" data-animation-delay="0.7">التقارير</li>
                     <li class="nav-item animated-nav-item" data-animation-delay="0.8">
                         <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view resource report')): ?>
@@ -93,6 +93,15 @@
                             <a href="<?php echo e(route('photo_reports.index')); ?>" class="nav-link <?php echo e(request()->routeIs('photo_reports.*') ? 'active-link' : ''); ?>">
                                 <i class="nav-icon fas fa-images"></i>
                                 <p>التقارير المصورة</p>
+                            </a>
+                        <?php endif; ?>
+                    </li>
+                    
+                    <li class="nav-item animated-nav-item" data-animation-delay="1.05"> 
+                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view monthly summary')): ?> 
+                            <a href="<?php echo e(route('monthly-summary.show')); ?>" class="nav-link <?php echo e(request()->routeIs('monthly-summary.*') ? 'active-link' : ''); ?>">
+                                <i class="nav-icon fas fa-calendar-alt"></i> 
+                                <p>ملخص الحضور الشهري</p>
                             </a>
                         <?php endif; ?>
                     </li>

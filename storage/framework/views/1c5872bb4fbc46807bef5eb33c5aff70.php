@@ -1,30 +1,23 @@
-{{-- resources/views/dashboard.blade.php --}}
-{{--
-    هذا الملف هو قالب صفحة لوحة التحكم الرئيسية.
-    تم تحديثه ليرث التخطيط الرئيسي الجديد (admin_layout) ولإضافة أنماط وتحريكات احترافية للكروت،
-    مع التركيز على تحسينات تجربة المستخدم والجاذبية البصرية.
---}}
+ 
 
-@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
+<?php $__env->startSection('title', 'لوحة التحكم'); ?> 
 
-@section('title', 'لوحة التحكم') {{-- تحديد عنوان الصفحة لتبويب المتصفح --}}
+<?php $__env->startSection('page_title', 'لوحة التحكم'); ?> 
 
-@section('page_title', 'لوحة التحكم') {{-- عنوان الصفحة داخل AdminLTE (رأس المحتوى) --}}
-
-@section('breadcrumb') {{-- Breadcrumb لـ AdminLTE --}}
-    <li class="breadcrumb-item"><a href="{{ route('home') }}">الرئيسية</a></li>
+<?php $__env->startSection('breadcrumb'); ?> 
+    <li class="breadcrumb-item"><a href="<?php echo e(route('home')); ?>">الرئيسية</a></li>
     <li class="breadcrumb-item active">لوحة التحكم</li>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content') {{-- بداية قسم المحتوى الذي سيتم عرضه داخل AdminLTE layout --}}
-    <div class="container-fluid py-4"> {{-- استخدام container-fluid وهامش علوي/سفلي --}}
-        <div class="card card-outline card-info shadow-lg border-0 dashboard-main-card"> {{-- استخدام بطاقة AdminLTE رئيسية مع ظل وتعديلات إضافية --}}
+<?php $__env->startSection('content'); ?> 
+    <div class="container-fluid py-4"> 
+        <div class="card card-outline card-info shadow-lg border-0 dashboard-main-card"> 
             <div class="card-body p-4 dashboard-main-card-body">
                 <h4 class="text-white mb-4 text-center section-title-animated">نظرة عامة سريعة على النظام</h4>
                 <div class="row dashboard-cards-container">
 
-                    {{-- قسم مهام النظافة العامة --}}
-                    @canany(['view general cleaning tasks', 'manage general cleaning tasks'])
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view general cleaning tasks', 'manage general cleaning tasks'])): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-tasks-general h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="100">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -35,18 +28,18 @@
                                     <p class="text-white-light mb-4 card-description">
                                         إدارة وتتبع مهام النظافة اليومية في الأقسام المختلفة بكفاءة.
                                     </p>
-                                    <a href="{{ route('general-cleaning-tasks.index') }}"
-                                       class="btn btn-card-action text-decoration-none mt-auto"> {{-- mt-auto لدفع الزر للأسفل --}}
+                                    <a href="<?php echo e(route('general-cleaning-tasks.index')); ?>"
+                                       class="btn btn-card-action text-decoration-none mt-auto"> 
                                         عرض التفاصيل
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
                                     </a>
                                 </div>
                             </div>
                         </div>
-                    @endcanany
+                    <?php endif; ?>
 
-                    {{-- قسم مهام المنشآت الصحية --}}
-                    @canany(['view sanitation facility tasks', 'manage sanitation facility tasks'])
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view sanitation facility tasks', 'manage sanitation facility tasks'])): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-tasks-sanitation h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="200">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -57,7 +50,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         متابعة المهام الخاصة بالنظافة والتعقيم في المنشآت الصحية بدقة.
                                     </p>
-                                    <a href="{{ route('sanitation-facility-tasks.index') }}"
+                                    <a href="<?php echo e(route('sanitation-facility-tasks.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         عرض التفاصيل
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -65,10 +58,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcanany
+                    <?php endif; ?>
 
-                    {{-- قسم لوحة مهام الشُعبة الخدمية --}}
-                    @can('view service tasks board')
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view service tasks board')): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-service-board h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="300">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -79,7 +72,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         عرض شامل لجميع المهام والمشاريع الخدمية الجارية وتتبعها.
                                     </p>
-                                    <a href="{{ route('service-tasks.board.index') }}"
+                                    <a href="<?php echo e(route('service-tasks.board.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         عرض اللوحة
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -87,10 +80,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcan
+                    <?php endif; ?>
 
-                    {{-- قسم الموقف اليومي --}}
-                    @canany(['view daily statuses', 'manage daily statuses'])
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view daily statuses', 'manage daily statuses'])): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-daily-status h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="400">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -101,7 +94,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         تسجيل ومراجعة الحالات اليومية للموارد والعمليات بانتظام.
                                     </p>
-                                    <a href="{{ route('daily-statuses.index') }}"
+                                    <a href="<?php echo e(route('daily-statuses.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         عرض الموقف
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -109,10 +102,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcanany
+                    <?php endif; ?>
 
-                    {{-- قسم تقرير الموارد --}}
-                    @can('view resource report')
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view resource report')): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-resource-report h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="500">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -123,7 +116,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         تقارير مفصلة عن استخدام وتوفر الموارد المختلفة لاتخاذ القرارات.
                                     </p>
-                                    <a href="{{ route('resource-report.index') }}"
+                                    <a href="<?php echo e(route('resource-report.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         عرض التقرير
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -131,10 +124,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcan
+                    <?php endif; ?>
 
-                    {{-- قسم تقرير النظافة العامة الشهري --}}
-                    @can('view monthly cleaning report')
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view monthly cleaning report')): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-monthly-cleaning h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="600">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -145,7 +138,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         تقارير شهرية لأداء مهام النظافة العامة وتقييمها الدوري.
                                     </p>
-                                    <a href="{{ route('monthly-cleaning-report.index') }}"
+                                    <a href="<?php echo e(route('monthly-cleaning-report.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         عرض التقرير
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -153,10 +146,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcan
+                    <?php endif; ?>
 
-                    {{-- قسم تقرير المنشآت الصحية الشهري --}}
-                    @can('view monthly sanitation report')
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view monthly sanitation report')): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-monthly-sanitation h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="700">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -167,7 +160,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         تقارير شهرية خاصة بأداء النظافة والتعقيم في المنشآت الصحية.
                                     </p>
-                                    <a href="{{ route('monthly-sanitation-report.index') }}"
+                                    <a href="<?php echo e(route('monthly-sanitation-report.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         عرض التقرير
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -175,10 +168,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcan
+                    <?php endif; ?>
 
-                    {{-- قسم الملخص الشهري (جديد) --}}
-                    @canany(['view monthly summary', 'manage monthly summary'])
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view monthly summary', 'manage monthly summary'])): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-monthly-summary h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="750">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -189,7 +182,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         عرض ملخص شامل للحضور والانصراف والإجازات والغيابات للموظفين شهرياً.
                                     </p>
-                                    <a href="{{ route('monthly-summary.show') }}"
+                                    <a href="<?php echo e(route('monthly-summary.show')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         عرض الملخص
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -197,10 +190,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcanany
+                    <?php endif; ?>
 
-                    {{-- قسم الموظفين --}}
-                    @canany(['view employees', 'manage employees'])
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view employees', 'manage employees'])): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-employees h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="800">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -211,7 +204,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         إدارة بيانات الموظفين، تتبع الحضور، وتقييم الأداء.
                                     </p>
-                                    <a href="{{ route('employees.index') }}"
+                                    <a href="<?php echo e(route('employees.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         عرض القائمة
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -219,10 +212,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcanany
+                    <?php endif; ?>
 
-                    {{-- قسم التقارير المصورة --}}
-                    @canany(['view photo reports', 'manage photo reports'])
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view photo reports', 'manage photo reports'])): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-photo-reports h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="900">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -233,7 +226,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         مكتبة شاملة للتقارير الموثقة بالصور والفيديوهات للمشاريع.
                                     </p>
-                                    <a href="{{ route('photo_reports.index') }}"
+                                    <a href="<?php echo e(route('photo_reports.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         عرض التقارير
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -241,10 +234,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcanany
+                    <?php endif; ?>
 
-                    {{-- قسم إعدادات الخلفية --}}
-                    @can('manage background settings')
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('manage background settings')): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-background-settings h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="1000">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -255,7 +248,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         تخصيص خلفيات لوحة التحكم والصفحات المختلفة لتعزيز الهوية.
                                     </p>
-                                    <a href="{{ route('background-settings.index') }}"
+                                    <a href="<?php echo e(route('background-settings.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         ضبط الإعدادات
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -263,10 +256,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcan
+                    <?php endif; ?>
 
-                    {{-- قسم النتائج الفعلية --}}
-                    @canany(['view actual results', 'manage actual results'])
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view actual results', 'manage actual results'])): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-actual-results h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="1100">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -277,7 +270,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         مقارنة الأداء الفعلي بالأهداف المحددة وتحليل الانحرافات.
                                     </p>
-                                    <a href="{{ route('actual-results.index') }}"
+                                    <a href="<?php echo e(route('actual-results.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         عرض النتائج
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -285,10 +278,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcanany
+                    <?php endif; ?>
 
-                    {{-- قسم تتبع الموارد --}}
-                    @canany(['view resource trackings', 'manage resource trackings'])
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view resource trackings', 'manage resource trackings'])): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-resource-trackings h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="1200">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -299,7 +292,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         تتبع دقيق لحركة ومخزون الموارد المختلفة لضمان التوفر.
                                     </p>
-                                    <a href="{{ route('resource-trackings.index') }}"
+                                    <a href="<?php echo e(route('resource-trackings.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         تتبع الموارد
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -307,10 +300,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcanany
+                    <?php endif; ?>
 
-                    {{-- قسم أهداف الوحدات --}}
-                    @canany(['view unit goals', 'manage unit goals'])
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view unit goals', 'manage unit goals'])): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-unit-goals h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="1300">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -321,7 +314,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         تحديد وتتبع الأهداف الاستراتيجية لكل وحدة عمل بفعالية.
                                     </p>
-                                    <a href="{{ route('unit-goals.index') }}"
+                                    <a href="<?php echo e(route('unit-goals.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         إدارة الأهداف
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -329,10 +322,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcanany
+                    <?php endif; ?>
 
-                    {{-- قسم مخطط جلبرت --}}
-                    @can('view gilbert triangle chart')
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view gilbert triangle chart')): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-gilbert-charts h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="1400">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -343,7 +336,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         عرض المهام والعلاقات بينها باستخدام مخطط جلبرت التفاعلي.
                                     </p>
-                                    <a href="{{ route('charts.gilbert-triangle.index') }}"
+                                    <a href="<?php echo e(route('charts.gilbert-triangle.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         عرض المخطط
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -351,10 +344,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcan
+                    <?php endif; ?>
 
-                    {{-- قسم استبيانات رضا الزائرين --}}
-                    @canany(['view surveys', 'manage surveys'])
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view surveys', 'manage surveys'])): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-surveys h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="1500">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -365,7 +358,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         إنشاء وإدارة وتحليل استبيانات لجمع آراء الزائرين وتحسين الخدمات.
                                     </p>
-                                    <a href="{{ route('surveys.index') }}"
+                                    <a href="<?php echo e(route('surveys.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         إدارة الاستبيانات
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -373,10 +366,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcanany
+                    <?php endif; ?>
 
-                    {{-- قسم إحصائيات الاستبيانات --}}
-                    @can('view survey statistics')
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view survey statistics')): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-survey-charts h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="1600">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -387,7 +380,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         عرض وتحليل نتائج استبيانات رضا الزائرين عبر الرسوم البيانية المتطورة.
                                     </p>
-                                    <a href="{{ route('charts.surveys.index') }}"
+                                    <a href="<?php echo e(route('charts.surveys.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         عرض الإحصائيات
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -395,10 +388,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcan
+                    <?php endif; ?>
 
-                    {{-- قسم الإشعارات --}}
-                    @canany(['view notifications', 'manage notifications'])
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view notifications', 'manage notifications'])): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-notifications h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="1700">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -409,7 +402,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         إدارة وتكوين إشعارات النظام للمستخدمين لضمان التواصل الفعال.
                                     </p>
-                                    <a href="{{ route('notifications.index') }}"
+                                    <a href="<?php echo e(route('notifications.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         إدارة الإشعارات
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -417,10 +410,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcanany
+                    <?php endif; ?>
 
-                    {{-- قسم إدارة المستخدمين --}}
-                    @can('manage users')
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('manage users')): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-users h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="1800">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -431,7 +424,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         إنشاء، تعديل، وحذف حسابات المستخدمين وصلاحياتهم بدقة.
                                     </p>
-                                    <a href="{{ route('users.index') }}"
+                                    <a href="<?php echo e(route('users.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         إدارة المستخدمين
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -439,10 +432,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcan
+                    <?php endif; ?>
 
-                    {{-- قسم إدارة الأدوار --}}
-                    @can('manage roles')
+                    
+                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('manage roles')): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-roles h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="1900">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -453,7 +446,7 @@
                                     <p class="text-white-light mb-4 card-description">
                                         تحديد الأدوار والصلاحيات المختلفة للمستخدمين لضبط الوصول.
                                     </p>
-                                    <a href="{{ route('roles.index') }}"
+                                    <a href="<?php echo e(route('roles.index')); ?>"
                                        class="btn btn-card-action text-decoration-none mt-auto">
                                         إدارة الأدوار
                                         <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -461,10 +454,10 @@
                                 </div>
                             </div>
                         </div>
-                    @endcan
+                    <?php endif; ?>
 
-                    {{-- قسم الملف الشخصي --}}
-                    {{-- لا يحتاج صلاحية خاصة، يعرض لجميع المستخدمين المصادق عليهم --}}
+                    
+                    
                     <div class="col-md-6 col-lg-4 mb-4">
                         <div class="card card-dashboard card-profile h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="2000">
                             <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -475,7 +468,7 @@
                                 <p class="text-white-light mb-4 card-description">
                                     تحديث معلوماتك الشخصية وإعدادات الحساب.
                                 </p>
-                                <a href="{{ route('profile.edit') }}"
+                                <a href="<?php echo e(route('profile.edit')); ?>"
                                    class="btn btn-card-action text-decoration-none mt-auto">
                                     عرض الملف الشخصي
                                     <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
@@ -483,13 +476,13 @@
                             </div>
                         </div>
                     </div>
-                </div> {{-- /.row dashboard-cards-container --}}
-            </div> {{-- /.card-body --}}
-        </div> {{-- /.card --}}
-    </div> {{-- /.container-fluid --}}
-@endsection
+                </div> 
+            </div> 
+        </div> 
+    </div> 
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
     <!-- AOS (Animate On Scroll) Library -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
@@ -633,4 +626,6 @@
             }
         }
     </style>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin_layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\kadm-drgham\resources\views/dashboard.blade.php ENDPATH**/ ?>
