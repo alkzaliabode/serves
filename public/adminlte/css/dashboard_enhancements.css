@@ -1,0 +1,741 @@
+/*
+ * File: dashboard_enhancements.css
+ * Description: Professional and enhanced CSS styles for the admin dashboard.
+ * Designed to be used with AdminLTE 4 framework.
+ * This file is intended to be compiled from its SCSS equivalent if SASS is used.
+ */
+
+/* =========================================================================
+   1. CSS Variables (Global Color Palette & UI Elements)
+   ========================================================================= */
+:root {
+    /* Base Colors */
+    --primary-blue: #007bff;
+    --secondary-gray: #6c757d;
+    --success-green: #28a745;
+    --info-teal: #17a2b8;
+    --warning-yellow: #ffc107;
+    --danger-red: #dc3545;
+
+    /* Custom Gradient Colors (More Vibrant) */
+    --gradient-blue-start: #2c3e50; /* Darker blue for background */
+    --gradient-blue-end: #3498db;
+    --gradient-purple-start: #8e44ad;
+    --gradient-purple-end: #9b59b6;
+    --gradient-green-start: #27ae60;
+    --gradient-green-end: #2ecc71;
+    --gradient-orange-start: #e67e22;
+    --gradient-orange-end: #f39c12;
+    --gradient-red-start: #c0392b;
+    --gradient-red-end: #e74c3c;
+    --gradient-dark-start: #34495e;
+    --gradient-dark-end: #2c3e50;
+    --gradient-pink-start: #e91e63;
+    --gradient-pink-end: #f48fb1;
+    --gradient-cyan-start: #00bcd4;
+    --gradient-cyan-end: #00acc1;
+
+    /* Text & Shadow */
+    --text-light: #ecf0f1; /* Light gray for general text */
+    --text-dark: #34495e; /* Dark for button text on light background */
+    --text-shadow-strong: rgba(0, 0, 0, 0.8);
+    --text-shadow-medium: rgba(0, 0, 0, 0.6);
+    --box-shadow-light: rgba(0, 0, 0, 0.15);
+    --box-shadow-medium: rgba(0, 0, 0, 0.3);
+    --box-shadow-strong: rgba(0, 0, 0, 0.5);
+
+    /* Glassmorphism Effect */
+    --glass-background-light: rgba(255, 255, 255, 0.08); /* Very light, almost transparent */
+    --glass-background-medium: rgba(255, 255, 255, 0.15); /* Slightly less transparent */
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-blur: 15px; /* Stronger blur for modern look */
+    --border-radius-large: 1.5rem; /* 24px */
+    --border-radius-medium: 1rem; /* 16px */
+    --border-radius-small: 0.5rem; /* 8px */
+
+    /* Animation */
+    --transition-speed: 0.4s;
+    --transition-bezier: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* =========================================================================
+   2. Global Body & Layout Overrides
+   ========================================================================= */
+
+/* Ensure the body background is visible through AdminLTE components */
+body {
+    /* تم التعديل: يجب أن يتم تمرير هذا المتغير من خلال Blade إلى HTML كمتغير CSS */
+    /* مثال على كيفية إعداد هذا في ملف Blade (مثل layouts/app.blade.php):
+    <style>
+        :root {
+            --background-image-url: url("{{ config('app.background_image_url', asset('dist/img/default-background.jpg')) }}");
+        }
+    </style>
+    ثم هنا نستخدم: var(--background-image-url)
+    */
+    background-image: var(--background-image-url); 
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    position: relative;
+    background-color: var(--gradient-dark-end); /* Fallback */
+    font-family: 'Cairo', 'Noto Sans Arabic', sans-serif !important; /* Apply custom fonts globally */
+    color: var(--text-light); /* Default text color */
+}
+
+/* Overlay for body background to ensure text readability */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Darker overlay for better contrast */
+    z-index: -1;
+}
+
+/* Make core AdminLTE content areas transparent */
+.content-wrapper,
+.app-main,
+.app-content {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* =========================================================================
+   3. Sidebar (Glassmorphism Effect)
+   ========================================================================= */
+.app-sidebar {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    position: relative;
+    z-index: 1038; /* AdminLTE's default z-index for sidebar */
+}
+
+.app-sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--glass-background-medium);
+    backdrop-filter: blur(var(--glass-blur));
+    z-index: -1;
+    border-right: 1px solid var(--glass-border);
+}
+
+.sidebar-wrapper,
+.sidebar-wrapper .nav-sidebar,
+.sidebar-wrapper .nav-treeview {
+    background-color: transparent !important;
+}
+
+.sidebar-brand {
+    position: relative;
+    overflow: hidden;
+    height: 70px; /* Slightly taller brand area */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--glass-border);
+    margin-bottom: 20px; /* More space below brand */
+    text-shadow: 2px 2px 5px var(--text-shadow-strong);
+}
+
+.sidebar-brand .brand-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    text-decoration: none;
+    color: var(--text-light);
+    font-size: 1.8rem; /* Larger font for brand */
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.sidebar-brand .brand-image {
+    display: none !important;
+}
+
+.sidebar-brand .brand-text {
+    font-weight: bold;
+    font-size: 1.8rem;
+    color: var(--text-light);
+    z-index: 1;
+}
+
+/* Sidebar Navigation Links */
+.nav-sidebar > .nav-item > .nav-link {
+    font-size: 1.4rem; /* Adjusted font size for better balance */
+    font-weight: 600;
+    color: var(--text-light) !important;
+    transition: all var(--transition-speed) var(--transition-bezier);
+    position: relative;
+    margin-bottom: 10px;
+    padding: 14px 25px; /* Larger padding for touch targets */
+    border-radius: var(--border-radius-small);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+.nav-sidebar > .nav-item > .nav-link .nav-icon {
+    font-size: 2.2rem; /* Larger icons */
+    margin-left: 20px; /* More space */
+    transition: all var(--transition-speed) var(--transition-bezier);
+}
+
+.nav-sidebar > .nav-item > .nav-link:hover {
+    color: var(--info-teal) !important; /* Teal highlight on hover */
+    transform: translateX(10px) scale(1.01);
+    background-color: var(--glass-background-medium) !important;
+    box-shadow: 0 5px 15px var(--box-shadow-medium);
+}
+
+.nav-sidebar > .nav-item > .nav-link:hover .nav-icon {
+    transform: scale(1.1) rotate(5deg);
+    color: var(--info-teal) !important;
+}
+
+.nav-sidebar > .nav-item > .nav-link.active {
+    background-color: rgba(23, 162, 184, 0.25) !important; /* Active teal background */
+    color: var(--info-teal) !important;
+    border-left: 6px solid var(--info-teal); /* Stronger active indicator */
+    box-shadow: 0 5px 20px rgba(23, 162, 184, 0.4);
+    transform: translateX(5px);
+}
+
+.nav-sidebar > .nav-item > .nav-link.active .nav-icon {
+    color: var(--info-teal) !important;
+}
+
+.nav-sidebar > .nav-item > .nav-link::after {
+    display: none; /* Remove default arrow if not needed */
+}
+
+/* Sub-menu styling (if applicable) */
+.nav-treeview .nav-item .nav-link {
+    font-size: 1.1rem;
+    padding: 8px 15px 8px 40px; /* Adjusted padding for hierarchy */
+    color: var(--text-light) !important;
+    transition: all 0.3s ease;
+}
+
+.nav-treeview .nav-item .nav-link:hover,
+.nav-treeview .nav-item .nav-link.active {
+    background-color: var(--glass-background-light) !important;
+    color: var(--info-teal) !important;
+}
+
+/* =========================================================================
+   4. Top Navbar
+   ========================================================================= */
+.app-header.navbar {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 2px 10px var(--box-shadow-light) !important;
+    border-bottom: 1px solid var(--glass-border);
+}
+.app-header .nav-link {
+    color: var(--text-light) !important;
+    transition: color 0.3s ease;
+}
+.app-header .nav-link:hover {
+    color: var(--info-teal) !important;
+}
+
+/* User Menu Dropdown */
+.user-menu .dropdown-menu {
+    background-color: rgba(255, 255, 255, 0.95) !important; /* Almost opaque light background */
+    border: none !important;
+    border-radius: var(--border-radius-medium);
+    box-shadow: 0 10px 30px var(--box-shadow-medium) !important;
+    color: var(--text-dark) !important;
+    backdrop-filter: blur(8px); /* Stronger glass effect for dropdown */
+}
+
+.user-menu .dropdown-menu .user-header {
+    background-color: var(--primary-blue) !important; /* Solid blue header */
+    color: white !important;
+    text-shadow: 1px 1px 3px var(--text-shadow-medium);
+    border-top-left-radius: var(--border-radius-medium);
+    border-top-right-radius: var(--border-radius-medium);
+}
+
+.user-menu .dropdown-menu .user-footer {
+    background-color: rgba(255, 255, 255, 0.98) !important; /* Very light, almost white footer */
+    border-top: none !important;
+    border-bottom-left-radius: var(--border-radius-medium);
+    border-bottom-right-radius: var(--border-radius-medium);
+}
+
+.user-menu .dropdown-menu .dropdown-item {
+    color: var(--text-dark) !important;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.user-menu .dropdown-menu .dropdown-item:hover {
+    background-color: var(--primary-blue) !important;
+    color: var(--text-light) !important;
+}
+
+
+/* =========================================================================
+   5. Footer
+   ========================================================================= */
+.app-footer {
+    background-color: transparent !important;
+    border-top: none !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    text-shadow: 1px 1px 3px var(--text-shadow-medium);
+    padding: 20px 15px; /* More padding for better spacing */
+}
+.app-footer strong {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+.app-footer a {
+    color: var(--info-teal) !important;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+.app-footer a:hover {
+    text-decoration: underline;
+    color: #61dcb7 !important; /* Slightly lighter teal on hover */
+}
+
+/* =========================================================================
+   6. General Card Styling (for all cards, including dashboard ones)
+   ========================================================================= */
+.card {
+    background-color: var(--glass-background-light) !important; /* More transparency for general cards */
+    backdrop-filter: blur(var(--glass-blur)) !important;
+    border-radius: var(--border-radius-large) !important;
+    box-shadow: 0 10px 30px var(--box-shadow-medium) !important;
+    border: 1px solid var(--glass-border) !important;
+    transition: all 0.3s ease-in-out;
+}
+.card:hover {
+    box-shadow: 0 15px 40px var(--box-shadow-strong) !important;
+    transform: translateY(-5px);
+}
+.card-header {
+    background-color: var(--glass-background-medium) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    color: var(--text-light) !important;
+    text-shadow: 1px 1px 4px var(--text-shadow-strong) !important;
+    border-top-left-radius: var(--border-radius-large);
+    border-top-right-radius: var(--border-radius-large);
+    padding: 1.25rem 1.5rem; /* More padding */
+    font-size: 1.2rem; /* Larger header text */
+    font-weight: 600;
+}
+.card-title,
+.card-header .btn,
+.card-body,
+.card-footer {
+    color: var(--text-light) !important;
+    text-shadow: 1px 1px 3px var(--text-shadow-medium) !important;
+}
+.card-footer {
+    background-color: var(--glass-background-light) !important;
+    border-top: 1px solid var(--glass-border) !important;
+    border-bottom-left-radius: var(--border-radius-large);
+    border-bottom-right-radius: var(--border-radius-large);
+    padding: 1rem 1.5rem;
+}
+
+/* =========================================================================
+   7. Dashboard Specific Card Styles (Vibrant Gradients)
+   ========================================================================= */
+
+.dashboard-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Adaptive grid */
+    gap: 1.75rem; /* Consistent gap */
+    padding: 1.5rem 0;
+}
+
+.card-dashboard {
+    border-radius: 20px; /* More rounded */
+    color: white;
+    transition: all var(--transition-speed) var(--transition-bezier);
+    box-shadow: 0 10px 30px var(--box-shadow-strong);
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Stronger border for glass effect */
+    overflow: hidden;
+    position: relative; /* For ::before pseudo-element */
+    perspective: 1000px;
+    background: var(--glass-background-light); /* Base for glass effect */
+    backdrop-filter: blur(var(--glass-blur));
+}
+
+.card-dashboard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.9; /* Stronger color overlay */
+    z-index: 0;
+    transition: opacity var(--transition-speed) ease-in-out;
+}
+
+.card-dashboard:hover {
+    transform: translateY(-12px) scale(1.04) rotateX(3deg); /* More pronounced 3D hover */
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); /* Even stronger shadow */
+    border-color: var(--info-teal); /* Highlight border on hover */
+}
+
+/* Card Gradient Overlays (using ::before for better control) */
+.card-general-cleaning::before { background: linear-gradient(135deg, var(--gradient-blue-start), var(--gradient-blue-end)); }
+.card-sanitation-facility::before { background: linear-gradient(135deg, var(--gradient-purple-start), var(--gradient-purple-end)); }
+.card-daily-status::before { background: linear-gradient(135deg, var(--gradient-green-start), var(--gradient-green-end)); }
+.card-resource-report::before { background: linear-gradient(135deg, var(--gradient-dark-start), var(--gradient-dark-end)); }
+.card-monthly-cleaning-report::before { background: linear-gradient(135deg, var(--gradient-orange-start), var(--gradient-orange-end)); }
+.card-monthly-sanitation-report::before { background: linear-gradient(135deg, var(--gradient-cyan-start), var(--gradient-cyan-end)); }
+.card-employees::before { background: linear-gradient(135deg, #663399, #4b0082); } /* Re-using some from previous for variety */
+.card-visitor-survey::before { background: linear-gradient(135deg, #00b894, #00cec9); } /* Vibrant Teal */
+
+/* NEW CARDS GRADIENTS (Ensure these classes are correctly applied in your Blade files) */
+.card-photo-reports::before { background: linear-gradient(135deg, #ff7f50, #ff6347); } /* Coral to Tomato */
+.card-background-settings::before { background: linear-gradient(135deg, #9c27b0, #673ab7); } /* Deep Purple to Dark Violet */
+.card-service-tasks-board::before { background: linear-gradient(135deg, #008080, #20b2aa); } /* Teal to Light Sea Green */
+.card-actual-results::before { background: linear-gradient(135deg, #b71c1c, #d32f2f); } /* Dark Red to Medium Red */
+.card-resource-tracking::before { background: linear-gradient(135deg, #388e3c, #4caf50); } /* Dark Green to Light Green */
+.card-unit-goals::before { background: linear-gradient(135deg, #1976d2, #2196f3); } /* Dark Blue to Blue */
+.card-gilbert-triangle::before { background: linear-gradient(135deg, #ffc107, #ff9800); } /* Amber to Orange */
+.card-users::before { background: linear-gradient(135deg, #3f51b5, #283593); } /* Indigo to Dark Indigo */
+.card-roles::before { background: linear-gradient(135deg, #673ab7, #512da8); } /* Deep Purple to Darker Deep Purple */
+.card-survey-charts::before { background: linear-gradient(135deg, #f06292, #e91e63); } /* Pink to Deep Pink */
+.card-notifications::before { background: linear-gradient(135deg, #ff9800, #fb8c00); } /* Orange to Darker Orange */
+.card-profile::before { background: linear-gradient(135deg, #795548, #5d4037); } /* Brown */
+
+
+/* Card Inner Content Styles */
+.card-dashboard .card-body {
+    position: relative;
+    z-index: 1; /* Ensure content is above ::before overlay */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 2.25rem; /* Generous padding */
+}
+
+.card-title-animated {
+    font-size: 1.8rem; /* Larger title */
+    font-weight: 700;
+    text-shadow: 1px 1px 6px var(--text-shadow-strong);
+    transition: transform var(--transition-speed) ease-in-out;
+}
+
+.card-dashboard:hover .card-title-animated {
+    transform: translateX(8px); /* More pronounced slide */
+}
+
+.card-icon-animated {
+    font-size: 4rem !important; /* Even larger icons */
+    opacity: 0.75;
+    transition: transform var(--transition-speed) ease-in-out, opacity var(--transition-speed) ease-in-out;
+    filter: drop-shadow(2px 2px 5px var(--text-shadow-strong)); /* Icon shadow */
+}
+
+.card-dashboard:hover .card-icon-animated {
+    transform: scale(1.15) rotate(7deg); /* More dynamic icon hover */
+    opacity: 0.95;
+}
+
+.card-description {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text-light);
+    flex-grow: 1;
+    margin-top: 10px; /* Space between title and description */
+    text-shadow: 1px 1px 2px var(--text-shadow-medium);
+}
+
+.btn-card-action {
+    background-color: var(--text-light); /* White background for button */
+    color: var(--dark-blue); /* Default color for text, overridden by specific card styles */
+    border: none;
+    border-radius: 50px; /* Pill shape */
+    padding: 0.75rem 2rem; /* Larger button */
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: all var(--transition-speed) ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    box-shadow: 0 5px 15px var(--box-shadow-medium);
+    margin-top: 20px; /* Space above button */
+}
+
+.btn-card-action:hover {
+    background-color: #f8f9fa; /* Slightly off-white on hover */
+    transform: translateY(-3px) scale(1.02); /* Lift and slightly enlarge */
+    box-shadow: 0 8px 20px var(--box-shadow-strong);
+}
+
+.icon-arrow-animated {
+    transition: transform var(--transition-speed) ease-in-out;
+}
+
+.btn-card-action:hover .icon-arrow-animated {
+    transform: translateX(8px); /* More pronounced arrow movement */
+}
+
+/* Specific button colors for each card type (Override .btn-card-action's color) */
+.card-general-cleaning .btn-card-action { color: var(--gradient-blue-end); }
+.card-sanitation-facility .btn-card-action { color: var(--gradient-purple-end); }
+.card-daily-status .btn-card-action { color: var(--gradient-green-end); }
+.card-resource-report .btn-card-action { color: var(--gradient-dark-end); }
+.card-monthly-cleaning-report .btn-card-action { color: var(--gradient-orange-end); }
+.card-monthly-sanitation-report .btn-card-action { color: var(--gradient-cyan-end); }
+.card-employees .btn-card-action { color: #4b0082; }
+.card-visitor-survey .btn-card-action { color: #00cec9; }
+.card-photo-reports .btn-card-action { color: #ff6347; }
+.card-background-settings .btn-card-action { color: #673ab7; }
+.card-service-tasks-board .btn-card-action { color: #20b2aa; }
+.card-actual-results .btn-card-action { color: #d32f2f; }
+.card-resource-tracking .btn-card-action { color: #4caf50; }
+.card-unit-goals .btn-card-action { color: #2196f3; }
+.card-gilbert-triangle .btn-card-action { color: #ff9800; }
+.card-users .btn-card-action { color: #283593; }
+.card-roles .btn-card-action { color: #512da8; }
+.card-survey-charts .btn-card-action { color: #e91e63; }
+.card-notifications .btn-card-action { color: #fb8c00; }
+.card-profile .btn-card-action { color: #5d4037; }
+
+
+/* =========================================================================
+   8. Welcome Message & Animations
+   ========================================================================= */
+.welcome-title {
+    animation: fadeInDown 1.2s ease-out forwards; /* Slightly faster */
+    color: var(--text-light);
+    text-shadow: 2px 2px 8px var(--text-shadow-strong);
+    font-size: 2.8rem; /* Larger welcome title */
+    font-weight: 800;
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.typing-message {
+    color: var(--text-light);
+    text-shadow: 1px 1px 4px var(--text-shadow-medium);
+    font-size: 1.4rem; /* Larger typing message */
+    font-weight: 500;
+    overflow: hidden; /* Ensures text is clipped before typing */
+    border-right: .15em solid var(--info-teal); /* Blinking cursor */
+    white-space: nowrap;
+    margin: 0 auto;
+    letter-spacing: .05em;
+    animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+}
+
+@keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+}
+
+@keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: var(--info-teal); }
+}
+
+/* =========================================================================
+   9. Notification Badge & Dropdown
+   ========================================================================= */
+.notification-badge {
+    position: absolute;
+    top: 3px; /* Adjusted position */
+    right: 3px;
+    padding: 4px 8px;
+    border-radius: 50%;
+    background-color: var(--danger-red);
+    color: white;
+    font-size: 0.8em;
+    font-weight: bold;
+    display: flex; /* Use flex for centering content */
+    align-items: center;
+    justify-content: center;
+    min-width: 20px; /* Ensure it's a circle even with 1 digit */
+    height: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    z-index: 10; /* Ensure it's above other elements */
+}
+
+.notifications-dropdown-menu {
+    width: 320px; /* Slightly wider */
+    max-height: 450px; /* Taller */
+    overflow-y: auto;
+    background-color: rgba(255, 255, 255, 0.98) !important;
+    border-radius: var(--border-radius-medium);
+    box-shadow: 0 10px 30px var(--box-shadow-medium);
+    backdrop-filter: blur(10px);
+    padding: 15px; /* More padding */
+}
+
+.notifications-dropdown-menu .dropdown-header {
+    color: var(--text-dark);
+    font-weight: bold;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+}
+
+.notifications-dropdown-menu .dropdown-item {
+    color: var(--text-dark);
+    padding: 10px 0;
+    white-space: normal;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    transition: background-color 0.2s ease;
+}
+
+.notifications-dropdown-menu .dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.notifications-dropdown-menu .dropdown-item:hover {
+    background-color: rgba(0, 0, 0, 0.03); /* Lighter hover */
+}
+
+.notification-item.unread {
+    background-color: rgba(0, 123, 255, 0.05); /* Light blue for unread */
+    font-weight: 600;
+}
+
+.notification-item .notification-time {
+    font-size: 0.9em;
+    color: var(--secondary-gray);
+    display: block;
+    margin-top: 5px;
+}
+
+/* =========================================================================
+   10. Typography Enhancements (for general elements)
+   ========================================================================= */
+h1, h2, h3, h4, h5, h6, .lead, p, .text-muted, .form-label {
+    font-family: 'Cairo', 'Noto Sans Arabic', sans-serif !important;
+    color: var(--text-light) !important; /* Consistent light text */
+    text-shadow: 1px 1px 2px var(--text-shadow-medium);
+}
+.btn, a {
+    font-family: 'Cairo', 'Noto Sans Arabic', sans-serif !important;
+}
+.bi {
+    vertical-align: -0.125em;
+}
+
+/* =========================================================================
+   11. Responsive Adjustments
+   ========================================================================= */
+@media (max-width: 1200px) {
+    .section-title-animated {
+        font-size: 2rem;
+    }
+    .card-title-animated {
+        font-size: 1.6rem;
+    }
+    .card-icon-animated {
+        font-size: 3.5rem !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .section-title-animated {
+        font-size: 1.8rem;
+    }
+    .card-dashboard .card-body {
+        padding: 1.75rem;
+    }
+    .card-title-animated {
+        font-size: 1.4rem;
+    }
+    .card-icon-animated {
+        font-size: 3rem !important;
+    }
+    .btn-card-action {
+        padding: 0.6rem 1.5rem;
+        font-size: 1rem;
+    }
+    .sidebar-brand .brand-link {
+        font-size: 1.6rem;
+    }
+    .nav-sidebar > .nav-item > .nav-link {
+        font-size: 1.25rem;
+        padding: 12px 20px;
+    }
+    .nav-sidebar > .nav-item > .nav-link .nav-icon {
+        font-size: 2rem;
+        margin-left: 15px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .section-title-animated {
+        font-size: 1.5rem;
+        text-align: center; /* Center title on small screens */
+    }
+    .dashboard-main-card-body {
+        padding: 1.5rem !important;
+    }
+    .card-dashboard {
+        border-radius: 15px;
+    }
+    .card-dashboard .card-body {
+        padding: 1.5rem !important;
+    }
+    .card-title-animated {
+        font-size: 1.2rem;
+    }
+    .card-icon-animated {
+        font-size: 2.5rem !important;
+    }
+    .btn-card-action {
+        padding: 0.5rem 1.2rem;
+        font-size: 0.9rem;
+        margin-top: 15px;
+    }
+    .sidebar-brand {
+        height: 60px;
+    }
+    .sidebar-brand .brand-link {
+        font-size: 1.4rem;
+    }
+    .nav-sidebar > .nav-item > .nav-link {
+        font-size: 1.1rem;
+        padding: 10px 15px;
+    }
+    .nav-sidebar > .nav-item > .nav-link .nav-icon {
+        font-size: 1.8rem;
+        margin-left: 10px;
+    }
+    .app-header .nav-link {
+        padding: 0.5rem 0.75rem !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .dashboard-cards-grid {
+        grid-template-columns: 1fr; /* Stack cards vertically */
+    }
+    .welcome-title {
+        font-size: 2rem;
+    }
+    .typing-message {
+        font-size: 1.1rem;
+        white-space: normal; /* Allow message to wrap */
+        border-right: none; /* Remove blinking cursor if wrapping */
+        text-align: center;
+    }
+}
