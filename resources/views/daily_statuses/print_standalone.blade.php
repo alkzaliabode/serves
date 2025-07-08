@@ -25,11 +25,11 @@
         }
         .print-container {
             /* أبعاد A4 هي 210mm عرض و 297mm ارتفاع.
-               إذا كان الإطار 1.5px (تقريباً 0.4mm)، والهوامش 5mm من كل جانب.
-               فالعرض الفعلي للمحتوى سيكون 210mm - (5mm * 2) = 200mm
-               والارتفاع الفعلي للمحتوى سيكون 297mm - (5mm * 2) = 287mm
-               لذا، الـ width و height هنا تمثل المساحة المتاحة للمحتوى داخل الإطار.
-               الإطار نفسه سيتم إضافته حول هذه المساحة.
+                إذا كان الإطار 1.5px (تقريباً 0.4mm)، والهوامش 5mm من كل جانب.
+                فالعرض الفعلي للمحتوى سيكون 210mm - (5mm * 2) = 200mm
+                والارتفاع الفعلي للمحتوى سيكون 297mm - (5mm * 2) = 287mm
+                لذا، الـ width و height هنا تمثل المساحة المتاحة للمحتوى داخل الإطار.
+                الإطار نفسه سيتم إضافته حول هذه المساحة.
             */
             width: 200mm;
             height: 287mm;
@@ -51,20 +51,20 @@
         .header-print {
             text-align: center;
             margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            display: flex; /* استخدم فليكس بوكس لترتيب العناصر */
+            align-items: center; /* توسيط العناصر عمودياً */
+            justify-content: space-between; /* دفع العناصر إلى الأطراف مع توسيط النص */
             padding-bottom: 5px;
             border-bottom: 1px solid #bbb;
         }
         .header-print .logo {
-            width: 60px;
-            height: 60px;
+            width: 60px; /* حجم الشعار */
+            height: 60px; /* حجم الشعار */
             object-fit: contain;
-            margin-left: 5px;
+            /* margin-left: 5px;  تم إزالة الهامش الجانبي هنا لأن justify-content: space-between سيتولى المسافات */
         }
         .header-print .text-content {
-            flex-grow: 1;
+            flex-grow: 1; /* للسماح للنص بأخذ المساحة المتاحة والتوسط */
             text-align: center;
         }
         .title-print {
@@ -171,6 +171,11 @@
 
         /* أنماط الطباعة الفعلية */
         @media print {
+            /* إخفاء زر الطباعة عند الطباعة */
+            .print-button-container {
+                display: none !important;
+            }
+
             .app-header, .app-sidebar, .app-footer, .app-content-header, .no-print-adminlte,
             .main-header, .main-sidebar, .main-footer, .content-header, .control-sidebar,
             .preloader, .wrapper > .content-wrapper, body > .wrapper > .content-wrapper .card-tools,
@@ -270,16 +275,26 @@
     <div class="print-container" lang="ar" dir="rtl">
         <div class="content-wrapper">
             <div class="header-print">
+                {{-- الشعار الأول على اليمين --}}
                 <img src="{{ asset('images/logo.png') }}"
-                        alt="شعار المدينة"
+                        alt="شعار المؤسسة 1"
                         class="logo"
-                        onerror="this.onerror=null; this.src='https://placehold.co/60x60/CCCCCC/666666?text=شعار';"
-                        title="إذا لم يظهر الشعار، تأكد من مسار الصورة في مجلد public/images">
+                        onerror="this.onerror=null; this.src='https://placehold.co/60x60/CCCCCC/666666?text=شعار1';"
+                        title="إذا لم يظهر الشعار الأول، تأكد من مساره في مجلد public/images">
+                
+                {{-- محتوى النص في المنتصف --}}
                 <div class="text-content">
                     <div class="title-print">الموقف اليومي للمنتسبين</div>
                     <div class="subtitle-print">قسم مدينة الإمام الحسين (ع) للزائرين</div>
                     <div class="subtitle-print">الموقف الخاص بالشعبة الخدمية</div>
                 </div>
+
+                {{-- الشعار الثاني على اليسار --}}
+                <img src="{{ asset('images/another_logo.png') }}" {{-- افترض أن لديك ملف صورة آخر هنا --}}
+                        alt="شعار المؤسسة 2"
+                        class="logo"
+                        onerror="this.onerror=null; this.src='https://placehold.co/60x60/CCCCCC/666666?text=شعار2';"
+                        title="إذا لم يظهر الشعار الثاني، تأكد من مساره في مجلد public/images">
             </div>
 
             <table>
@@ -655,9 +670,9 @@
                     $shortage = $totalRequired - $totalEmployees;
 
                     $paidLeavesCount = count($dailyStatus->annual_leaves ?? [])
-                                        + count($dailyStatus->periodic_leaves ?? [])
-                                        + count($dailyStatus->sick_leaves ?? [])
-                                        + count($dailyStatus->bereavement_leaves ?? []);
+                                            + count($dailyStatus->periodic_leaves ?? [])
+                                            + count($dailyStatus->sick_leaves ?? [])
+                                            + count($dailyStatus->bereavement_leaves ?? []);
 
                     $eidLeavesCount = 0;
                     foreach ($dailyStatus->eid_leaves ?? [] as $eidLeave) {
@@ -722,24 +737,40 @@
                 </tr>
             </table>
         </div>
-
-        <div class="signatures-container">
-            <div class="signature-block responsible-signature">
-                <div>مسؤول شعبة الخدمية</div>
-                <div class="signature-line">
-                    <div>التوقيع: ........................</div>
-                    <div>التاريخ: {{ \Carbon\Carbon::parse($dailyStatus->date)->addDay()->format('d/m/Y') }}</div>
-                </div>
+     
+   <div class="signatures-container" style="display: flex; justify-content: space-between; margin-top: 40px;">
+    @if (!empty($dailyStatus->organizer_employee_name))
+        <div class="signature-block organizer-signature" style="text-align: right;">
+            <div>منظم الموقف: <strong>{{ $dailyStatus->organizer_employee_name }}</strong></div>
+            <div class="signature-line">
+                <div>التوقيع: ........................</div>
             </div>
+        </div>
+    @endif
 
-            @if (!empty($dailyStatus->organizer_employee_name))
-            <div class="signature-block organizer-signature">
-                <div>منظم الموقف: <strong>{{ $dailyStatus->organizer_employee_name }}</strong></div>
-                <div class="signature-line">
-                    <div>التوقيع: ........................</div>
-                </div>
-            </div>
-            @endif
+    <div class="signature-block responsible-signature" style="text-align: left;">
+        <div>مسؤول شعبة الخدمية</div>
+        <div class="signature-line">
+            <div>التوقيع: ........................</div>
+            <div>التاريخ: {{ \Carbon\Carbon::parse($dailyStatus->date)->addDay()->format('d/m/Y') }}</div>
+        </div>
+    </div>
+</div>
+
+
+        {{-- زر الطباعة --}}
+        <div class="print-button-container" style="text-align: center; margin-top: 20px;">
+            <button onclick="window.print()" style="
+                padding: 10px 20px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+            ">
+                طباعة التقرير
+            </button>
         </div>
     </div>
 </body>
