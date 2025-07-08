@@ -1,38 +1,76 @@
 #!/bin/bash
+set -e
 
-echo "🔧 Starting entrypoint.sh script..."
-echo "🌍 Current APP_ENV: $APP_ENV"
+echo "🔧 Starting Laravel application on Railway..."
+echo "🌍 Environment: $APP_ENV"
 
-# تحميل المتغيرات من .env
-if [ -f .env ]; then
-    echo "📦 Loading environment variables from .env"
-    export $(cat .env | grep -v '^#' | xargs)
-fi
+# دالة للتحقق من قاعدة البيانات
+check_database() {
+    php -r "
+    try {
+        \$pdo = new PDO(
+            'mysql:host=' . getenv('DB_HOST') . ';port=' . getenv('DB_PORT') . ';dbname=' . getenv('DB_DATABASE'),
+            getenv('DB_USERNAME'),
+            getenv('DB_PASSWORD'),
+            [
+                PDO::ATTR_TIMEOUT => 30,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4'
+            ]
+        );
+        echo 'Database connection successful';
+        exit(0);
+    } catch (Exception \$e) {
+        echo 'Database connection failed: ' . \$e->getMessage();
+        exit(1);
+    }
+    "
+}
 
-# عرض معلومات الاتصال بقاعدة البيانات
-echo "📡 Checking DB connection..."
-echo "DB_HOST: '$DB_HOST'"
-echo "DB_PORT: '$DB_PORT'"
-echo "DB_DATABASE: '$DB_DATABASE'"
-echo "DB_USERNAME: '$DB_USERNAME'"
-# لا تطبع كلمة المرور
+# عرض معلومات الاتصال
+echo "📡 Database connection details:"
+echo "   Host: $DB_HOST"
+echo "   Port: $DB_PORT"
+echo "   Database: $DB_DATABASE"
+echo "   Username: $DB_USERNAME"
 
-# الانتظار حتى تصبح قاعدة البيانات جاهزة
-echo "⌛ Waiting for MySQL to be ready..."
-until php artisan migrate:status > /dev/null 2>&1
-do
-  echo "❌ Database not ready. Retrying in 3 seconds..."
-  sleep 3
+# انتظار قاعدة البيانات
+echo "⌛ Waiting for database to be ready..."
+max_attempts=60
+attempt=1
+
+while [ $attempt -le $max_attempts ]; do
+    if check_database; then
+        echo "✅ Database connection established!"
+        break
+    else
+        echo "❌ Attempt $attempt/$max_attempts failed. Retrying in 5 seconds..."
+        sleep 5
+        ((attempt++))
+    fi
 done
 
-echo "✅ Database is ready! Running migrations and seeders..."
+if [ $attempt -gt $max_attempts ]; then
+    echo "❌ Failed to connect to database after $max_attempts attempts"
+    exit 1
+fi
 
-# تجهيز Laravel
-php artisan config:clear
-php artisan config:cache
+# تشغيل الترحيلات
+echo "🗃️ Running database migrations..."
 php artisan migrate --force
-php artisan db:seed --force
 
-# بدء Laravel server
-echo "🚀 Starting Laravel server on port ${PORT:-8000}..."
-php artisan serve --host 0.0.0.0 --port ${PORT:-8000}
+# مسح الكاش
+echo "🧹 Clearing application cache..."
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+
+# تحسين للإنتاج
+echo "⚡ Optimizing for production..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+echo "🚀 Starting web server..."
+exec "$@"
