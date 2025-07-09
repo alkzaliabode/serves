@@ -23,6 +23,7 @@ use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\SurveyChartController; // تأكد من استيراد هذا المتحكم
 use App\Http\Controllers\UserProfilePhotoController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\MonthlySummaryController; // استيراد المتحكم الجديد للملخص الشهري
 
 
 /*
@@ -70,6 +71,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/daily-statuses/get-dated-leave-item', [DailyStatusController::class, 'getDatedLeaveItem'])->name('daily-statuses.get-dated-leave-item');
     Route::get('/daily-statuses/get-custom-usage-item', [DailyStatusController::class, 'getCustomUsageItem'])->name('daily-statuses.get-custom-usage-item');
     Route::get('/daily-statuses/get-hijri-date-and-day', [DailyStatusController::class, 'getHijriDateAndDay'])->name('daily-statuses.get-hijri-date-and-day');
+
+    // مسار الملخص الشهري الجديد
+    Route::get('/monthly-summary/{year?}/{month?}', [MonthlySummaryController::class, 'showMonthlySummary'])->name('monthly-summary.show');
 
 
     // مسارات تقرير الموارد

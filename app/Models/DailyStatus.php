@@ -23,15 +23,19 @@ class DailyStatus extends Model
         'bereavement_leaves',
         'eid_leaves',
         'guard_rest',
+        'custom_usages', // Existing custom usages
+        'wedding_leaves', // New: Wedding leaves
+        'other_leaves',   // New: Other leaves
+        'monthly_hours',  // New: Monthly hours (if stored daily)
         'total_employees',
         'actual_attendance',
         'paid_leaves_count',
         'unpaid_leaves_count',
         'absences_count',
         'shortage',
+        'total_required', // Added total_required to fillable
         'organizer_employee_id',
         'organizer_employee_name',
-        'custom_usages',
     ];
 
     /**
@@ -45,13 +49,16 @@ class DailyStatus extends Model
         'annual_leaves' => 'array',
         'temporary_leaves' => 'array',
         'unpaid_leaves' => 'array',
-        'absences' => 'array', // هذا الحقل سيحتوي على start_date و total_days
-        'long_leaves' => 'array', // هذا الحقل سيحتوي على start_date و total_days
-        'sick_leaves' => 'array', // هذا الحقل سيحتوي على start_date و total_days
+        'absences' => 'array',
+        'long_leaves' => 'array',
+        'sick_leaves' => 'array',
         'bereavement_leaves' => 'array',
         'eid_leaves' => 'array',
         'guard_rest' => 'array',
         'custom_usages' => 'array',
+        'wedding_leaves' => 'array', // Cast new field as array
+        'other_leaves' => 'array',   // Cast new field as array
+        'monthly_hours' => 'array',  // Cast new field as array (if storing daily hours per employee)
         'organizer_employee_id' => 'integer',
         'organizer_employee_name' => 'string',
     ];

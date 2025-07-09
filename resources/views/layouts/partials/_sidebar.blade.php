@@ -61,7 +61,7 @@
 
                 {{-- روابط التقارير --}}
                 {{-- هذا الـ nav-header سيظهر إذا كان لدى المستخدم أي صلاحية لعرض أي من التقارير الفرعية --}}
-                @canany(['view resource report', 'view monthly cleaning report', 'view monthly sanitation report', 'view photo reports'])
+                @canany(['view resource report', 'view monthly cleaning report', 'view monthly sanitation report', 'view photo reports', 'view monthly summary'])
                     <li class="nav-header animated-nav-item" data-animation-delay="0.7">التقارير</li>
                     <li class="nav-item animated-nav-item" data-animation-delay="0.8">
                         @can('view resource report')
@@ -95,6 +95,15 @@
                                 <p>التقارير المصورة</p>
                             </a>
                         @endcanany
+                    </li>
+                    {{-- رابط الملخص الشهري الجديد --}}
+                    <li class="nav-item animated-nav-item" data-animation-delay="1.05"> {{-- Adjusted delay --}}
+                        @can('view monthly summary') {{-- New permission for monthly summary --}}
+                            <a href="{{ route('monthly-summary.show') }}" class="nav-link {{ request()->routeIs('monthly-summary.*') ? 'active-link' : '' }}">
+                                <i class="nav-icon fas fa-calendar-alt"></i> {{-- Icon for monthly summary --}}
+                                <p>ملخص الحضور الشهري</p>
+                            </a>
+                        @endcan
                     </li>
                 @endcanany
 
