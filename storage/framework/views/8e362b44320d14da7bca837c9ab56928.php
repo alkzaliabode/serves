@@ -110,11 +110,11 @@
 
                 
                 
-                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['manage employees', 'manage background settings'])): ?>
+                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view users', 'manage users', 'manage background settings'])): ?> 
                     <li class="nav-header animated-nav-item" data-animation-delay="1.1">الإدارة</li>
                     
                     <li class="nav-item animated-nav-item" data-animation-delay="1.2">
-                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view employees', 'manage employees'])): ?>
+                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['view users', 'manage users'])): ?> 
                             <a href="<?php echo e(route('employees.index')); ?>" class="nav-link <?php echo e(request()->routeIs('employees.*') ? 'active-link' : ''); ?>">
                                 <i class="nav-icon fas fa-users"></i>
                                 <p>الموظفين</p>

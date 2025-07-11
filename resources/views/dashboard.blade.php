@@ -200,7 +200,8 @@
                     @endcanany
 
                     {{-- قسم الموظفين --}}
-                    @canany(['view employees', 'manage employees'])
+                    {{-- تم تعديل الصلاحيات هنا لتتوافق مع الصلاحيات المعرفة في PermissionsSeeder --}}
+                    @canany(['view users', 'manage users'])
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-employees h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="800">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -451,7 +452,7 @@
                                         <i class="fas fa-user-tag text-white fs-1 opacity-75 card-icon-animated"></i>
                                     </div>
                                     <p class="text-white-light mb-4 card-description">
-                                        تحديد الأدوار والصلاحيات المختلفة للمستخدمين لضبط الوصول.
+                                        إنشاء، تعديل، وحذف الأدوار وتعيين الصلاحيات للمستخدمين.
                                     </p>
                                     <a href="{{ route('roles.index') }}"
                                        class="btn btn-card-action text-decoration-none mt-auto">
@@ -462,158 +463,238 @@
                             </div>
                         </div>
                     @endcan
-
-                    {{-- قسم الملف الشخصي --}}
-                    {{-- لا يحتاج صلاحية خاصة، يعرض لجميع المستخدمين المصادق عليهم --}}
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="card card-dashboard card-profile h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="2000">
-                            <div class="card-body d-flex flex-column justify-content-between p-4">
-                                <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <h3 class="h3 font-weight-bold text-white-shadow card-title-animated">الملف الشخصي</h3>
-                                    <i class="fas fa-user-circle text-white fs-1 opacity-75 card-icon-animated"></i>
-                                </div>
-                                <p class="text-white-light mb-4 card-description">
-                                    تحديث معلوماتك الشخصية وإعدادات الحساب.
-                                </p>
-                                <a href="{{ route('profile.edit') }}"
-                                   class="btn btn-card-action text-decoration-none mt-auto">
-                                    عرض الملف الشخصي
-                                    <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div> {{-- /.row dashboard-cards-container --}}
-            </div> {{-- /.card-body --}}
-        </div> {{-- /.card --}}
-    </div> {{-- /.container-fluid --}}
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
-    <!-- AOS (Animate On Scroll) Library -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    @parent {{-- للحفاظ على أي سكربتات أخرى قد تكون موجودة في layout الأب --}}
     <script>
+        // AOS (Animate On Scroll) initialization
         AOS.init({
-            duration: 800, // duration of animation
-            once: true,    // whether animation should happen only once
+            duration: 800, // Duration of animation
+            once: true,    // Whether animation should happen only once - while scrolling down
+            mirror: false, // Whether elements should animate out while scrolling past them
+        });
+
+        // Add custom styling for dashboard cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const dashboardCards = document.querySelectorAll('.card-dashboard');
+            dashboardCards.forEach(card => {
+                // Add a subtle glow on hover
+                card.addEventListener('mouseenter', () => {
+                    card.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 123, 255, 0.4)';
+                    card.style.transform = 'translateY(-5px) scale(1.01)';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.4)';
+                    card.style.transform = 'translateY(0) scale(1)';
+                });
+
+                // Add a subtle animation to the icon and title on hover
+                const icon = card.querySelector('.card-icon-animated');
+                const title = card.querySelector('.card-title-animated');
+                const arrowIcon = card.querySelector('.icon-arrow-animated');
+
+                if (icon) {
+                    card.addEventListener('mouseenter', () => {
+                        icon.style.transform = 'scale(1.1) rotate(5deg)';
+                        icon.style.color = '#00a0f0'; // Brighter color on hover
+                    });
+                    card.addEventListener('mouseleave', () => {
+                        icon.style.transform = 'scale(1) rotate(0deg)';
+                        icon.style.color = 'rgba(255, 255, 255, 0.75)'; // Original color
+                    });
+                }
+                if (title) {
+                    card.addEventListener('mouseenter', () => {
+                        title.style.transform = 'translateX(5px)';
+                        title.style.color = 'white'; // Ensure title is bright
+                    });
+                    card.addEventListener('mouseleave', () => {
+                        title.style.transform = 'translateX(0)';
+                        title.style.color = 'rgba(255, 255, 255, 0.9)'; // Original color
+                    });
+                }
+                if (arrowIcon) {
+                    card.addEventListener('mouseenter', () => {
+                        arrowIcon.style.transform = 'translateX(5px)';
+                    });
+                    card.addEventListener('mouseleave', () => {
+                        arrowIcon.style.transform = 'translateX(0)';
+                    });
+                }
+            });
         });
     </script>
+@endsection
+
+@section('styles')
+    @parent {{-- للحفاظ على أي أنماط أخرى قد تكون موجودة في layout الأب --}}
     <style>
-        /* Custom styles for dashboard cards */
+        /* General Dashboard Card Styling */
         .dashboard-main-card {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); /* Darker gradient */
-            border-radius: 1rem;
-            overflow: hidden; /* Ensures rounded corners apply to children */
+            background: linear-gradient(135deg, rgba(42, 56, 75, 0.9), rgba(31, 39, 50, 0.9)); /* Darker, more prominent gradient */
+            border-radius: 1.5rem; /* More rounded corners for main card */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); /* Stronger shadow for main card */
+            border: 1px solid rgba(255, 255, 255, 0.15); /* Subtle border for main card */
+            backdrop-filter: blur(10px); /* Apply blur to main card */
         }
 
         .dashboard-main-card-body {
-            padding: 2.5rem !important;
+            padding: 2.5rem !important; /* More padding inside the main card */
         }
 
         .section-title-animated {
             font-size: 2.2rem;
-            color: #ecf0f1; /* Light grey */
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            animation: fadeInDown 1s ease-out;
+            font-weight: 700;
+            color: #e0e0e0;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+            animation: fadeInDown 1s ease-out forwards;
         }
 
-        /* Card base styling */
+        /* Individual Dashboard Cards */
         .card-dashboard {
-            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 0.8rem;
-            backdrop-filter: blur(5px); /* Frosted glass effect */
-            transition: all 0.3s ease-in-out;
+            background-color: rgba(255, 255, 255, 0.08) !important; /* Slightly transparent white for cards */
+            border-radius: 1.25rem !important; /* Rounded corners */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4) !important; /* Soft shadow */
+            border: 1px solid rgba(255, 255, 255, 0.2) !important; /* Prominent border */
+            backdrop-filter: blur(15px) !important; /* Stronger glassmorphism effect */
+            transition: all 0.3s ease-in-out; /* Smooth transitions for hover */
+            overflow: hidden; /* Ensure content stays within rounded corners */
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1; /* Ensure cards are above background elements if any */
+        }
+
+        .card-dashboard::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+            z-index: -1;
+            border-radius: 1.25rem;
         }
 
         .card-dashboard:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-5px) scale(1.01); /* Lift and slightly enlarge on hover */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 123, 255, 0.4); /* Enhanced shadow and glow */
         }
 
-        /* Card specific gradients */
-        .card-tasks-general { background: linear-gradient(45deg, #1abc9c, #16a085); } /* Turquoise */
-        .card-tasks-sanitation { background: linear-gradient(45deg, #3498db, #2980b9); } /* Peter River */
-        .card-service-board { background: linear-gradient(45deg, #9b59b6, #8e44ad); } /* Amethyst */
-        .card-daily-status { background: linear-gradient(45deg, #f1c40f, #f39c12); } /* Sunflower */
-        .card-resource-report { background: linear-gradient(45deg, #e67e22, #d35400); } /* Carrot */
-        .card-monthly-cleaning { background: linear-gradient(45deg, #e74c3c, #c0392b); } /* Alizarin */
-        .card-monthly-sanitation { background: linear-gradient(45deg, #2ecc71, #27ae60); } /* Emerald */
-        .card-monthly-summary { background: linear-gradient(45deg, #6c757d, #495057); } /* Gray */
-        .card-employees { background: linear-gradient(45deg, #34495e, #2c3e50); } /* Wet Asphalt */
-        .card-photo-reports { background: linear-gradient(45deg, #f39c12, #e67e22); } /* Orange */
-        .card-background-settings { background: linear-gradient(45deg, #95a5a6, #7f8c8d); } /* Concrete */
-        .card-actual-results { background: linear-gradient(45deg, #1abc9c, #16a085); } /* Turquoise */
-        .card-resource-trackings { background: linear-gradient(45deg, #3498db, #2980b9); } /* Peter River */
-        .card-unit-goals { background: linear-gradient(45deg, #9b59b6, #8e44ad); } /* Amethyst */
-        .card-gilbert-charts { background: linear-gradient(45deg, #f1c40f, #f39c12); } /* Sunflower */
-        .card-surveys { background: linear-gradient(45deg, #e67e22, #d35400); } /* Carrot */
-        .card-survey-charts { background: linear-gradient(45deg, #e74c3c, #c0392b); } /* Alizarin */
-        .card-notifications { background: linear-gradient(45deg, #2ecc71, #27ae60); } /* Emerald */
-        .card-users { background: linear-gradient(45deg, #34495e, #2c3e50); } /* Wet Asphalt */
-        .card-roles { background: linear-gradient(45deg, #7f8c8d, #95a5a6); } /* Asbestos */
-        .card-profile { background: linear-gradient(45deg, #c0392b, #e74c3c); } /* Pomegranate */
+        .card-dashboard .card-body {
+            color: rgba(255, 255, 255, 0.9); /* Lighter text for better contrast */
+        }
 
-
-        /* Card content styling */
-        .card-dashboard .h3 {
-            color: white;
+        .card-title-animated {
             font-size: 1.6rem;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease-in-out;
         }
 
-        .card-dashboard .card-description {
-            color: rgba(255, 255, 255, 0.9);
+        .card-icon-animated {
+            transition: all 0.3s ease-in-out;
+        }
+
+        .card-description {
             font-size: 0.95rem;
             line-height: 1.6;
-        }
-
-        .card-dashboard .card-icon-animated {
-            font-size: 3.5rem;
             color: rgba(255, 255, 255, 0.7);
-            transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
-        }
-
-        .card-dashboard:hover .card-icon-animated {
-            transform: scale(1.1) rotate(5deg);
-            color: white;
         }
 
         .btn-card-action {
-            background-color: rgba(255, 255, 255, 0.2);
+            background: linear-gradient(90deg, #007bff, #00a0f0); /* Blue gradient button */
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
+            border: none;
+            border-radius: 0.75rem; /* Rounded button */
+            padding: 10px 20px;
             font-weight: bold;
             transition: all 0.3s ease-in-out;
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
             display: inline-flex;
             align-items: center;
             justify-content: center;
         }
 
         .btn-card-action:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-            color: white;
+            background: linear-gradient(90deg, #0056b3, #007bff); /* Darker blue on hover */
+            box-shadow: 0 8px 20px rgba(0, 123, 255, 0.6);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
-        .btn-card-action .icon-arrow-animated {
-            margin-right: 8px; /* Space between text and icon */
+        .icon-arrow-animated {
+            margin-right: 8px; /* Space between text and arrow */
             transition: transform 0.3s ease-in-out;
         }
 
-        .btn-card-action:hover .icon-arrow-animated {
-            transform: translateX(5px);
+        /* Specific card color themes (optional, can be expanded) */
+        .card-tasks-general {
+            background: linear-gradient(135deg, rgba(30, 144, 255, 0.1), rgba(0, 123, 255, 0.1)) !important;
+        }
+        .card-tasks-sanitation {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(0, 128, 0, 0.1)) !important;
+        }
+        .card-service-board {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 165, 0, 0.1)) !important;
+        }
+        .card-daily-status {
+            background: linear-gradient(135deg, rgba(108, 117, 125, 0.1), rgba(80, 80, 80, 0.1)) !important;
+        }
+        .card-resource-report {
+            background: linear-gradient(135deg, rgba(23, 162, 184, 0.1), rgba(0, 139, 139, 0.1)) !important;
+        }
+        .card-monthly-cleaning {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(178, 34, 34, 0.1)) !important;
+        }
+        .card-monthly-sanitation {
+            background: linear-gradient(135deg, rgba(111, 66, 193, 0.1), rgba(75, 0, 130, 0.1)) !important;
+        }
+        .card-monthly-summary {
+            background: linear-gradient(135deg, rgba(255, 99, 71, 0.1), rgba(255, 69, 0, 0.1)) !important;
+        }
+        .card-employees {
+            background: linear-gradient(135deg, rgba(255, 159, 64, 0.1), rgba(255, 140, 0, 0.1)) !important;
+        }
+        .card-photo-reports {
+            background: linear-gradient(135deg, rgba(128, 0, 128, 0.1), rgba(75, 0, 130, 0.1)) !important;
+        }
+        .card-background-settings {
+            background: linear-gradient(135deg, rgba(0, 128, 128, 0.1), rgba(0, 100, 0, 0.1)) !important;
+        }
+        .card-actual-results {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(218, 165, 32, 0.1)) !important;
+        }
+        .card-resource-trackings {
+            background: linear-gradient(135deg, rgba(128, 128, 0, 0.1), rgba(85, 107, 47, 0.1)) !important;
+        }
+        .card-unit-goals {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.1), rgba(199, 21, 133, 0.1)) !important;
+        }
+        .card-gilbert-charts {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 206, 209, 0.1)) !important;
+        }
+        .card-surveys {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(75, 0, 130, 0.1)) !important;
+        }
+        .card-survey-charts {
+            background: linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 20, 147, 0.1)) !important;
+        }
+        .card-notifications {
+            background: linear-gradient(135deg, rgba(255, 99, 71, 0.1), rgba(255, 69, 0, 0.1)) !important;
+        }
+        .card-users {
+            background: linear-gradient(135deg, rgba(70, 130, 180, 0.1), rgba(65, 105, 225, 0.1)) !important;
+        }
+        .card-roles {
+            background: linear-gradient(135deg, rgba(255, 20, 147, 0.1), rgba(199, 21, 133, 0.1)) !important;
         }
 
-        /* Responsive adjustments */
+        /* Responsive adjustments for smaller screens */
         @media (max-width: 767.98px) {
             .dashboard-main-card-body {
                 padding: 1.5rem !important;
@@ -621,15 +702,15 @@
             .section-title-animated {
                 font-size: 1.8rem;
             }
-            .card-dashboard .h3 {
-                font-size: 1.4rem;
+            .card-title-animated {
+                font-size: 1.3rem;
             }
-            .card-dashboard .card-icon-animated {
-                font-size: 3rem;
+            .card-description {
+                font-size: 0.85rem;
             }
             .btn-card-action {
-                padding: 0.6rem 1.2rem;
                 font-size: 0.9rem;
+                padding: 8px 15px;
             }
         }
     </style>

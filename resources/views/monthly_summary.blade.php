@@ -236,6 +236,9 @@
             <div class="card-header no-print"> {{-- Add no-print to hide this header during print --}}
                 <h3 class="card-title">ملخص الحضور والانصراف للمنتسبين</h3>
                 <div class="card-tools">
+                    <button class="btn btn-secondary btn-sm mr-2" onclick="goBack()">
+                        <i class="fas fa-arrow-right"></i> الرجوع
+                    </button>
                     <button class="btn btn-primary btn-sm" onclick="window.print()">
                         <i class="fas fa-print"></i> طباعة الملخص
                     </button>
@@ -256,35 +259,63 @@
                 </div>
 
                 <div class="row mb-3 no-print">
-                    <div class="col-md-4">
-                        <label for="month_select">اختر الشهر:</label>
-                        <select id="month_select" class="form-control" onchange="navigateToMonth()">
-                            @for ($i = 1; $i <= 12; $i++)
-                                <option value="{{ $i }}" {{ $month == $i ? 'selected' : '' }}>
-                                    {{ \Carbon\Carbon::create(null, $i, 1)->monthName }}
-                                </option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="year_select">اختر السنة:</label>
-                        <select id="year_select" class="form-control" onchange="navigateToMonth()">
-                            @for ($i = \Carbon\Carbon::now()->year - 5; $i <= \Carbon\Carbon::now()->year + 1; $i++)
-                                <option value="{{ $i }}" {{ $year == $i ? 'selected' : '' }}>
-                                    {{ $i }}
-                                </option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div class="col-md-4 d-flex align-items-end">
-                        <p class="form-control-static mb-0">
-                            <strong>ملخص شهر {{ \Carbon\Carbon::create(null, $month, 1)->monthName }} {{ $year }}</strong>
-                        </p>
+                    <div class="col-md-12">
+                        <div class="form-row align-items-end"> {{-- Use form-row for better alignment and wrapping --}}
+                            <div class="col-md-2 mb-3">
+                                <label for="day_select">اليوم:</label>
+                                <select id="day_select" class="form-control form-control-sm">
+                                    <option value="">كل الأيام</option>
+                                    @for ($i = 1; $i <= 31; $i++)
+                                        <option value="{{ $i }}" {{ (isset($day) && $day == $i) ? 'selected' : '' }}>
+                                            {{ $i }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="month_select">الشهر:</label>
+                                <select id="month_select" class="form-control form-control-sm">
+                                    @for ($i = 1; $i <= 12; $i++)
+                                        <option value="{{ $i }}" {{ $month == $i ? 'selected' : '' }}>
+                                            {{ \Carbon\Carbon::create(null, $i, 1)->monthName }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label for="year_select">السنة:</label>
+                                <select id="year_select" class="form-control form-control-sm">
+                                    @for ($i = \Carbon\Carbon::now()->year - 5; $i <= \Carbon\Carbon::now()->year + 1; $i++)
+                                        <option value="{{ $i }}" {{ $year == $i ? 'selected' : '' }}>
+                                            {{ $i }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="search_input">البحث بالاسم/الرقم:</label>
+                                <input type="text" id="search_input" class="form-control form-control-sm" placeholder="ابحث عن موظف..." value="{{ $searchQuery ?? '' }}">
+                            </div>
+                            <div class="col-md-2 mb-3 d-flex justify-content-end">
+                                <button class="btn btn-info btn-sm mr-2" onclick="navigateToDate()">
+                                    <i class="fas fa-filter"></i> تصفية
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="clearFilters()">
+                                    <i class="fas fa-times"></i> مسح
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <p class="text-center font-weight-bold">
-                    ملخص شهر {{ \Carbon\Carbon::create(null, $month, 1)->monthName }} منتسبين شعبة الخدمية
+                    ملخص
+                    @if(isset($day) && $day)
+                        يوم {{ $day }}
+                    @endif
+                    شهر {{ \Carbon\Carbon::create(null, $month, 1)->monthName }}
+                    سنة {{ $year }}
+                    منتسبين شعبة الخدمية
                 </p>
                 <p class="text-center">
                     التاريخ: {{ \Carbon\Carbon::now()->format('d/m/Y') }}
@@ -292,7 +323,7 @@
 
                 @if(empty($finalSummary))
                     <div class="alert alert-info text-center mt-4">
-                        لا توجد بيانات متاحة لهذا الشهر.
+                        لا توجد بيانات متاحة لهذا @if(isset($day) && $day) اليوم @else الشهر @endif.
                     </div>
                 @else
                     <div class="table-responsive">
@@ -308,6 +339,7 @@
                                     <th>عدد الساعات الزمنية خلال الشهر</th>
                                     <th>عدد أيام الغياب</th>
                                     <th>عدد الأيام بدون راتب</th>
+                                    <th>عدد الإجازات الطويلة</th>
                                     <th>عدد الإجازات المرضية</th>
                                     <th>عدد إجازات الوفاة</th>
                                     <th>عدد إجازات الأعياد</th>
@@ -330,6 +362,7 @@
                                     <td>{{ $data['temporary_leaves_hours'] ?? 0 }}</td>
                                     <td>{{ $data['absences_days'] ?? 0 }}</td>
                                     <td>{{ $data['unpaid_leaves_count'] ?? 0 }}</td>
+                                    <td>{{ $data['long_leaves_days'] ?? 0 }}</td>
                                     <td>{{ $data['sick_leaves_days'] ?? 0 }}</td>
                                     <td>{{ $data['bereavement_leaves_count'] ?? 0 }}</td>
                                     <td>{{ $data['eid_leaves_count'] ?? 0 }}</td>
@@ -365,12 +398,82 @@
 
     <script>
         // This function is for navigating between months/years on screen, not directly for print.
-        function navigateToMonth() {
-            const selectedMonth = document.getElementById('month_select').value;
-            const selectedYear = document.getElementById('year_select').value;
-            // Construct the URL for the monthly summary page
-            window.location.href = `/monthly-summary/${selectedYear}/${selectedMonth}`;
+        function navigateToDate() {
+            let selectedDay = document.getElementById('day_select').value;
+            let selectedMonth = document.getElementById('month_select').value;
+            let selectedYear = document.getElementById('year_select').value;
+            const searchQuery = document.getElementById('search_input').value;
+
+            // Ensure year and month always have a value, default to current if not set
+            const now = new Date();
+            if (!selectedYear) {
+                selectedYear = now.getFullYear();
+                // No need to update dropdown here, as we are navigating away
+            }
+            if (!selectedMonth) {
+                selectedMonth = now.getMonth() + 1; // Month is 0-indexed
+                // No need to update dropdown here, as we are navigating away
+            }
+
+            let url = `/monthly-summary/${selectedYear}/${selectedMonth}`;
+            if (selectedDay) {
+                url += `/${selectedDay}`;
+            }
+
+            // Add search query as a URL parameter
+            const params = new URLSearchParams();
+            if (searchQuery) {
+                params.append('search', searchQuery);
+            }
+            if (params.toString()) {
+                url += `?${params.toString()}`;
+            }
+
+            window.location.href = url;
         }
+
+        function clearFilters() {
+            // Get current year and month to reset to them
+            const currentYear = new Date().getFullYear();
+            const currentMonth = new Date().getMonth() + 1; // Month is 0-indexed
+
+            // Construct the URL for the current month/year without any day or search query
+            window.location.href = `/monthly-summary/${currentYear}/${currentMonth}`;
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        // Update initial values for all dropdowns and search input based on current URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const pathSegments = window.location.pathname.split('/');
+            const yearIndex = pathSegments.indexOf('monthly-summary') + 2;
+            const monthIndex = pathSegments.indexOf('monthly-summary') + 3;
+            const dayIndex = pathSegments.indexOf('monthly-summary') + 4;
+
+            if (pathSegments[yearIndex]) {
+                document.getElementById('year_select').value = pathSegments[yearIndex];
+            }
+            if (pathSegments[monthIndex]) {
+                document.getElementById('month_select').value = pathSegments[monthIndex];
+            }
+            // Only set day if it exists in the URL
+            if (pathSegments[dayIndex] && !isNaN(pathSegments[dayIndex])) {
+                document.getElementById('day_select').value = pathSegments[dayIndex];
+            } else {
+                // If no day in URL, ensure "كل الأيام" is selected
+                document.getElementById('day_select').value = "";
+            }
+
+
+            // Get search query from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchParam = urlParams.get('search');
+            if (searchParam) {
+                document.getElementById('search_input').value = searchParam;
+            }
+        });
     </script>
 </body>
 </html>

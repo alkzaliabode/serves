@@ -28,7 +28,7 @@ class PermissionsSeeder extends Seeder
         $permissions = [
             // صلاحيات إدارة المستخدمين
             // User Management Permissions
-            'manage users',        // صلاحية شاملة لإدارة المستخدمين (CRUD) - Comprehensive permission for user management (CRUD)
+            'manage users',          // صلاحية شاملة لإدارة المستخدمين (CRUD) - Comprehensive permission for user management (CRUD)
             'create users',
             'edit users',
             'delete users',
@@ -36,7 +36,7 @@ class PermissionsSeeder extends Seeder
 
             // صلاحيات إدارة الأدوار
             // Role Management Permissions
-            'manage roles',        // صلاحية شاملة لإدارة الأدوار (CRUD) - Comprehensive permission for role management (CRUD)
+            'manage roles',          // صلاحية شاملة لإدارة الأدوار (CRUD) - Comprehensive permission for role management (CRUD)
             'create roles',
             'edit roles',
             'delete roles',
@@ -44,7 +44,7 @@ class PermissionsSeeder extends Seeder
 
             // صلاحيات إدارة الصلاحيات (نادرًا ما تُعطى إلا لـ super_admin)
             // Permission Management Permissions (rarely given except to super_admin)
-            'manage permissions', // صلاحية شاملة لإدارة الصلاحيات (CRUD) - Comprehensive permission for permission management (CRUD)
+            'manage permissions',    // صلاحية شاملة لإدارة الصلاحيات (CRUD) - Comprehensive permission for permission management (CRUD)
             'create permissions',
             'edit permissions',
             'delete permissions',
@@ -52,7 +52,7 @@ class PermissionsSeeder extends Seeder
 
             // صلاحيات لوحة التحكم
             // Dashboard Permissions
-            'access dashboard',    // الوصول إلى لوحة التحكم الرئيسية - Access to the main dashboard
+            'access dashboard',      // الوصول إلى لوحة التحكم الرئيسية - Access to the main dashboard
 
             // صلاحيات مهام النظافة العامة
             // General Cleaning Tasks Permissions
@@ -141,10 +141,10 @@ class PermissionsSeeder extends Seeder
         // **دور Super Admin**: يمتلك جميع الصلاحيات
         // Super Admin Role: Possesses all permissions
         if ($superAdminRole) {
-            $superAdminRole->givePermissionTo(Permission::all()); // يمتلك جميع الصلاحيات - Possesses all permissions
+            $superAdminRole->syncPermissions(Permission::all()); // يمتلك جميع الصلاحيات - Possesses all permissions
             Log::info('تم منح جميع الصلاحيات لدور super_admin.');
         } else {
-            Log::warning('دور super_admin غير موجود.');
+            Log::warning('دور super_admin غير موجود. يرجى التأكد من تشغيل RolesSeeder أولاً.');
         }
 
         // **دور Admin**: صلاحيات واسعة ولكن ليست كل الصلاحيات (مثال: لا يدير الصلاحيات نفسها)
@@ -172,10 +172,10 @@ class PermissionsSeeder extends Seeder
                 'view survey statistics',
                 'manage notifications', 'view notifications',
             ];
-            $adminRole->givePermissionTo($adminPermissions);
+            $adminRole->syncPermissions($adminPermissions); // استخدام syncPermissions
             Log::info('تم منح صلاحيات المدير (admin) لدور admin.');
         } else {
-            Log::warning('دور admin غير موجود.');
+            Log::warning('دور admin غير موجود. يرجى التأكد من تشغيل RolesSeeder أولاً.');
         }
 
         // **دور Editor**: يمكنه إنشاء وتعديل بعض المحتوى، ولكن لا يمكنه حذف أو إدارة المستخدمين/الأدوار.
@@ -183,7 +183,7 @@ class PermissionsSeeder extends Seeder
         if ($editorRole) {
             $editorPermissions = [
                 'access dashboard',
-                'view users',
+                'view users', // تم إرجاعها الآن بناءً على طلبك
                 'view general cleaning tasks', 'create general cleaning tasks', 'edit general cleaning tasks',
                 'view sanitation facility tasks', 'create sanitation facility tasks', 'edit sanitation facility tasks',
                 'view service tasks board', 'update service tasks status',
@@ -201,10 +201,10 @@ class PermissionsSeeder extends Seeder
                 'view survey statistics',
                 'view notifications',
             ];
-            $editorRole->givePermissionTo($editorPermissions);
+            $editorRole->syncPermissions($editorPermissions); // استخدام syncPermissions
             Log::info('تم منح صلاحيات المحرر (editor) لدور editor.');
         } else {
-            Log::warning('دور editor غير موجود.');
+            Log::warning('دور editor غير موجود. يرجى التأكد من تشغيل RolesSeeder أولاً.');
         }
 
         // **دور Viewer**: يمكنه عرض معظم الأشياء فقط.
@@ -212,7 +212,7 @@ class PermissionsSeeder extends Seeder
         if ($viewerRole) {
             $viewerPermissions = [
                 'access dashboard',
-                'view users',
+                'view users', // تم إرجاعها الآن بناءً على طلبك
                 'view general cleaning tasks',
                 'view sanitation facility tasks',
                 'view service tasks board',
@@ -230,10 +230,10 @@ class PermissionsSeeder extends Seeder
                 'view survey statistics',
                 'view notifications',
             ];
-            $viewerRole->givePermissionTo($viewerPermissions);
+            $viewerRole->syncPermissions($viewerPermissions); // استخدام syncPermissions
             Log::info('تم منح صلاحيات العرض (viewer) لدور viewer.');
         } else {
-            Log::warning('دور viewer غير موجود.');
+            Log::warning('دور viewer غير موجود. يرجى التأكد من تشغيل RolesSeeder أولاً.');
         }
 
         // **دور Employee**: صلاحيات محددة جداً للموظفين (مثال: فقط عرض مهامهم أو تسجيل الدخول)
@@ -241,15 +241,16 @@ class PermissionsSeeder extends Seeder
         if ($employeeRole) {
             $employeePermissions = [
                 'access dashboard',
-                'view daily statuses', // قد يحتاج الموظف لعرض الموقف اليومي - Employee might need to view daily status
-                'view service tasks board', // قد يحتاج الموظف لعرض لوحة المهام الخاصة به - Employee might need to view their task board
+                'view daily statuses',       // قد يحتاج الموظف لعرض الموقف اليومي - Employee might need to view daily status
+                'view service tasks board',  // قد يحتاج الموظف لعرض لوحة المهام الخاصة به - Employee might need to view their task board
+                'view notifications',        // الموظف قد يحتاج لعرض الإشعارات - Employee might need to view notifications
                 // أضف أي صلاحيات أخرى يحتاجها الموظف بشكل يومي
                 // Add any other permissions needed by the employee on a daily basis
             ];
-            $employeeRole->givePermissionTo($employeePermissions);
+            $employeeRole->syncPermissions($employeePermissions); // استخدام syncPermissions
             Log::info('تم منح صلاحيات الموظف (employee) لدور employee.');
         } else {
-            Log::warning('دور employee غير موجود.');
+            Log::warning('دور employee غير موجود. يرجى التأكد من تشغيل RolesSeeder أولاً.');
         }
 
         Log::info('تم الانتهاء من seeding الصلاحيات وربطها بالأدوار.');

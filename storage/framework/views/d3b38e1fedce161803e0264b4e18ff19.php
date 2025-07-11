@@ -1,17 +1,17 @@
-@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
+ 
 
-@section('title', 'إضافة دور جديد')
+<?php $__env->startSection('title', 'إضافة دور جديد'); ?>
 
-@section('page_title', 'إضافة دور جديد')
+<?php $__env->startSection('page_title', 'إضافة دور جديد'); ?>
 
-@section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">لوحة التحكم</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('roles.index') }}">إدارة الأدوار</a></li>
+<?php $__env->startSection('breadcrumb'); ?>
+    <li class="breadcrumb-item"><a href="<?php echo e(route('dashboard')); ?>">لوحة التحكم</a></li>
+    <li class="breadcrumb-item"><a href="<?php echo e(route('roles.index')); ?>">إدارة الأدوار</a></li>
     <li class="breadcrumb-item active">إضافة دور جديد</li>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('styles')
-    @parent {{-- للحفاظ على أي أنماط أخرى قد تكون موجودة في layout الأب --}}
+<?php $__env->startSection('styles'); ?>
+    <?php echo \Illuminate\View\Factory::parentPlaceholder('styles'); ?> 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css">
     <style>
@@ -224,83 +224,119 @@
             font-size: 1.2em; /* حجم أكبر قليلا للأيقونات داخل الأزرار */
         }
     </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="row">
         <div class="col-md-8 offset-md-2">
             <div class="card card-primary">
                 <div class="card-header">
                     <h3 class="card-title">إنشاء دور جديد</h3>
                 </div>
-                <form method="POST" action="{{ route('roles.store') }}">
-                    @csrf
+                <form method="POST" action="<?php echo e(route('roles.store')); ?>">
+                    <?php echo csrf_field(); ?>
 
                     <div class="card-body">
-                        @if ($errors->any())
+                        <?php if($errors->any()): ?>
                             <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
                                 <h5><i class="icon fas fa-ban"></i> خطأ في الإدخال!</h5>
                                 يرجى مراجعة الأخطاء التالية:
                                 <ul>
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
+                                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <li><?php echo e($error); ?></li>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
                         <div class="form-group">
-                            <label for="name">{{ __('اسم الدور') }}</label>
-                            <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required autofocus>
-                            @error('name')
+                            <label for="name"><?php echo e(__('اسم الدور')); ?></label>
+                            <input type="text" name="name" id="name" class="form-control <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" value="<?php echo e(old('name')); ?>" required autofocus>
+                            <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
                                 <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
+                                    <strong><?php echo e($message); ?></strong>
                                 </span>
-                            @enderror
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
 
                         <div class="form-group">
-                            <label for="permissions">{{ __('الصلاحيات') }}</label>
-                            <select id="permissions" name="permissions[]" multiple class="form-control select2 @error('permissions') is-invalid @enderror">
-                                @foreach ($permissions as $permission)
-                                    <option value="{{ $permission->name }}" {{ in_array($permission->name, old('permissions', [])) ? 'selected' : '' }}>
-                                        {{ $permission->name }}
+                            <label for="permissions"><?php echo e(__('الصلاحيات')); ?></label>
+                            <select id="permissions" name="permissions[]" multiple class="form-control select2 <?php $__errorArgs = ['permissions'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                                <?php $__currentLoopData = $permissions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $permission): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($permission->name); ?>" <?php echo e(in_array($permission->name, old('permissions', [])) ? 'selected' : ''); ?>>
+                                        <?php echo e($permission->name); ?>
+
                                     </option>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
-                            @error('permissions')
+                            <?php $__errorArgs = ['permissions'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
                                 <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
+                                    <strong><?php echo e($message); ?></strong>
                                 </span>
-                            @enderror
-                            @error('permissions.*')
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            <?php $__errorArgs = ['permissions.*'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
                                 <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
+                                    <strong><?php echo e($message); ?></strong>
                                 </span>
-                            @enderror
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
 
                     </div>
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">{{ __('إنشاء الدور') }}</button>
-                        <a href="{{ route('roles.index') }}" class="btn btn-secondary float-right">{{ __('إلغاء') }}</a>
+                        <button type="submit" class="btn btn-primary"><?php echo e(__('إنشاء الدور')); ?></button>
+                        <a href="<?php echo e(route('roles.index')); ?>" class="btn btn-secondary float-right"><?php echo e(__('إلغاء')); ?></a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
     <script>
         $(document).ready(function() {
             $('#permissions').select2({
-                placeholder: "{{ __('اختر صلاحية أو أكثر') }}",
+                placeholder: "<?php echo e(__('اختر صلاحية أو أكثر')); ?>",
                 allowClear: true,
                 theme: 'bootstrap4'
             });
@@ -310,4 +346,6 @@
             });
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin_layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\kadm-drgham\resources\views/roles/create.blade.php ENDPATH**/ ?>

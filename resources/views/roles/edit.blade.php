@@ -10,6 +10,54 @@
     <li class="breadcrumb-item active">تعديل الدور</li>
 @endsection
 
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css">
+    <style>
+        /* تحسين وضوح الكتابة في حقول الإدخال */
+        .form-control {
+            color: #333; /* لون نص أغمق */
+            background-color: #f8f9fa; /* خلفية بيضاء مائلة للرمادي الفاتح لزيادة التباين */
+            border-color: #ced4da; /* لون حدود أوضح */
+        }
+        .form-control::placeholder {
+            color: #6c757d; /* لون placeholder أغمق */
+        }
+
+        /* تحسين Select2 ليتناسب مع AdminLTE ووضوح الكتابة */
+        .select2-container--bootstrap4 .select2-selection--multiple,
+        .select2-container--bootstrap4 .select2-selection--single {
+            background-color: #f8f9fa !important; /* خلفية بيضاء مائلة للرمادي الفاتح */
+            border-color: #ced4da !important; /* حدود أوضح */
+            color: #333 !important; /* لون نص أغمق */
+        }
+        .select2-container--bootstrap4 .select2-selection__choice {
+            background-color: #007bff !important; /* خلفية زرقاء للخيار المحدد */
+            color: white !important; /* نص أبيض على الخلفية الزرقاء */
+            border-color: #006fe6 !important;
+        }
+        .select2-container--bootstrap4 .select2-selection__choice__remove {
+            color: rgba(255, 255, 255, 0.7) !important; /* لون X أبيض فاتح */
+        }
+        .select2-container--bootstrap4 .select2-selection__choice__remove:hover {
+            color: white !important; /* لون X أبيض عند التحويم */
+        }
+        .select2-container--bootstrap4 .select2-selection__rendered {
+            color: #333 !important; /* لون النص المعروض في Select2 */
+        }
+        .select2-container--bootstrap4 .select2-search__field {
+            color: #333 !important; /* لون النص في حقل البحث */
+        }
+        .select2-container--bootstrap4 .select2-results__option {
+            color: #333; /* لون النص في خيارات القائمة المنسدلة */
+        }
+        .select2-container--bootstrap4 .select2-results__option--highlighted {
+            background-color: #007bff !important; /* خلفية زرقاء للخيار المميز */
+            color: white !important; /* نص أبيض للخيار المميز */
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="row">
         <div class="col-md-8 offset-md-2">
@@ -80,14 +128,39 @@
 @endsection
 
 @section('scripts')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
     <script>
         $(document).ready(function() {
             $('#permissions').select2({
                 placeholder: "{{ __('اختر صلاحية أو أكثر') }}",
                 allowClear: true,
                 theme: 'bootstrap4'
+            });
+
+            // استخدام SweetAlert2 بدلاً من alert/confirm المتصفح
+            $('form').on('submit', function(e) {
+                // إذا كان هناك أخطاء تحقق من صحة النموذج، لا تعرض SweetAlert
+                if ($(this).find('.is-invalid').length > 0) {
+                    return; // دع التحقق الافتراضي لـ Laravel/Bootstrap يتعامل مع الأخطاء
+                }
+
+                // يمكنك إضافة تأكيد مخصص هنا إذا أردت، ولكن عادةً لا يكون مطلوبًا لتحديث الأدوار
+                // e.preventDefault(); // لمنع الإرسال الفوري إذا كنت ستضيف تأكيد
+                // Swal.fire({
+                //     title: 'هل أنت متأكد؟',
+                //     text: "سيتم تحديث الدور بالصلاحيات الجديدة!",
+                //     icon: 'warning',
+                //     showCancelButton: true,
+                //     confirmButtonColor: '#3085d6',
+                //     cancelButtonColor: '#d33',
+                //     confirmButtonText: 'نعم، قم بالتحديث!',
+                //     cancelButtonText: 'إلغاء'
+                // }).then((result) => {
+                //     if (result.isConfirmed) {
+                //         e.currentTarget.submit(); // إرسال النموذج يدوياً بعد التأكيد
+                //     }
+                // });
             });
 
             $('.alert .close').on('click', function() {

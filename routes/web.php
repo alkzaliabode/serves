@@ -20,7 +20,7 @@ use App\Http\Controllers\ResourceTrackingController;
 use App\Http\Controllers\GilbertTriangleController;
 use App\Http\Controllers\UnitGoalController;
 use App\Http\Controllers\SurveyController;
-use App\Http\Controllers\SurveyChartController; // تأكد من استيراد هذا المتحكم
+use App\Http\Controllers\SurveyChartController;
 use App\Http\Controllers\UserProfilePhotoController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MonthlySummaryController; // استيراد المتحكم الجديد للملخص الشهري
@@ -96,13 +96,29 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/monthly-sanitation-report/{id}', [MonthlySanitationReportController::class, 'destroy'])->name('monthly-sanitation-report.destroy');
 
     // مسارات إدارة الموظفين
-    Route::get('employees/print', [EmployeeController::class, 'print'])->name('employees.print');
-    Route::get('employees/export', [EmployeeController::class, 'export'])->name('employees.export');
-    Route::resource('employees', EmployeeController::class);
+    // تم تطبيق صلاحيات دقيقة لمسارات الموظفين
+    Route::middleware(['permission:view users'])->group(function () {
+        Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
+        Route::get('employees/print', [EmployeeController::class, 'print'])->name('employees.print');
+        Route::get('employees/export', [EmployeeController::class, 'export'])->name('employees.export');
+    });
+
+    Route::middleware(['permission:create users'])->group(function () {
+        Route::get('employees/create', [EmployeeController::class, 'create'])->name('employees.create');
+        Route::post('employees', [EmployeeController::class, 'store'])->name('employees.store');
+    });
+
+    Route::middleware(['permission:edit users'])->group(function () {
+        Route::get('employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
+        Route::put('employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+    });
+
+    Route::middleware(['permission:delete users'])->group(function () {
+        Route::delete('employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+    });
+
 
     // مسارات التقارير المصورة الاحترافية
-    // مسارات التقارير المصورة الاحترافية
-
     // **ضع المسارات المحددة أولاً لتجنب التضارب مع مسار الموارد (resource)**
 
     // المسار لعرض نموذج فلترة التقرير الشهري
