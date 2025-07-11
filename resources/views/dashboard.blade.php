@@ -200,12 +200,8 @@
                     @endcanany
 
                     {{-- قسم الموظفين --}}
-<<<<<<< HEAD
                     {{-- تم تعديل الصلاحيات هنا لتتوافق مع الصلاحيات المعرفة في PermissionsSeeder --}}
                     @canany(['view users', 'manage users'])
-=======
-                    @canany(['view employees', 'manage employees'])
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card card-dashboard card-employees h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="800">
                                 <div class="card-body d-flex flex-column justify-content-between p-4">
@@ -456,11 +452,7 @@
                                         <i class="fas fa-user-tag text-white fs-1 opacity-75 card-icon-animated"></i>
                                     </div>
                                     <p class="text-white-light mb-4 card-description">
-<<<<<<< HEAD
                                         إنشاء، تعديل، وحذف الأدوار وتعيين الصلاحيات للمستخدمين.
-=======
-                                        تحديد الأدوار والصلاحيات المختلفة للمستخدمين لضبط الوصول.
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
                                     </p>
                                     <a href="{{ route('roles.index') }}"
                                        class="btn btn-card-action text-decoration-none mt-auto">
@@ -471,7 +463,6 @@
                             </div>
                         </div>
                     @endcan
-<<<<<<< HEAD
                 </div>
             </div>
         </div>
@@ -554,60 +545,10 @@
 
         .dashboard-main-card-body {
             padding: 2.5rem !important; /* More padding inside the main card */
-=======
-
-                    {{-- قسم الملف الشخصي --}}
-                    {{-- لا يحتاج صلاحية خاصة، يعرض لجميع المستخدمين المصادق عليهم --}}
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="card card-dashboard card-profile h-100 animate__animated animate__fadeInUp animate__faster" data-aos="fade-up" data-aos-delay="2000">
-                            <div class="card-body d-flex flex-column justify-content-between p-4">
-                                <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <h3 class="h3 font-weight-bold text-white-shadow card-title-animated">الملف الشخصي</h3>
-                                    <i class="fas fa-user-circle text-white fs-1 opacity-75 card-icon-animated"></i>
-                                </div>
-                                <p class="text-white-light mb-4 card-description">
-                                    تحديث معلوماتك الشخصية وإعدادات الحساب.
-                                </p>
-                                <a href="{{ route('profile.edit') }}"
-                                   class="btn btn-card-action text-decoration-none mt-auto">
-                                    عرض الملف الشخصي
-                                    <i class="fas fa-arrow-right me-1 icon-arrow-animated"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div> {{-- /.row dashboard-cards-container --}}
-            </div> {{-- /.card-body --}}
-        </div> {{-- /.card --}}
-    </div> {{-- /.container-fluid --}}
-@endsection
-
-@section('scripts')
-    <!-- AOS (Animate On Scroll) Library -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-        AOS.init({
-            duration: 800, // duration of animation
-            once: true,    // whether animation should happen only once
-        });
-    </script>
-    <style>
-        /* Custom styles for dashboard cards */
-        .dashboard-main-card {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); /* Darker gradient */
-            border-radius: 1rem;
-            overflow: hidden; /* Ensures rounded corners apply to children */
-        }
-
-        .dashboard-main-card-body {
-            padding: 2.5rem !important;
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
         }
 
         .section-title-animated {
             font-size: 2.2rem;
-<<<<<<< HEAD
             font-weight: 700;
             color: #e0e0e0;
             text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
@@ -675,94 +616,12 @@
             font-weight: bold;
             transition: all 0.3s ease-in-out;
             box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
-=======
-            color: #ecf0f1; /* Light grey */
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            animation: fadeInDown 1s ease-out;
-        }
-
-        /* Card base styling */
-        .card-dashboard {
-            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 0.8rem;
-            backdrop-filter: blur(5px); /* Frosted glass effect */
-            transition: all 0.3s ease-in-out;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-dashboard:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-            background-color: rgba(255, 255, 255, 0.15);
-        }
-
-        /* Card specific gradients */
-        .card-tasks-general { background: linear-gradient(45deg, #1abc9c, #16a085); } /* Turquoise */
-        .card-tasks-sanitation { background: linear-gradient(45deg, #3498db, #2980b9); } /* Peter River */
-        .card-service-board { background: linear-gradient(45deg, #9b59b6, #8e44ad); } /* Amethyst */
-        .card-daily-status { background: linear-gradient(45deg, #f1c40f, #f39c12); } /* Sunflower */
-        .card-resource-report { background: linear-gradient(45deg, #e67e22, #d35400); } /* Carrot */
-        .card-monthly-cleaning { background: linear-gradient(45deg, #e74c3c, #c0392b); } /* Alizarin */
-        .card-monthly-sanitation { background: linear-gradient(45deg, #2ecc71, #27ae60); } /* Emerald */
-        .card-monthly-summary { background: linear-gradient(45deg, #6c757d, #495057); } /* Gray */
-        .card-employees { background: linear-gradient(45deg, #34495e, #2c3e50); } /* Wet Asphalt */
-        .card-photo-reports { background: linear-gradient(45deg, #f39c12, #e67e22); } /* Orange */
-        .card-background-settings { background: linear-gradient(45deg, #95a5a6, #7f8c8d); } /* Concrete */
-        .card-actual-results { background: linear-gradient(45deg, #1abc9c, #16a085); } /* Turquoise */
-        .card-resource-trackings { background: linear-gradient(45deg, #3498db, #2980b9); } /* Peter River */
-        .card-unit-goals { background: linear-gradient(45deg, #9b59b6, #8e44ad); } /* Amethyst */
-        .card-gilbert-charts { background: linear-gradient(45deg, #f1c40f, #f39c12); } /* Sunflower */
-        .card-surveys { background: linear-gradient(45deg, #e67e22, #d35400); } /* Carrot */
-        .card-survey-charts { background: linear-gradient(45deg, #e74c3c, #c0392b); } /* Alizarin */
-        .card-notifications { background: linear-gradient(45deg, #2ecc71, #27ae60); } /* Emerald */
-        .card-users { background: linear-gradient(45deg, #34495e, #2c3e50); } /* Wet Asphalt */
-        .card-roles { background: linear-gradient(45deg, #7f8c8d, #95a5a6); } /* Asbestos */
-        .card-profile { background: linear-gradient(45deg, #c0392b, #e74c3c); } /* Pomegranate */
-
-
-        /* Card content styling */
-        .card-dashboard .h3 {
-            color: white;
-            font-size: 1.6rem;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
-        }
-
-        .card-dashboard .card-description {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        .card-dashboard .card-icon-animated {
-            font-size: 3.5rem;
-            color: rgba(255, 255, 255, 0.7);
-            transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
-        }
-
-        .card-dashboard:hover .card-icon-animated {
-            transform: scale(1.1) rotate(5deg);
-            color: white;
-        }
-
-        .btn-card-action {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: bold;
-            transition: all 0.3s ease-in-out;
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
             display: inline-flex;
             align-items: center;
             justify-content: center;
         }
 
         .btn-card-action:hover {
-<<<<<<< HEAD
             background: linear-gradient(90deg, #0056b3, #007bff); /* Darker blue on hover */
             box-shadow: 0 8px 20px rgba(0, 123, 255, 0.6);
             transform: translateY(-2px);
@@ -836,24 +695,6 @@
         }
 
         /* Responsive adjustments for smaller screens */
-=======
-            background-color: rgba(255, 255, 255, 0.3);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-card-action .icon-arrow-animated {
-            margin-right: 8px; /* Space between text and icon */
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .btn-card-action:hover .icon-arrow-animated {
-            transform: translateX(5px);
-        }
-
-        /* Responsive adjustments */
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
         @media (max-width: 767.98px) {
             .dashboard-main-card-body {
                 padding: 1.5rem !important;
@@ -861,7 +702,6 @@
             .section-title-animated {
                 font-size: 1.8rem;
             }
-<<<<<<< HEAD
             .card-title-animated {
                 font-size: 1.3rem;
             }
@@ -875,18 +715,3 @@
         }
     </style>
 @endsection
-=======
-            .card-dashboard .h3 {
-                font-size: 1.4rem;
-            }
-            .card-dashboard .card-icon-animated {
-                font-size: 3rem;
-            }
-            .btn-card-action {
-                padding: 0.6rem 1.2rem;
-                font-size: 0.9rem;
-            }
-        }
-    </style>
-@endsection
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28

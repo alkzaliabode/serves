@@ -14,14 +14,14 @@ class CreateDailyStatusesTable extends Migration
         Schema::create('daily_statuses', function (Blueprint $table) {
             $table->id();
 
-            $table->date('date');                          // التاريخ الميلادي
-            $table->string('hijri_date')->nullable();      // التاريخ الهجري
-            $table->string('day_name')->nullable();        // اسم اليوم
+            $table->date('date');           // التاريخ الميلادي
+            $table->string('hijri_date')->nullable();    // التاريخ الهجري
+            $table->string('day_name')->nullable();     // اسم اليوم
 
             // الحقول التي تحتوي على قوائم أسماء أو أرقام الموظفين بصيغة JSON
             $table->json('periodic_leaves')->nullable();    // إجازات دورية
             $table->json('annual_leaves')->nullable();      // إجازات سنوية
-            $table->json('temporary_leaves')->nullable();   // إجازات زمنية
+            $table->json('temporary_leaves')->nullable();  // إجازات زمنية
             $table->json('unpaid_leaves')->nullable();      // بدون راتب
             $table->json('absences')->nullable();          // غياب
             $table->json('long_leaves')->nullable();        // طويلة
@@ -68,8 +68,4 @@ class CreateDailyStatusesTable extends Migration
     {
         Schema::dropIfExists('daily_statuses');
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28

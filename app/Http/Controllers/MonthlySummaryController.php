@@ -47,9 +47,9 @@ class MonthlySummaryController extends Controller
         // Fetch all DailyStatus records for the specified month
         // جلب جميع سجلات الموقف اليومي للشهر المحدد
         $dailyStatuses = DailyStatus::whereYear('date', $year)
-                                    ->whereMonth('date', $month)
-                                    ->orderBy('date', 'asc')
-                                    ->get();
+                                     ->whereMonth('date', $month)
+                                     ->orderBy('date', 'asc')
+                                     ->get();
 
         // Aggregate data for each employee
         // تجميع البيانات لكل موظف
@@ -177,9 +177,9 @@ class MonthlySummaryController extends Controller
             // Sum all counted leaves (each occurrence is 1 day)
             // جمع جميع الإجازات المحتسبة (كل تكرار هو يوم واحد)
             $data['total_leave_days'] = $data['periodic_leaves_count'] + $data['annual_leaves_count'] +
-                                        $data['unpaid_leaves_count'] + $data['bereavement_leaves_count'] +
-                                        $data['eid_leaves_count'] + $data['guard_rest_count'] +
-                                        $data['wedding_leaves_count'] + $data['other_leaves_count'];
+                                         $data['unpaid_leaves_count'] + $data['bereavement_leaves_count'] +
+                                         $data['eid_leaves_count'] + $data['guard_rest_count'] +
+                                         $data['wedding_leaves_count'] + $data['other_leaves_count'];
 
             // Sum all absence/long/sick leave days (from total_days field)
             // جمع جميع أيام الغياب/الإجازات الطويلة/المرضية (من حقل total_days)
@@ -236,8 +236,4 @@ class MonthlySummaryController extends Controller
             'total_working_days' => 0,
         ];
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28

@@ -7,7 +7,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-<<<<<<< HEAD
         "alkoumi/laravel-hijri-date": "^1.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^12.0",
@@ -20,17 +19,6 @@
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "laravel/breeze": "^2.3",
-=======
-        "laravel/framework": "^12.0",
-        "laravel/sanctum": "*",
-        "laravel/tinker": "^2.10.1",
-        "livewire/volt": "^1.7",
-        "spatie/laravel-permission": "^6.0" ,
-        "alkoumi/laravel-hijri-date": "*"
-    },
-    "require-dev": {
-        "fakerphp/faker": "^1.23",
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.41",
@@ -51,15 +39,12 @@
         }
     },
     "scripts": {
-<<<<<<< HEAD
         "pre-install-cmd": [
             "@php -r \"mkdir('storage/framework/cache', 0777, true);\"",
             "@php -r \"mkdir('storage/framework/sessions', 0777, true);\"",
             "@php -r \"mkdir('storage/framework/views', 0777, true);\"",
             "@php -r \"mkdir('storage/logs', 0777, true);\""
         ],
-=======
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
@@ -99,9 +84,6 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
-<<<<<<< HEAD
+    "prefer-stable": true,
+    "content-hash": "d4488dd94be085d4238df3d9e34a4520"
 }
-=======
-}
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28

@@ -110,19 +110,11 @@
 
                 {{-- روابط الإدارة --}}
                 {{-- هذا الـ nav-header سيظهر إذا كان لدى المستخدم أي صلاحية لإدارة الموظفين أو إعدادات الخلفية --}}
-<<<<<<< HEAD
                 @canany(['view users', 'manage users', 'manage background settings']) {{-- تم تعديل الصلاحيات هنا --}}
                     <li class="nav-header animated-nav-item" data-animation-delay="1.1">الإدارة</li>
                     {{-- الموظفين --}}
                     <li class="nav-item animated-nav-item" data-animation-delay="1.2">
                         @canany(['view users', 'manage users']) {{-- تم تعديل الصلاحيات هنا --}}
-=======
-                @canany(['manage employees', 'manage background settings'])
-                    <li class="nav-header animated-nav-item" data-animation-delay="1.1">الإدارة</li>
-                    {{-- الموظفين --}}
-                    <li class="nav-item animated-nav-item" data-animation-delay="1.2">
-                        @canany(['view employees', 'manage employees'])
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
                             <a href="{{ route('employees.index') }}" class="nav-link {{ request()->routeIs('employees.*') ? 'active-link' : '' }}">
                                 <i class="nav-icon fas fa-users"></i>
                                 <p>الموظفين</p>
@@ -406,8 +398,4 @@
             }, delay * 1000); // Convert seconds to milliseconds
         });
     });
-<<<<<<< HEAD
 </script>
-=======
-</script>
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28

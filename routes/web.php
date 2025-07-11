@@ -20,11 +20,7 @@ use App\Http\Controllers\ResourceTrackingController;
 use App\Http\Controllers\GilbertTriangleController;
 use App\Http\Controllers\UnitGoalController;
 use App\Http\Controllers\SurveyController;
-<<<<<<< HEAD
-use App\Http\Controllers\SurveyChartController;
-=======
-use App\Http\Controllers\SurveyChartController; // تأكد من استيراد هذا المتحكم
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
+use App\Http\Controllers\SurveyChartController; // تم دمج استيراد المتحكم
 use App\Http\Controllers\UserProfilePhotoController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MonthlySummaryController; // استيراد المتحكم الجديد للملخص الشهري
@@ -100,7 +96,6 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/monthly-sanitation-report/{id}', [MonthlySanitationReportController::class, 'destroy'])->name('monthly-sanitation-report.destroy');
 
     // مسارات إدارة الموظفين
-<<<<<<< HEAD
     // تم تطبيق صلاحيات دقيقة لمسارات الموظفين
     Route::middleware(['permission:view users'])->group(function () {
         Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
@@ -124,15 +119,6 @@ Route::middleware(['auth'])->group(function () {
 
 
     // مسارات التقارير المصورة الاحترافية
-=======
-    Route::get('employees/print', [EmployeeController::class, 'print'])->name('employees.print');
-    Route::get('employees/export', [EmployeeController::class, 'export'])->name('employees.export');
-    Route::resource('employees', EmployeeController::class);
-
-    // مسارات التقارير المصورة الاحترافية
-    // مسارات التقارير المصورة الاحترافية
-
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
     // **ضع المسارات المحددة أولاً لتجنب التضارب مع مسار الموارد (resource)**
 
     // المسار لعرض نموذج فلترة التقرير الشهري
@@ -259,8 +245,4 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // هذا السطر ضروري جداً لتحميل جميع مسارات المصادقة (login, register, logout, etc.)
-<<<<<<< HEAD
 require __DIR__.'/auth.php';
-=======
-require __DIR__.'/auth.php';
->>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
