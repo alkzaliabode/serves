@@ -10,6 +10,7 @@
     <li class="breadcrumb-item active">إضافة دور جديد</li>
 @endsection
 
+<<<<<<< HEAD
 @section('styles')
     @parent {{-- للحفاظ على أي أنماط أخرى قد تكون موجودة في layout الأب --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
@@ -226,6 +227,8 @@
     </style>
 @endsection
 
+=======
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
 @section('content')
     <div class="row">
         <div class="col-md-8 offset-md-2">
@@ -295,8 +298,13 @@
 @endsection
 
 @section('scripts')
+<<<<<<< HEAD
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+=======
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
     <script>
         $(document).ready(function() {
             $('#permissions').select2({

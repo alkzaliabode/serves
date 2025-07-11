@@ -25,6 +25,7 @@
     21 => 'Illuminate\\Validation\\ValidationServiceProvider',
     22 => 'Illuminate\\View\\ViewServiceProvider',
     23 => 'Alkoumi\\LaravelHijriDate\\LaravelHijriDateServiceProvider',
+<<<<<<< HEAD
     24 => 'Barryvdh\\DomPDF\\ServiceProvider',
     25 => 'Laravel\\Sanctum\\SanctumServiceProvider',
     26 => 'Laravel\\Tinker\\TinkerServiceProvider',
@@ -41,6 +42,26 @@
     37 => 'App\\Providers\\AppServiceProvider',
     38 => 'App\\Providers\\VoltServiceProvider',
     39 => 'Spatie\\Permission\\PermissionServiceProvider',
+=======
+    24 => 'Laravel\\Pail\\PailServiceProvider',
+    25 => 'Laravel\\Sail\\SailServiceProvider',
+    26 => 'Laravel\\Sanctum\\SanctumServiceProvider',
+    27 => 'Laravel\\Tinker\\TinkerServiceProvider',
+    28 => 'Livewire\\LivewireServiceProvider',
+    29 => 'Livewire\\Volt\\VoltServiceProvider',
+    30 => 'Carbon\\Laravel\\ServiceProvider',
+    31 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
+    32 => 'Termwind\\Laravel\\TermwindServiceProvider',
+    33 => 'Spatie\\Permission\\PermissionServiceProvider',
+    34 => 'App\\Providers\\AppServiceProvider',
+    35 => 'App\\Providers\\AuthServiceProvider',
+    36 => 'App\\Providers\\EventServiceProvider',
+    37 => 'App\\Providers\\RouteServiceProvider',
+    38 => 'App\\Providers\\VoltServiceProvider',
+    39 => 'App\\Providers\\AppServiceProvider',
+    40 => 'App\\Providers\\VoltServiceProvider',
+    41 => 'Spatie\\Permission\\PermissionServiceProvider',
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
   ),
   'eager' => 
   array (
@@ -56,11 +77,16 @@
     9 => 'Illuminate\\Session\\SessionServiceProvider',
     10 => 'Illuminate\\View\\ViewServiceProvider',
     11 => 'Alkoumi\\LaravelHijriDate\\LaravelHijriDateServiceProvider',
+<<<<<<< HEAD
     12 => 'Barryvdh\\DomPDF\\ServiceProvider',
+=======
+    12 => 'Laravel\\Pail\\PailServiceProvider',
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
     13 => 'Laravel\\Sanctum\\SanctumServiceProvider',
     14 => 'Livewire\\LivewireServiceProvider',
     15 => 'Livewire\\Volt\\VoltServiceProvider',
     16 => 'Carbon\\Laravel\\ServiceProvider',
+<<<<<<< HEAD
     17 => 'Termwind\\Laravel\\TermwindServiceProvider',
     18 => 'Spatie\\Permission\\PermissionServiceProvider',
     19 => 'App\\Providers\\AppServiceProvider',
@@ -71,6 +97,19 @@
     24 => 'App\\Providers\\AppServiceProvider',
     25 => 'App\\Providers\\VoltServiceProvider',
     26 => 'Spatie\\Permission\\PermissionServiceProvider',
+=======
+    17 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
+    18 => 'Termwind\\Laravel\\TermwindServiceProvider',
+    19 => 'Spatie\\Permission\\PermissionServiceProvider',
+    20 => 'App\\Providers\\AppServiceProvider',
+    21 => 'App\\Providers\\AuthServiceProvider',
+    22 => 'App\\Providers\\EventServiceProvider',
+    23 => 'App\\Providers\\RouteServiceProvider',
+    24 => 'App\\Providers\\VoltServiceProvider',
+    25 => 'App\\Providers\\AppServiceProvider',
+    26 => 'App\\Providers\\VoltServiceProvider',
+    27 => 'Spatie\\Permission\\PermissionServiceProvider',
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
   ),
   'deferred' => 
   array (
@@ -223,6 +262,11 @@
     'validator' => 'Illuminate\\Validation\\ValidationServiceProvider',
     'validation.presence' => 'Illuminate\\Validation\\ValidationServiceProvider',
     'Illuminate\\Contracts\\Validation\\UncompromisedVerifier' => 'Illuminate\\Validation\\ValidationServiceProvider',
+<<<<<<< HEAD
+=======
+    'Laravel\\Sail\\Console\\InstallCommand' => 'Laravel\\Sail\\SailServiceProvider',
+    'Laravel\\Sail\\Console\\PublishCommand' => 'Laravel\\Sail\\SailServiceProvider',
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
     'command.tinker' => 'Laravel\\Tinker\\TinkerServiceProvider',
   ),
   'when' => 
@@ -263,6 +307,12 @@
     'Illuminate\\Validation\\ValidationServiceProvider' => 
     array (
     ),
+<<<<<<< HEAD
+=======
+    'Laravel\\Sail\\SailServiceProvider' => 
+    array (
+    ),
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
     'Laravel\\Tinker\\TinkerServiceProvider' => 
     array (
     ),

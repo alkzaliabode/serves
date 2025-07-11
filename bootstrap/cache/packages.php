@@ -6,6 +6,7 @@
       0 => 'Alkoumi\\LaravelHijriDate\\LaravelHijriDateServiceProvider',
     ),
   ),
+<<<<<<< HEAD
   'barryvdh/laravel-dompdf' => 
   array (
     'aliases' => 
@@ -16,6 +17,20 @@
     'providers' => 
     array (
       0 => 'Barryvdh\\DomPDF\\ServiceProvider',
+=======
+  'laravel/pail' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Laravel\\Pail\\PailServiceProvider',
+    ),
+  ),
+  'laravel/sail' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Laravel\\Sail\\SailServiceProvider',
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
     ),
   ),
   'laravel/sanctum' => 
@@ -57,6 +72,16 @@
       0 => 'Carbon\\Laravel\\ServiceProvider',
     ),
   ),
+<<<<<<< HEAD
+=======
+  'nunomaduro/collision' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
+    ),
+  ),
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
   'nunomaduro/termwind' => 
   array (
     'providers' => 

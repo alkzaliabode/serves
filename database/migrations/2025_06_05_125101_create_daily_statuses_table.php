@@ -68,4 +68,8 @@ class CreateDailyStatusesTable extends Migration
     {
         Schema::dropIfExists('daily_statuses');
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28

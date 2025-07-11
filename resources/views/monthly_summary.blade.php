@@ -236,9 +236,12 @@
             <div class="card-header no-print"> {{-- Add no-print to hide this header during print --}}
                 <h3 class="card-title">ملخص الحضور والانصراف للمنتسبين</h3>
                 <div class="card-tools">
+<<<<<<< HEAD
                     <button class="btn btn-secondary btn-sm mr-2" onclick="goBack()">
                         <i class="fas fa-arrow-right"></i> الرجوع
                     </button>
+=======
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
                     <button class="btn btn-primary btn-sm" onclick="window.print()">
                         <i class="fas fa-print"></i> طباعة الملخص
                     </button>
@@ -259,6 +262,7 @@
                 </div>
 
                 <div class="row mb-3 no-print">
+<<<<<<< HEAD
                     <div class="col-md-12">
                         <div class="form-row align-items-end"> {{-- Use form-row for better alignment and wrapping --}}
                             <div class="col-md-2 mb-3">
@@ -305,10 +309,37 @@
                                 </button>
                             </div>
                         </div>
+=======
+                    <div class="col-md-4">
+                        <label for="month_select">اختر الشهر:</label>
+                        <select id="month_select" class="form-control" onchange="navigateToMonth()">
+                            @for ($i = 1; $i <= 12; $i++)
+                                <option value="{{ $i }}" {{ $month == $i ? 'selected' : '' }}>
+                                    {{ \Carbon\Carbon::create(null, $i, 1)->monthName }}
+                                </option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="year_select">اختر السنة:</label>
+                        <select id="year_select" class="form-control" onchange="navigateToMonth()">
+                            @for ($i = \Carbon\Carbon::now()->year - 5; $i <= \Carbon\Carbon::now()->year + 1; $i++)
+                                <option value="{{ $i }}" {{ $year == $i ? 'selected' : '' }}>
+                                    {{ $i }}
+                                </option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <p class="form-control-static mb-0">
+                            <strong>ملخص شهر {{ \Carbon\Carbon::create(null, $month, 1)->monthName }} {{ $year }}</strong>
+                        </p>
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
                     </div>
                 </div>
 
                 <p class="text-center font-weight-bold">
+<<<<<<< HEAD
                     ملخص
                     @if(isset($day) && $day)
                         يوم {{ $day }}
@@ -316,6 +347,9 @@
                     شهر {{ \Carbon\Carbon::create(null, $month, 1)->monthName }}
                     سنة {{ $year }}
                     منتسبين شعبة الخدمية
+=======
+                    ملخص شهر {{ \Carbon\Carbon::create(null, $month, 1)->monthName }} منتسبين شعبة الخدمية
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
                 </p>
                 <p class="text-center">
                     التاريخ: {{ \Carbon\Carbon::now()->format('d/m/Y') }}
@@ -323,7 +357,11 @@
 
                 @if(empty($finalSummary))
                     <div class="alert alert-info text-center mt-4">
+<<<<<<< HEAD
                         لا توجد بيانات متاحة لهذا @if(isset($day) && $day) اليوم @else الشهر @endif.
+=======
+                        لا توجد بيانات متاحة لهذا الشهر.
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
                     </div>
                 @else
                     <div class="table-responsive">
@@ -339,7 +377,10 @@
                                     <th>عدد الساعات الزمنية خلال الشهر</th>
                                     <th>عدد أيام الغياب</th>
                                     <th>عدد الأيام بدون راتب</th>
+<<<<<<< HEAD
                                     <th>عدد الإجازات الطويلة</th>
+=======
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
                                     <th>عدد الإجازات المرضية</th>
                                     <th>عدد إجازات الوفاة</th>
                                     <th>عدد إجازات الأعياد</th>
@@ -362,7 +403,10 @@
                                     <td>{{ $data['temporary_leaves_hours'] ?? 0 }}</td>
                                     <td>{{ $data['absences_days'] ?? 0 }}</td>
                                     <td>{{ $data['unpaid_leaves_count'] ?? 0 }}</td>
+<<<<<<< HEAD
                                     <td>{{ $data['long_leaves_days'] ?? 0 }}</td>
+=======
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
                                     <td>{{ $data['sick_leaves_days'] ?? 0 }}</td>
                                     <td>{{ $data['bereavement_leaves_count'] ?? 0 }}</td>
                                     <td>{{ $data['eid_leaves_count'] ?? 0 }}</td>
@@ -398,6 +442,7 @@
 
     <script>
         // This function is for navigating between months/years on screen, not directly for print.
+<<<<<<< HEAD
         function navigateToDate() {
             let selectedDay = document.getElementById('day_select').value;
             let selectedMonth = document.getElementById('month_select').value;
@@ -477,3 +522,14 @@
     </script>
 </body>
 </html>
+=======
+        function navigateToMonth() {
+            const selectedMonth = document.getElementById('month_select').value;
+            const selectedYear = document.getElementById('year_select').value;
+            // Construct the URL for the monthly summary page
+            window.location.href = `/monthly-summary/${selectedYear}/${selectedMonth}`;
+        }
+    </script>
+</body>
+</html>
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28

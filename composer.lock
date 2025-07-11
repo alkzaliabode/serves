@@ -4,7 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
+<<<<<<< HEAD
     "content-hash": "d4488dd94be085d4238df3d9e34a4520",
+=======
+    "content-hash": "a0b1053fc74630130a4e5f2593cdeb18",
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
     "packages": [
         {
             "name": "alkoumi/laravel-hijri-date",
@@ -71,6 +75,7 @@
             "time": "2020-11-27T09:41:21+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "barryvdh/laravel-dompdf",
             "version": "v3.1.1",
             "source": {
@@ -148,6 +153,8 @@
             "time": "2025-02-13T15:07:54+00:00"
         },
         {
+=======
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
             "name": "brick/math",
             "version": "0.13.1",
             "source": {
@@ -520,6 +527,7 @@
             "time": "2024-02-05T11:56:58+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "dompdf/dompdf",
             "version": "v3.1.0",
             "source": {
@@ -675,6 +683,8 @@
             "time": "2024-04-29T13:26:35+00:00"
         },
         {
+=======
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
             "name": "dragonmantank/cron-expression",
             "version": "v3.4.0",
             "source": {
@@ -2515,6 +2525,7 @@
             "time": "2025-04-08T15:13:36+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "masterminds/html5",
             "version": "2.9.0",
             "source": {
@@ -2582,6 +2593,8 @@
             "time": "2024-03-31T07:05:07+00:00"
         },
         {
+=======
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
             "name": "monolog/monolog",
             "version": "3.9.0",
             "source": {
@@ -3847,6 +3860,7 @@
             "time": "2025-06-25T14:20:11+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "sabberworm/php-css-parser",
             "version": "v8.8.0",
             "source": {
@@ -3912,6 +3926,8 @@
             "time": "2025-03-23T17:59:05+00:00"
         },
         {
+=======
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
             "name": "spatie/laravel-permission",
             "version": "6.20.0",
             "source": {
@@ -6688,6 +6704,7 @@
             "time": "2025-04-30T06:54:44+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "laravel/breeze",
             "version": "v2.3.7",
             "source": {
@@ -6749,6 +6766,8 @@
             "time": "2025-06-17T13:07:20+00:00"
         },
         {
+=======
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
             "name": "laravel/pail",
             "version": "v1.2.3",
             "source": {

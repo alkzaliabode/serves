@@ -236,4 +236,8 @@ class MonthlySummaryController extends Controller
             'total_working_days' => 0,
         ];
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 803da7cf45068dbc65c8c30f9c7a8aaea3f14e28
