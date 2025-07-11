@@ -9,10 +9,10 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles; // لاستخدام صلاحيات Spatie
 use Illuminate\Support\Facades\Storage; // لاستخدام Storage facade
-use Illuminate\Database\Eloquent\Relations\BelongsTo; // *** NEW: تم إضافة هذا السطر لاستخدام BelongsTo ***
+use Illuminate\Database\Eloquent\Relations\BelongsTo; // تم إضافة هذا السطر لاستخدام BelongsTo
 use App\Models\Employee; // تم إضافته: للعلاقة employees()
 
-class User extends Authenticatable // تأكد من أنك لا تستخدم MustVerifyEmail إذا لم تكن بحاجة لها
+class User extends Authenticatable implements MustVerifyEmail // تم حل التعارض هنا: الاحتفاظ بـ MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
