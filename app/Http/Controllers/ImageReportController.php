@@ -47,10 +47,10 @@ class ImageReportController extends Controller
             'unit_type' => 'required|string|max:255',
             'location' => 'required|string|max:255',
             'task_type' => 'nullable|string|max:255',
-            'task_id' => 'nullable|integer',
+            'task_id' => 'nullable', // تم إزالة قاعدة integer للسماح بإدخال نصي
             'before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'status' => 'required|string|in:completed,pending,cancelled',
+            'status' => 'required|string|in:قيد التنفيذ,مكتملة,معلقة', // تم تغييرها لتقبل القيم العربية
             'notes' => 'nullable|string',
         ]);
 
@@ -125,10 +125,10 @@ class ImageReportController extends Controller
             'unit_type' => 'required|string|max:255',
             'location' => 'required|string|max:255',
             'task_type' => 'nullable|string|max:255',
-            'task_id' => 'nullable|integer',
+            'task_id' => 'nullable', // تم إزالة قاعدة integer للسماح بإدخال نصي
             'new_before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'new_after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'status' => 'required|string|in:completed,pending,cancelled',
+            'status' => 'required|string|in:قيد التنفيذ,مكتملة,معلقة', // تم تغييرها لتقبل القيم العربية
             'notes' => 'nullable|string',
             'deleted_before_images' => 'nullable|json',
             'deleted_after_images' => 'nullable|json',
