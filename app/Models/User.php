@@ -9,8 +9,10 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles; // لاستخدام صلاحيات Spatie
 use Illuminate\Support\Facades\Storage; // لاستخدام Storage facade
-use Illuminate\Database\Eloquent\Relations\BelongsTo; // *** NEW: تم إضافة هذا السطر لاستخدام BelongsTo ***
+use Illuminate\Database\Eloquent\Relations\BelongsTo; // تم إضافة هذا السطر لاستخدام BelongsTo
+use Illuminate\Database\Eloquent\Relations\HasMany; // *** NEW: تم إضافة هذا السطر لاستخدام HasMany ***
 use App\Models\Employee; // تم إضافته: للعلاقة employees()
+use App\Models\GeneralCleaningTask; // *** NEW: تم إضافة هذا السطر لاستخدام GeneralCleaningTask ***
 
 class User extends Authenticatable // تأكد من أنك لا تستخدم MustVerifyEmail إذا لم تكن بحاجة لها
 {
@@ -25,11 +27,11 @@ class User extends Authenticatable // تأكد من أنك لا تستخدم Mus
         'name',
         'email',
         'password',
-        'employee_id', // حقل جديد
-        'job_title',   // حقل جديد
-        'unit',        // حقل جديد
-        'is_active',   // حقل جديد
-        'profile_photo_path', // تم إضافة هذا الحقل
+        'employee_id',
+        'job_title',
+        'unit',
+        'is_active',
+        'profile_photo_path',
     ];
 
     /**
@@ -50,7 +52,7 @@ class User extends Authenticatable // تأكد من أنك لا تستخدم Mus
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'is_active' => 'boolean', // لضمان تحويلها إلى boolean
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -79,4 +81,30 @@ class User extends Authenticatable // تأكد من أنك لا تستخدم Mus
     {
         return $this->belongsTo(Employee::class, 'employee_id');
     }
+
+    /**
+     * Get the general cleaning tasks created by the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function createdGeneralCleaningTasks(): HasMany
+    {
+        // 'created_by' هو اسم العمود في جدول GeneralCleaningTasks الذي يشير إلى معرف المستخدم (User ID)
+        return $this->hasMany(GeneralCleaningTask::class, 'created_by');
+    }
+
+    /**
+     * Get the general cleaning tasks edited by the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function editedGeneralCleaningTasks(): HasMany
+    {
+        // 'edited_by' هو اسم العمود في جدول GeneralCleaningTasks الذي يشير إلى معرف المستخدم (User ID)
+        return $this->hasMany(GeneralCleaningTask::class, 'edited_by');
+    }
+
+    // ملاحظة: إذا كنت تستخدم Spatie/Laravel-permission، فإن علاقة الأدوار (roles)
+    // يتم توفيرها تلقائيًا بواسطة الـ trait HasRoles. لا تحتاج لتعريفها يدوياً.
+    // public function roles() { ... }
 }

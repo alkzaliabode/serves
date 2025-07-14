@@ -2,77 +2,77 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UnitGoal extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'department_goal_id',
         'unit_id',
         'unit_name',
         'goal_text',
+        'target_tasks',
         'date',
-        'target_tasks', // ✅ إضافة هنا
     ];
 
-    /**
-     * ✅ إضافة خاصية $casts لتحويل حقل 'date' إلى كائن Carbon تلقائياً.
-     */
     protected $casts = [
         'date' => 'date',
     ];
 
+    // العلاقة مع هدف القسم
+    public function departmentGoal()
+    {
+        return $this->belongsTo(DepartmentGoal::class);
+    }
+
+    // العلاقة مع الوحدة
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    // علاقة جديدة: الهدف لديه العديد من مهام النظافة العامة
+    public function generalCleaningTasks()
+    {
+        return $this->hasMany(GeneralCleaningTask::class, 'related_goal_id');
+    }
+
+    // علاقة جديدة: الهدف لديه العديد من مهام منشآت الصرف الصحي
+    public function sanitationFacilityTasks()
+    {
+        return $this->hasMany(SanitationFacilityTask::class, 'related_goal_id');
+    }
+
     /**
-     * نسبة تحقق الهدف (من جميع المهام المرتبطة)
+     * Accessor for progress_percentage attribute.
+     * Calculates the progress based on completed General Cleaning Tasks and Sanitation Facility Tasks
+     * versus the total target_tasks.
+     *
+     * @return float
      */
     public function getProgressPercentageAttribute()
     {
-        // مجموع المهام المكتملة من كلا النوعين (نظافة عامة وصحية)
-        $sanitationCompleted = $this->sanitationFacilityTasks()->where('status', 'مكتمل')->count();
-        $cleaningCompleted = $this->generalCleaningTasks()->where('status', 'مكتمل')->count();
-        $completedTasks = $sanitationCompleted + $cleaningCompleted;
-
-        // المهام المستهدفة تأتي الآن من عمود 'target_tasks'
-        $totalTarget = $this->target_tasks;
-
-        if ($totalTarget === 0) {
-            return 0;
+        // إذا لم يكن هناك عدد مهام مستهدف، أو كان صفرًا، فإن التقدم يكون صفرًا
+        if ($this->target_tasks <= 0) {
+            return 0.00;
         }
 
-        // حساب نسبة الإنجاز
-        return round(($completedTasks / $totalTarget) * 100, 2);
-    }
+        // عد المهام المكتملة من نوع النظافة العامة المرتبطة بهذا الهدف
+        $completedGeneralCleaningTasks = $this->generalCleaningTasks()->where('status', 'مكتمل')->count();
 
-    /**
-     * علاقة بـ department_goal
-     */
-    public function departmentGoal(): BelongsTo
-    {
-        return $this->belongsTo(\App\Models\DepartmentGoal::class, 'department_goal_id');
-    }
+        // عد المهام المكتملة من نوع منشآت الصرف الصحي المرتبطة بهذا الهدف
+        $completedSanitationFacilityTasks = $this->sanitationFacilityTasks()->where('status', 'مكتمل')->count();
 
-    /**
-     * علاقة بـ الوحدة (Unit)
-     */
-    public function unit(): BelongsTo
-    {
-        return $this->belongsTo(\App\Models\Unit::class, 'unit_id');
-    }
+        // إجمالي المهام المكتملة لكلا النوعين
+        $totalCompletedTasks = $completedGeneralCleaningTasks + $completedSanitationFacilityTasks;
 
-    /**
-     * علاقة بالمهام الصحية
-     */
-    public function sanitationFacilityTasks()
-    {
-        return $this->hasMany(\App\Models\SanitationFacilityTask::class, 'related_goal_id');
-    }
+        // حساب النسبة المئوية
+        $percentage = ($totalCompletedTasks / $this->target_tasks) * 100;
 
-    /**
-     * علاقة بمهام النظافة العامة
-     */
-    public function generalCleaningTasks()
-    {
-        return $this->hasMany(\App\Models\GeneralCleaningTask::class, 'related_goal_id');
+        // ضمان ألا تتجاوز النسبة 100% وتقريبها لمنزلتين عشريتين
+        return round(min($percentage, 100), 2);
     }
 }

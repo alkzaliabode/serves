@@ -399,9 +399,9 @@
                             <div class="mb-4">
                                 <label for="status" class="form-label">الحالة</label>
                                 <select class="form-select" id="status" name="status" required>
-                                    <option value="قيد التنفيذ" {{ old('status', $photo_report->status) == 'قيد التنفيذ' ? 'selected' : '' }}>قيد التنفيذ</option>
-                                    <option value="مكتملة" {{ old('status', $photo_report->status) == 'مكتملة' ? 'selected' : '' }}>مكتملة</option>
-                                    <option value="معلقة" {{ old('status', $photo_report->status) == 'معلقة' ? 'selected' : '' }}>معلقة</option>
+                                    <option value="pending" {{ old('status', $photo_report->status) == 'pending' ? 'selected' : '' }}>قيد التنفيذ</option>
+                                    <option value="completed" {{ old('status', $photo_report->status) == 'completed' ? 'selected' : '' }}>مكتملة</option>
+                                    <option value="cancelled" {{ old('status', $photo_report->status) == 'cancelled' ? 'selected' : '' }}>معلقة</option>
                                 </select>
                             </div>
                             <div class="mb-4">

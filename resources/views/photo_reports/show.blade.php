@@ -352,9 +352,9 @@
                     <i class="fas fa-edit"></i> تعديل
                 </a>
                 {{-- تم تعديل هذا الرابط ليتضمن ?print=1 --}}
-                <a href="{{ route('photo_reports.print', $photo_report->id) }}?print=1" class="btn btn-primary btn-sm" target="_blank">
-                    <i class="fas fa-print"></i> طباعة
-                </a>
+               <a href="{{ route('photo_reports.print_standalone', $photo_report->id) }}?print=true" class="btn btn-primary btn-sm" target="_blank">
+    <i class="fas fa-print"></i> طباعة
+</a>
                 <form action="{{ route('photo_reports.destroy', $photo_report->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا التقرير؟')">
                     @csrf
                     @method('DELETE')

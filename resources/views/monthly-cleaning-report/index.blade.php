@@ -1,25 +1,26 @@
 {{-- resources/views/monthly-cleaning-report/index.blade.php --}}
 {{--
-    هذا الملف هو قالب صفحة تقرير النظافة العامة الشهري للعرض على الشاشة.
-    تم تحديث تصميمه ليتوافق مع تصميم صفحة تقرير المنشآت الصحية الشهرية ومهام المنشآت الصحية، بما في ذلك:
-    - بطاقة فلاتر قابلة للطي بتصميم محسن.
+    هذا الملف هو قالب صفحة تقرير النظافة العامة التفصيلي للعرض على الشاشة.
+    تم تحديث تصميمه ليعرض المهام الفردية (حسب اليوم والشفت) بدلاً من الملخصات الشهرية.
+    يشمل ذلك:
+    - بطاقة فلاتر قابلة للطي بتصميم محسن، مع فلاتر جديدة للتاريخ والشفت والوحدة.
     - أيقونات فرز في رؤوس الأعمدة.
     - تنسيقات محسنة للجدول لجعلها أكثر تناسقاً ونظافة.
     - دعم لرسائل الجلسة (Session messages).
     - تم تفعيل Pagination للجدول.
-    - تمت إضافة أزرار التعديل والحذف لكل سجل تقرير.
+    - تمت إضافة أزرار التعديل والحذف لكل سجل مهمة.
 --}}
 
 @extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
-@section('title', 'تقرير النظافة العامة الشهري') {{-- تحديد عنوان الصفحة --}}
+@section('title', 'تقرير النظافة العامة التفصيلي') {{-- تحديد عنوان الصفحة --}}
 
-@section('page_title', '📊 تقرير النظافة العامة الشهري') {{-- عنوان الصفحة داخل AdminLTE --}}
+@section('page_title', '📊 تقرير النظافة العامة التفصيلي') {{-- عنوان الصفحة داخل AdminLTE --}}
 
 @section('breadcrumb') {{-- Breadcrumb لـ AdminLTE --}}
     <li class="breadcrumb-item"><a href="{{ route('home') }}">الرئيسية</a></li>
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">لوحة التحكم</a></li> {{-- إضافة لوحة التحكم --}}
-    <li class="breadcrumb-item active">تقرير النظافة العامة الشهري</li>
+    <li class="breadcrumb-item active">تقرير النظافة العامة التفصيلي</li>
 @endsection
 
 @section('styles')
@@ -326,13 +327,30 @@
         <div class="card-body">
             <form id="filter-form" action="{{ route('monthly-cleaning-report.index') }}" method="GET" class="form-filters-print">
                 <div class="row g-3 align-items-end mb-3"> {{-- استخدام g-3 و align-items-end --}}
+                    {{-- 💡 فلتر التاريخ الجديد --}}
+                    <div class="col-md-3">
+                        <label for="date" class="form-label">التاريخ</label>
+                        <input type="date" name="date" id="date" class="form-control" value="{{ $selectedDate }}">
+                    </div>
+                    {{-- 💡 فلتر الشفت الجديد --}}
+                    <div class="col-md-3">
+                        <label for="shift" class="form-label">الشفت</label>
+                        <select name="shift" id="shift" class="form-control">
+                            <option value="">كل الشفتات</option>
+                            @foreach($availableShifts as $shiftOption)
+                                <option value="{{ $shiftOption }}" {{ $selectedShift == $shiftOption ? 'selected' : '' }}>
+                                    {{ $shiftOption }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-md-3">
                         <label for="month" class="form-label">الشهر</label>
                         <select name="month" id="month" class="form-control">
                             <option value="">كل الشهور</option>
-                            @foreach($availableMonths as $monthOption)
-                                <option value="{{ $monthOption }}" {{ $selectedMonth == $monthOption ? 'selected' : '' }}>
-                                    {{ \Carbon\Carbon::parse($monthOption)->translatedFormat('F Y') }}
+                            @foreach($availableMonths as $monthValue => $monthLabel)
+                                <option value="{{ $monthValue }}" {{ $selectedMonth == $monthValue ? 'selected' : '' }}>
+                                    {{ $monthLabel }}
                                 </option>
                             @endforeach
                         </select>
@@ -352,9 +370,21 @@
                         <label for="task_type" class="form-label">نوع المهمة</label>
                         <select name="task_type" id="task_type" class="form-control">
                             <option value="">كل الأنواع</option>
-                            @foreach($availableTaskTypes as $value => $label)
+                            @foreach($availableTaskTypes as $value) {{-- 💡 تم تعديل هنا: لم تعد هناك حاجة لـ $label --}}
                                 <option value="{{ $value }}" {{ $selectedTaskType == $value ? 'selected' : '' }}>
-                                    {{ $label }}
+                                    {{ $value }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    {{-- 💡 فلتر الوحدة الجديد --}}
+                    <div class="col-md-3">
+                        <label for="unit_id" class="form-label">الوحدة</label>
+                        <select name="unit_id" id="unit_id" class="form-control">
+                            <option value="">كل الوحدات</option>
+                            @foreach($units as $unit)
+                                <option value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'selected' : '' }}>
+                                    {{ $unit->name }}
                                 </option>
                             @endforeach
                         </select>
@@ -369,6 +399,9 @@
                         </button>
                         <a href="{{ route('monthly-cleaning-report.index') }}" class="btn btn-secondary me-2">
                             <i class="fas fa-sync-alt"></i> إعادة تعيين
+                        </a>
+                        <a href="{{ route('monthly-cleaning-report.create') }}" class="btn btn-success me-2"> {{-- 💡 زر إضافة مهمة جديدة --}}
+                            <i class="fas fa-plus"></i> إضافة مهمة
                         </a>
                         <button type="button" onclick="printReport()" class="btn btn-success me-2"> {{-- زر طباعة --}}
                             <i class="fas fa-print"></i> طباعة التقرير
@@ -392,10 +425,16 @@
         <div class="card-body p-0">
             {{-- المحتوى المراد عرضه على الشاشة (الجدول) --}}
             <h4 class="text-md font-weight-bold mb-3 mt-3 text-secondary d-print-none text-center"> {{-- d-print-none لإخفاء العنوان عند الطباعة --}}
-                بيانات تقرير النظافة العامة الشهري
+                بيانات تقرير النظافة العامة التفصيلي
                 <span class="text-primary">
+                    @if ($selectedDate)
+                        (تاريخ: {{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d F Y') }})
+                    @endif
                     @if ($selectedMonth)
-                        (شهر {{ \Carbon\Carbon::parse($selectedMonth)->translatedFormat('F Y') }})
+                        (شهر: {{ \Carbon\Carbon::parse($selectedMonth)->translatedFormat('F Y') }})
+                    @endif
+                    @if ($selectedShift)
+                        (شفت: {{ $selectedShift }})
                     @endif
                     @if ($selectedLocation)
                         (موقع: {{ $selectedLocation }})
@@ -403,13 +442,16 @@
                     @if ($selectedTaskType)
                         (نوع المهمة: {{ $selectedTaskType }})
                     @endif
+                    @if ($selectedUnitId)
+                        (وحدة: {{ $units->find($selectedUnitId)->name ?? 'غير معروف' }})
+                    @endif
                     @if ($searchQuery)
                         (بحث: "{{ $searchQuery }}")
                     @endif
                 </span>
             </h4>
 
-            @if($reports->isEmpty())
+            @if($tasks->isEmpty()) {{-- 💡 تغيير المتغير إلى tasks --}}
                 <div class="alert alert-info" role="alert">
                     لا توجد بيانات لتقرير النظافة العامة لعرضها بهذه المعايير.
                 </div>
@@ -418,9 +460,19 @@
                     <table class="table table-bordered table-striped text-center table-sm"> {{-- تم تعديل classes --}}
                         <thead>
                             <tr class="bg-light">
-                                <th>الشهر
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'month', 'sort_order' => ($sortBy == 'month' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'month' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'month' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                <th>التاريخ
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'date', 'sort_order' => ($sortBy == 'date' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'date' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'date' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th>الشفت
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'shift', 'sort_order' => ($sortBy == 'shift' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'shift' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'shift' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th>الوحدة
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'unit_id', 'sort_order' => ($sortBy == 'unit_id' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'unit_id' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'unit_id' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
                                 <th>الموقع
@@ -434,94 +486,104 @@
                                     </a>
                                 </th>
                                 <th class="text-nowrap">المنادر
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'total_mats', 'sort_order' => ($sortBy == 'total_mats' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'total_mats' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'total_mats' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'mats_count', 'sort_order' => ($sortBy == 'mats_count' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'mats_count' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'mats_count' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
                                 <th class="text-nowrap">الوسائد
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'total_pillows', 'sort_order' => ($sortBy == 'total_pillows' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'total_pillows' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'total_pillows' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'pillows_count', 'sort_order' => ($sortBy == 'pillows_count' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'pillows_count' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'pillows_count' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
                                 <th class="text-nowrap">المراوح
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'total_fans', 'sort_order' => ($sortBy == 'total_fans' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'total_fans' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'total_fans' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'fans_count', 'sort_order' => ($sortBy == 'fans_count' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'fans_count' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'fans_count' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
                                 <th class="text-nowrap">النوافذ
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'total_windows', 'sort_order' => ($sortBy == 'total_windows' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'total_windows' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'total_windows' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'windows_count', 'sort_order' => ($sortBy == 'windows_count' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'windows_count' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'windows_count' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
                                 <th class="text-nowrap">السجاد
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'total_carpets', 'sort_order' => ($sortBy == 'total_carpets' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'total_carpets' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'total_carpets' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'carpets_count', 'sort_order' => ($sortBy == 'carpets_count' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'carpets_count' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'carpets_count' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
                                 <th class="text-nowrap">البطانيات
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'total_blankets', 'sort_order' => ($sortBy == 'total_blankets' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'total_blankets' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'total_blankets' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'blankets_count', 'sort_order' => ($sortBy == 'blankets_count' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'blankets_count' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'blankets_count' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
                                 <th class="text-nowrap">الأسرة
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'total_beds', 'sort_order' => ($sortBy == 'total_beds' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'total_beds' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'total_beds' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'beds_count', 'sort_order' => ($sortBy == 'beds_count' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'beds_count' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'beds_count' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
                                 <th class="text-nowrap">المستفيدون
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'total_beneficiaries', 'sort_order' => ($sortBy == 'total_beneficiaries' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'total_beneficiaries' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'total_beneficiaries' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'beneficiaries_count', 'sort_order' => ($sortBy == 'beneficiaries_count' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'beneficiaries_count' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'beneficiaries_count' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
                                 <th class="text-nowrap">الترامز
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'total_trams', 'sort_order' => ($sortBy == 'total_trams' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'total_trams' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'total_trams' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'filled_trams_count', 'sort_order' => ($sortBy == 'filled_trams_count' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'filled_trams_count' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'filled_trams_count' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
                                 <th class="text-nowrap">السجاد المفروش
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'total_laid_carpets', 'sort_order' => ($sortBy == 'total_laid_carpets' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'total_laid_carpets' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'total_laid_carpets' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'carpets_laid_count', 'sort_order' => ($sortBy == 'carpets_laid_count' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'carpets_laid_count' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'carpets_laid_count' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
                                 <th class="text-nowrap">حاويات كبيرة
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'total_large_containers', 'sort_order' => ($sortBy == 'total_large_containers' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'total_large_containers' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'total_large_containers' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'large_containers_count', 'sort_order' => ($sortBy == 'large_containers_count' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'large_containers_count' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'large_containers_count' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
                                 <th class="text-nowrap">حاويات صغيرة
-                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'total_small_containers', 'sort_order' => ($sortBy == 'total_small_containers' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
-                                        @if($sortBy == 'total_small_containers' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'total_small_containers' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'small_containers_count', 'sort_order' => ($sortBy == 'small_containers_count' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'small_containers_count' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'small_containers_count' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
                                     </a>
                                 </th>
-                                <th class="text-nowrap">الإجراءات</th> {{-- عمود جديد للإجراءات --}}
+                                <th class="text-nowrap">ساعات العمل
+                                    <a href="{{ route('monthly-cleaning-report.index', array_merge(request()->query(), ['sort_by' => 'working_hours', 'sort_order' => ($sortBy == 'working_hours' && $sortOrder == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if($sortBy == 'working_hours' && $sortOrder == 'asc') <i class="bi bi-sort-up"></i> @elseif($sortBy == 'working_hours' && $sortOrder == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th class="text-nowrap">الملاحظات</th>
+                                <th class="text-nowrap">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($reports as $report)
+                            @foreach ($tasks as $task) {{-- 💡 تغيير المتغير إلى tasks --}}
                                 <tr>
-                                    <td>{{ \Carbon\Carbon::parse($report->month)->translatedFormat('F Y') }}</td>
-                                    <td>{{ $report->location }}</td>
-                                    <td>{{ $report->task_type }}</td>
-                                    <td>{{ $report->total_mats }}</td>
-                                    <td>{{ $report->total_pillows }}</td>
-                                    <td>{{ $report->total_fans }}</td>
-                                    <td>{{ $report->total_windows }}</td>
-                                    <td>{{ $report->total_carpets }}</td>
-                                    <td>{{ $report->total_blankets }}</td>
-                                    <td>{{ $report->total_beds }}</td>
-                                    <td>{{ $report->total_beneficiaries }}</td>
-                                    <td>{{ $report->total_trams }}</td>
-                                    <td>{{ $report->total_laid_carpets }}</td>
-                                    <td>{{ $report->total_large_containers }}</td>
-                                    <td>{{ $report->total_small_containers }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($task->date)->translatedFormat('d F Y') }}</td> {{-- 💡 عرض التاريخ --}}
+                                    <td>{{ $task->shift }}</td> {{-- 💡 عرض الشفت --}}
+                                    <td>{{ $task->unit->name ?? 'N/A' }}</td> {{-- 💡 عرض اسم الوحدة --}}
+                                    <td>{{ $task->location }}</td>
+                                    <td>{{ $task->task_type }}</td>
+                                    <td>{{ $task->mats_count }}</td> {{-- 💡 عرض الكميات الفردية --}}
+                                    <td>{{ $task->pillows_count }}</td>
+                                    <td>{{ $task->fans_count }}</td>
+                                    <td>{{ $task->windows_count }}</td>
+                                    <td>{{ $task->carpets_count }}</td>
+                                    <td>{{ $task->blankets_count }}</td>
+                                    <td>{{ $task->beds_count }}</td>
+                                    <td>{{ $task->beneficiaries_count }}</td>
+                                    <td>{{ $task->filled_trams_count }}</td>
+                                    <td>{{ $task->carpets_laid_count }}</td>
+                                    <td>{{ $task->large_containers_count }}</td>
+                                    <td>{{ $task->small_containers_count }}</td>
+                                    <td>{{ $task->working_hours }}</td>
+                                    <td>{{ $task->notes }}</td>
                                     <td class="text-nowrap"> {{-- خلية الإجراءات --}}
-                                        <a href="{{ route('monthly-cleaning-report.edit', $report->id) }}" class="btn btn-sm btn-info">
+                                        <a href="{{ route('monthly-cleaning-report.edit', $task->id) }}" class="btn btn-sm btn-info"> {{-- 💡 التعديل ليعمل مع $task->id --}}
                                             <i class="fas fa-edit"></i> تعديل
                                         </a>
-                                        <form action="{{ route('monthly-cleaning-report.destroy', $report->id) }}" method="POST" style="display:inline-block;">
+                                        <form action="{{ route('monthly-cleaning-report.destroy', $task->id) }}" method="POST" style="display:inline-block;"> {{-- 💡 التعديل ليعمل مع $task->id --}}
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذا التقرير؟')">
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذه المهمة؟')">
                                                 <i class="fas fa-trash"></i> حذف
                                             </button>
                                         </form>
@@ -532,11 +594,8 @@
                     </table>
                 </div>
                 <div class="card-footer clearfix">
-                    <div class="d-flex justify-content-center mt-4"> {{-- تم تعديل justify-content --}}
-                        {{-- Pagination for monthly summaries, if applicable --}}
-                        {{-- افتراضياً، تقارير الملخصات الشهرية قد لا تحتاج تقسيم صفحات إذا كانت البيانات قليلة --}}
-                        {{-- إذا كان $reports هو كائن Paginator، فيمكنك تفعيل هذا السطر --}}
-                        {{-- {{ $reports->links('pagination::bootstrap-5') }} --}}
+                    <div class="d-flex justify-content-center mt-4">
+                        {{ $tasks->links('pagination::bootstrap-5') }} {{-- 💡 تغيير المتغير إلى tasks --}}
                     </div>
                 </div>
             @endif
@@ -557,25 +616,38 @@
             const actualTable = document.querySelector('.table-responsive table'); // استهداف الجدول الفعلي في هذا الملف
 
             if (!actualTable) {
-                // بدلاً من alert، يمكن استخدام modal أو رسالة داخل الصفحة
                 console.error('Table not found for CSV export.');
                 return;
             }
 
             let csv = [];
-            for (let i = 0; i < actualTable.rows.length; i++) {
-                let row = [], cols = actualTable.rows[i].querySelectorAll('td, th');
-                for (let j = 0; j < cols.length; j++) {
-                    let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, '').replace(/(\s\s)/gm, ' ');
-                    data = data.replace(/"/g, '""'); // Escape double quotes
-                    row.push('"' + data + '"');
+            // Get headers from <thead>
+            let headers = [];
+            actualTable.querySelectorAll('thead th').forEach(th => {
+                // Exclude the "الإجراءات" column
+                if (th.innerText.trim() !== 'الإجراءات') {
+                    headers.push('"' + th.innerText.trim().replace(/"/g, '""') + '"');
                 }
-                csv.push(row.join(','));
-            }
+            });
+            csv.push(headers.join(','));
+
+            // Get data from <tbody>
+            actualTable.querySelectorAll('tbody tr').forEach(row => {
+                let rowData = [];
+                row.querySelectorAll('td').forEach((td, index) => {
+                    // Exclude the "الإجراءات" column (last column)
+                    if (index < row.querySelectorAll('td').length - 1) {
+                        let data = td.innerText.replace(/(\r\n|\n|\r)/gm, '').replace(/(\s\s)/gm, ' ');
+                        data = data.replace(/"/g, '""');
+                        rowData.push('"' + data + '"');
+                    }
+                });
+                csv.push(rowData.join(','));
+            });
 
             const csvString = csv.join('\n');
             const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-            const filename = 'تقرير_النظافة_العامة_' + new Date().toISOString().slice(0,10) + '.csv';
+            const filename = 'تقرير_النظافة_التفصيلي_' + new Date().toISOString().slice(0,10) + '.csv'; // 💡 تغيير اسم الملف
 
             // Check if navigator.msSaveBlob exists (for IE10+)
             if (navigator.msSaveBlob) {
@@ -591,7 +663,6 @@
                     link.click();
                     document.body.removeChild(link);
                 } else {
-                    // بدلاً من alert، يمكن استخدام modal أو رسالة داخل الصفحة
                     console.error('المتصفح لا يدعم تصدير CSV بهذه الطريقة. يرجى استخدام متصفح أحدث.');
                 }
             }

@@ -2,15 +2,15 @@
 
 @extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
-@section('title', 'تعديل تقرير النظافة العامة الشهري')
+@section('title', 'تعديل مهمة النظافة العامة') {{-- 💡 تغيير العنوان --}}
 
-@section('page_title', '✏️ تعديل تقرير النظافة العامة الشهري')
+@section('page_title', '✏️ تعديل مهمة النظافة العامة') {{-- 💡 تغيير العنوان --}}
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('home') }}">الرئيسية</a></li>
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">لوحة التحكم</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('monthly-cleaning-report.index') }}">تقارير النظافة العامة الشهرية</a></li>
-    <li class="breadcrumb-item active">تعديل التقرير</li>
+    <li class="breadcrumb-item"><a href="{{ route('monthly-cleaning-report.index') }}">تقرير النظافة العامة التفصيلي</a></li> {{-- 💡 تغيير اسم المسار --}}
+    <li class="breadcrumb-item active">تعديل المهمة</li>
 @endsection
 
 @section('styles')
@@ -295,7 +295,7 @@
     <div class="container-fluid">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">تعديل تقرير النظافة العامة الشهري</h3>
+                <h3 class="card-title">تعديل مهمة النظافة العامة</h3> {{-- 💡 تغيير العنوان --}}
             </div>
             <div class="card-body">
                 @if (session('success'))
@@ -320,100 +320,162 @@
                     </div>
                 @endif
 
-                <form action="{{ route('monthly-cleaning-report.update', $report->id) }}" method="POST">
+                <form action="{{ route('monthly-cleaning-report.update', $task->id) }}" method="POST" enctype="multipart/form-data"> {{-- 💡 تغيير $report->id إلى $task->id وإضافة enctype للصور --}}
                     @csrf
                     @method('PUT') {{-- مهم جداً لتحديد طريقة الطلب كـ PUT --}}
 
                     <div class="card card-info card-outline">
                         <div class="card-header">
-                            <h2 class="card-title">معلومات التقرير</h2>
+                            <h2 class="card-title">معلومات المهمة</h2> {{-- 💡 تغيير العنوان --}}
                         </div>
                         <div class="card-body">
                             <div class="row mb-4">
                                 <div class="col-md-6 mb-3">
-                                    <label for="month" class="form-label">الشهر</label>
-                                    <input type="month" class="form-control" id="month" name="month" value="{{ old('month', $report->month) }}" required>
+                                    <label for="date" class="form-label">التاريخ</label> {{-- 💡 حقل التاريخ --}}
+                                    <input type="date" class="form-control" id="date" name="date" value="{{ old('date', $task->date ? $task->date->format('Y-m-d') : '') }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="shift" class="form-label">الشفت</label> {{-- 💡 حقل الشفت --}}
+                                    <select class="form-select" id="shift" name="shift" required>
+                                        <option value="">اختر الشفت</option>
+                                        @foreach($availableShifts as $shiftOption)
+                                            <option value="{{ $shiftOption }}" {{ old('shift', $task->shift) == $shiftOption ? 'selected' : '' }}>{{ $shiftOption }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="unit_id" class="form-label">الوحدة</label> {{-- 💡 حقل الوحدة --}}
+                                    <select class="form-select" id="unit_id" name="unit_id" required>
+                                        <option value="">اختر الوحدة</option>
+                                        @foreach($units as $unit)
+                                            <option value="{{ $unit->id }}" {{ old('unit_id', $task->unit_id) == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="location" class="form-label">الموقع</label>
                                     <select class="form-select" id="location" name="location" required>
                                         <option value="">اختر الموقع</option>
                                         {{-- القاعات --}}
-                                        <option value="قاعة 1 الأسفل" {{ old('location', $report->location) == 'قاعة 1 الأسفل' ? 'selected' : '' }}>قاعة 1 الأسفل</option>
-                                        <option value="قاعة 1 الأعلى" {{ old('location', $report->location) == 'قاعة 1 الأعلى' ? 'selected' : '' }}>قاعة 1 الأعلى</option>
-                                        <option value="قاعة 2 الأسفل" {{ old('location', $report->location) == 'قاعة 2 الأسفل' ? 'selected' : '' }}>قاعة 2 الأسفل</option>
-                                        <option value="قاعة 2 الأعلى" {{ old('location', $report->location) == 'قاعة 2 الأعلى' ? 'selected' : '' }}>قاعة 2 الأعلى</option>
-                                        <option value="قاعة 3 الأسفل" {{ old('location', $report->location) == 'قاعة 3 الأسفل' ? 'selected' : '' }}>قاعة 3 الأسفل</option>
-                                        <option value="قاعة 3 الأعلى" {{ old('location', $report->location) == 'قاعة 3 الأعلى' ? 'selected' : '' }}>قاعة 3 الأعلى</option>
-                                        <option value="قاعة 4 الأسفل" {{ old('location', $report->location) == 'قاعة 4 الأسفل' ? 'selected' : '' }}>قاعة 4 الأسفل</option>
-                                        <option value="قاعة 4 الأعلى" {{ old('location', $report->location) == 'قاعة 4 الأعلى' ? 'selected' : '' }}>قاعة 4 الأعلى</option>
-                                        <option value="قاعة 5 الأسفل" {{ old('location', $report->location) == 'قاعة 5 الأسفل' ? 'selected' : '' }}>قاعة 5 الأسفل</option>
-                                        <option value="قاعة 5 الأعلى" {{ old('location', $report->location) == 'قاعة 5 الأعلى' ? 'selected' : '' }}>قاعة 5 الأعلى</option>
-                                        <option value="قاعة 6 الأسفل" {{ old('location', $report->location) == 'قاعة 6 الأسفل' ? 'selected' : '' }}>قاعة 6 الأسفل</option>
-                                        <option value="قاعة 6 الأعلى" {{ old('location', $report->location) == 'قاعة 6 الأعلى' ? 'selected' : '' }}>قاعة 6 الأعلى</option>
-                                        <option value="قاعة 7 الأسفل" {{ old('location', $report->location) == 'قاعة 7 الأسفل' ? 'selected' : '' }}>قاعة 7 الأسفل</option>
-                                        <option value="قاعة 7 الأعلى" {{ old('location', $report->location) == 'قاعة 7 الأعلى' ? 'selected' : '' }}>قاعة 7 الأعلى</option>
-                                        <option value="قاعة 8 الأسفل" {{ old('location', $report->location) == 'قاعة 8 الأسفل' ? 'selected' : '' }}>قاعة 8 الأسفل</option>
-                                        <option value="قاعة 8 الأعلى" {{ old('location', $report->location) == 'قاعة 8 الأعلى' ? 'selected' : '' }}>قاعة 8 الأعلى</option>
-                                        <option value="قاعة 9 الأسفل" {{ old('location', $report->location) == 'قاعة 9 الأسفل' ? 'selected' : '' }}>قاعة 9 الأسفل</option>
-                                        <option value="قاعة 9 الأعلى" {{ old('location', $report->location) == 'قاعة 9 الأعلى' ? 'selected' : '' }}>قاعة 9 الأعلى</option>
-                                        <option value="قاعة 10 الأسفل" {{ old('location', $report->location) == 'قاعة 10 الأسفل' ? 'selected' : '' }}>قاعة 10 الأسفل</option>
-                                        <option value="قاعة 10 الأعلى" {{ old('location', $report->location) == 'قاعة 10 الأعلى' ? 'selected' : '' }}>قاعة 10 الأعلى</option>
-                                        <option value="قاعة 11 الأسفل" {{ old('location', $report->location) == 'قاعة 11 الأسفل' ? 'selected' : '' }}>قاعة 11 الأسفل</option>
-                                        <option value="قاعة 11 الأعلى" {{ old('location', $report->location) == 'قاعة 11 الأعلى' ? 'selected' : '' }}>قاعة 11 الأعلى</option>
-                                        <option value="قاعة 12 الأسفل" {{ old('location', $report->location) == 'قاعة 12 الأسفل' ? 'selected' : '' }}>قاعة 12 الأسفل</option>
-                                        <option value="قاعة 12 الأعلى" {{ old('location', $report->location) == 'قاعة 12 الأعلى' ? 'selected' : '' }}>قاعة 12 الأعلى</option>
-                                        <option value="قاعة 13 الأسفل" {{ old('location', $report->location) == 'قاعة 13 الأسفل' ? 'selected' : '' }}>قاعة 13 الأسفل</option>
-                                        <option value="قاعة 13 الأعلى" {{ old('location', $report->location) == 'قاعة 13 الأعلى' ? 'selected' : '' }}>قاعة 13 الأعلى</option>
+                                        <option value="قاعة 1 الأسفل" {{ old('location', $task->location) == 'قاعة 1 الأسفل' ? 'selected' : '' }}>قاعة 1 الأسفل</option>
+                                        <option value="قاعة 1 الأعلى" {{ old('location', $task->location) == 'قاعة 1 الأعلى' ? 'selected' : '' }}>قاعة 1 الأعلى</option>
+                                        <option value="قاعة 2 الأسفل" {{ old('location', $task->location) == 'قاعة 2 الأسفل' ? 'selected' : '' }}>قاعة 2 الأسفل</option>
+                                        <option value="قاعة 2 الأعلى" {{ old('location', $task->location) == 'قاعة 2 الأعلى' ? 'selected' : '' }}>قاعة 2 الأعلى</option>
+                                        <option value="قاعة 3 الأسفل" {{ old('location', $task->location) == 'قاعة 3 الأسفل' ? 'selected' : '' }}>قاعة 3 الأسفل</option>
+                                        <option value="قاعة 3 الأعلى" {{ old('location', $task->location) == 'قاعة 3 الأعلى' ? 'selected' : '' }}>قاعة 3 الأعلى</option>
+                                        <option value="قاعة 4 الأسفل" {{ old('location', $task->location) == 'قاعة 4 الأسفل' ? 'selected' : '' }}>قاعة 4 الأسفل</option>
+                                        <option value="قاعة 4 الأعلى" {{ old('location', $task->location) == 'قاعة 4 الأعلى' ? 'selected' : '' }}>قاعة 4 الأعلى</option>
+                                        <option value="قاعة 5 الأسفل" {{ old('location', $task->location) == 'قاعة 5 الأسفل' ? 'selected' : '' }}>قاعة 5 الأسفل</option>
+                                        <option value="قاعة 5 الأعلى" {{ old('location', $task->location) == 'قاعة 5 الأعلى' ? 'selected' : '' }}>قاعة 5 الأعلى</option>
+                                        <option value="قاعة 6 الأسفل" {{ old('location', $task->location) == 'قاعة 6 الأسفل' ? 'selected' : '' }}>قاعة 6 الأسفل</option>
+                                        <option value="قاعة 6 الأعلى" {{ old('location', $task->location) == 'قاعة 6 الأعلى' ? 'selected' : '' }}>قاعة 6 الأعلى</option>
+                                        <option value="قاعة 7 الأسفل" {{ old('location', $task->location) == 'قاعة 7 الأسفل' ? 'selected' : '' }}>قاعة 7 الأسفل</option>
+                                        <option value="قاعة 7 الأعلى" {{ old('location', $task->location) == 'قاعة 7 الأعلى' ? 'selected' : '' }}>قاعة 7 الأعلى</option>
+                                        <option value="قاعة 8 الأسفل" {{ old('location', $task->location) == 'قاعة 8 الأسفل' ? 'selected' : '' }}>قاعة 8 الأسفل</option>
+                                        <option value="قاعة 8 الأعلى" {{ old('location', $task->location) == 'قاعة 8 الأعلى' ? 'selected' : '' }}>قاعة 8 الأعلى</option>
+                                        <option value="قاعة 9 الأسفل" {{ old('location', $task->location) == 'قاعة 9 الأسفل' ? 'selected' : '' }}>قاعة 9 الأسفل</option>
+                                        <option value="قاعة 9 الأعلى" {{ old('location', $task->location) == 'قاعة 9 الأعلى' ? 'selected' : '' }}>قاعة 9 الأعلى</option>
+                                        <option value="قاعة 10 الأسفل" {{ old('location', $task->location) == 'قاعة 10 الأسفل' ? 'selected' : '' }}>قاعة 10 الأسفل</option>
+                                        <option value="قاعة 10 الأعلى" {{ old('location', $task->location) == 'قاعة 10 الأعلى' ? 'selected' : '' }}>قاعة 10 الأعلى</option>
+                                        <option value="قاعة 11 الأسفل" {{ old('location', $task->location) == 'قاعة 11 الأسفل' ? 'selected' : '' }}>قاعة 11 الأسفل</option>
+                                        <option value="قاعة 11 الأعلى" {{ old('location', $task->location) == 'قاعة 11 الأعلى' ? 'selected' : '' }}>قاعة 11 الأعلى</option>
+                                        <option value="قاعة 12 الأسفل" {{ old('location', $task->location) == 'قاعة 12 الأسفل' ? 'selected' : '' }}>قاعة 12 الأسفل</option>
+                                        <option value="قاعة 12 الأعلى" {{ old('location', $task->location) == 'قاعة 12 الأعلى' ? 'selected' : '' }}>قاعة 12 الأعلى</option>
+                                        <option value="قاعة 13 الأسفل" {{ old('location', $task->location) == 'قاعة 13 الأسفل' ? 'selected' : '' }}>قاعة 13 الأسفل</option>
+                                        <option value="قاعة 13 الأعلى" {{ old('location', $task->location) == 'قاعة 13 الأعلى' ? 'selected' : '' }}>قاعة 13 الأعلى</option>
                                         {{-- المناطق الخارجية --}}
-                                        <option value="جميع القواطع الخارجية" {{ old('location', $report->location) == 'جميع القواطع الخارجية' ? 'selected' : '' }}>جميع القواطع الخارجية</option>
-                                        <option value="الترامز" {{ old('location', $report->location) == 'الترامز' ? 'selected' : '' }}>الترامز</option>
-                                        <option value="السجاد" {{ old('location', $report->location) == 'السجاد' ? 'selected' : '' }}>السجاد</option>
-                                        <option value="الحاويات" {{ old('location', $report->location) == 'الحاويات' ? 'selected' : '' }}>الحاويات</option>
-                                        <option value="الجامع" {{ old('location', $report->location) == 'الجامع' ? 'selected' : '' }}>الجامع</option>
-                                        <option value="المركز الصحي" {{ old('location', $report->location) == 'المركز الصحي' ? 'selected' : '' }}>المركز الصحي</option>
+                                        <option value="جميع القواطع الخارجية" {{ old('location', $task->location) == 'جميع القواطع الخارجية' ? 'selected' : '' }}>جميع القواطع الخارجية</option>
+                                        <option value="الترامز" {{ old('location', $task->location) == 'الترامز' ? 'selected' : '' }}>الترامز</option>
+                                        <option value="السجاد" {{ old('location', $task->location) == 'السجاد' ? 'selected' : '' }}>السجاد</option>
+                                        <option value="الحاويات" {{ old('location', $task->location) == 'الحاويات' ? 'selected' : '' }}>الحاويات</option>
+                                        <option value="الجامع" {{ old('location', $task->location) == 'الجامع' ? 'selected' : '' }}>الجامع</option>
+                                        <option value="المركز الصحي" {{ old('location', $task->location) == 'المركز الصحي' ? 'selected' : '' }}>المركز الصحي</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="mb-4">
                                 <label for="task_type" class="form-label">نوع المهمة</label>
                                 <select class="form-select" id="task_type" name="task_type" required>
-                                    <option value="إدامة" {{ old('task_type', $report->task_type) == 'إدامة' ? 'selected' : '' }}>إدامة</option>
-                                    <option value="صيانة" {{ old('task_type', $report->task_type) == 'صيانة' ? 'selected' : '' }}>صيانة</option>
+                                    <option value="">اختر نوع المهمة</option>
+                                    @foreach($availableTaskTypes as $taskTypeOption)
+                                        <option value="{{ $taskTypeOption }}" {{ old('task_type', $task->task_type) == $taskTypeOption ? 'selected' : '' }}>{{ $taskTypeOption }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="mb-4">
-                                <label for="total_working_hours" class="form-label">إجمالي ساعات العمل للمهمة</label>
-                                <input type="number" step="0.5" class="form-control" id="total_working_hours" name="total_working_hours" min="0" max="24" value="{{ old('total_working_hours', $report->total_working_hours) }}" required>
-                                <div class="form-text">إجمالي ساعات العمل التي استغرقتها هذه المهمة.</div>
+                                <label for="status" class="form-label">الحالة</label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="قيد التنفيذ" {{ old('status', $task->status) == 'قيد التنفيذ' ? 'selected' : '' }}>قيد التنفيذ</option>
+                                    <option value="مكتمل" {{ old('status', $task->status) == 'مكتمل' ? 'selected' : '' }}>مكتمل</option>
+                                    <option value="معلق" {{ old('status', $task->status) == 'معلق' ? 'selected' : '' }}>معلق</option>
+                                    <option value="ملغاة" {{ old('status', $task->status) == 'ملغاة' ? 'selected' : '' }}>ملغاة</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label for="working_hours" class="form-label">ساعات العمل لهذه المهمة</label> {{-- 💡 تغيير الاسم --}}
+                                <input type="number" step="0.5" class="form-control" id="working_hours" name="working_hours" min="0" max="24" value="{{ old('working_hours', $task->working_hours) }}" required>
+                                <div class="form-text">ساعات العمل التي استغرقتها هذه المهمة.</div>
                             </div>
                         </div>
                     </div>
 
                     <div class="card card-info card-outline">
                         <div class="card-header">
-                            <h2 class="card-title">تفاصيل الأداء (الكميات المجمعة)</h2>
+                            <h2 class="card-title">تفاصيل الأداء (الكميات)</h2> {{-- 💡 تغيير العنوان --}}
                         </div>
                         <div class="card-body">
                             <div class="row mb-3">
-                                <div class="col-md-4 mb-3"><label for="total_mats" class="form-label">إجمالي المنادر المدامة</label><input type="number" class="form-control" id="total_mats" name="total_mats" min="0" value="{{ old('total_mats', $report->total_mats) }}"></div>
-                                <div class="col-md-4 mb-3"><label for="total_pillows" class="form-label">إجمالي الوسادات المدامة</label><input type="number" class="form-control" id="total_pillows" name="total_pillows" min="0" value="{{ old('total_pillows', $report->total_pillows) }}"></div>
-                                <div class="col-md-4 mb-3"><label for="total_fans" class="form-label">إجمالي المراوح المدامة</label><input type="number" class="form-control" id="total_fans" name="total_fans" min="0" value="{{ old('total_fans', $report->total_fans) }}"></div>
-                                <div class="col-md-4 mb-3"><label for="total_windows" class="form-label">إجمالي النوافذ المدامة</label><input type="number" class="form-control" id="total_windows" name="total_windows" min="0" value="{{ old('total_windows', $report->total_windows) }}"></div>
-                                <div class="col-md-4 mb-3"><label for="total_carpets" class="form-label">إجمالي السجاد المدام</label><input type="number" class="form-control" id="total_carpets" name="total_carpets" min="0" value="{{ old('total_carpets', $report->total_carpets) }}"></div>
-                                <div class="col-md-4 mb-3"><label for="total_blankets" class="form-label">إجمالي البطانيات المدامة</label><input type="number" class="form-control" id="total_blankets" name="total_blankets" min="0" value="{{ old('total_blankets', $report->total_blankets) }}"></div>
-                                <div class="col-md-4 mb-3"><label for="total_beds" class="form-label">إجمالي الأسرة</label><input type="number" class="form-control" id="total_beds" name="total_beds" min="0" value="{{ old('total_beds', $report->total_beds) }}"></div>
-                                <div class="col-md-4 mb-3"><label for="total_beneficiaries" class="form-label">إجمالي المستفيدين من القاعة</label><input type="number" class="form-control" id="total_beneficiaries" name="total_beneficiaries" min="0" value="{{ old('total_beneficiaries', $report->total_beneficiaries) }}"></div>
-                                <div class="col-md-4 mb-3"><label for="total_trams" class="form-label">إجمالي الترامز المملوئة والمدامة</label><input type="number" class="form-control" id="total_trams" name="total_trams" min="0" value="{{ old('total_trams', $report->total_trams) }}"></div>
-                                <div class="col-md-4 mb-3"><label for="total_laid_carpets" class="form-label">إجمالي السجاد المفروش في الساحات</label><input type="number" class="form-control" id="total_laid_carpets" name="total_laid_carpets" min="0" value="{{ old('total_laid_carpets', $report->total_laid_carpets) }}"></div>
-                                <div class="col-md-4 mb-3"><label for="total_large_containers" class="form-label">إجمالي الحاويات الكبيرة المفرغة والمدامة</label><input type="number" class="form-control" id="total_large_containers" name="total_large_containers" min="0" value="{{ old('total_large_containers', $report->total_large_containers) }}"></div>
-                                <div class="col-md-4 mb-3"><label for="total_small_containers" class="form-label">إجمالي الحاويات الصغيرة المفرغة والمدامة</label><input type="number" class="form-control" id="total_small_containers" name="total_small_containers" min="0" value="{{ old('total_small_containers', $report->total_small_containers) }}"></div>
-                                <div class="col-md-4 mb-3"><label for="total_external_partitions" class="form-label">إجمالي القواطع الخارجية المدامة</label><input type="number" class="form-control" id="total_external_partitions" name="total_external_partitions" min="0" value="{{ old('total_external_partitions', $report->total_external_partitions) }}"></div>
+                                <div class="col-md-4 mb-3"><label for="mats_count" class="form-label">المنادر المدامة</label><input type="number" class="form-control" id="mats_count" name="mats_count" min="0" value="{{ old('mats_count', $task->mats_count) }}"></div> {{-- 💡 تغيير الاسم --}}
+                                <div class="col-md-4 mb-3"><label for="pillows_count" class="form-label">الوسادات المدامة</label><input type="number" class="form-control" id="pillows_count" name="pillows_count" min="0" value="{{ old('pillows_count', $task->pillows_count) }}"></div> {{-- 💡 تغيير الاسم --}}
+                                <div class="col-md-4 mb-3"><label for="fans_count" class="form-label">المراوح المدامة</label><input type="number" class="form-control" id="fans_count" name="fans_count" min="0" value="{{ old('fans_count', $task->fans_count) }}"></div> {{-- 💡 تغيير الاسم --}}
+                                <div class="col-md-4 mb-3"><label for="windows_count" class="form-label">النوافذ المدامة</label><input type="number" class="form-control" id="windows_count" name="windows_count" min="0" value="{{ old('windows_count', $task->windows_count) }}"></div> {{-- 💡 تغيير الاسم --}}
+                                <div class="col-md-4 mb-3"><label for="carpets_count" class="form-label">السجاد المدام</label><input type="number" class="form-control" id="carpets_count" name="carpets_count" min="0" value="{{ old('carpets_count', $task->carpets_count) }}"></div> {{-- 💡 تغيير الاسم --}}
+                                <div class="col-md-4 mb-3"><label for="blankets_count" class="form-label">البطانيات المدامة</label><input type="number" class="form-control" id="blankets_count" name="blankets_count" min="0" value="{{ old('blankets_count', $task->blankets_count) }}"></div> {{-- 💡 تغيير الاسم --}}
+                                <div class="col-md-4 mb-3"><label for="beds_count" class="form-label">الأسرة</label><input type="number" class="form-control" id="beds_count" name="beds_count" min="0" value="{{ old('beds_count', $task->beds_count) }}"></div> {{-- 💡 تغيير الاسم --}}
+                                <div class="col-md-4 mb-3"><label for="beneficiaries_count" class="form-label">المستفيدون من القاعة</label><input type="number" class="form-control" id="beneficiaries_count" name="beneficiaries_count" min="0" value="{{ old('beneficiaries_count', $task->beneficiaries_count) }}"></div> {{-- 💡 تغيير الاسم --}}
+                                <div class="col-md-4 mb-3"><label for="filled_trams_count" class="form-label">الترامز المملوئة والمدامة</label><input type="number" class="form-control" id="filled_trams_count" name="filled_trams_count" min="0" value="{{ old('filled_trams_count', $task->filled_trams_count) }}"></div> {{-- 💡 تغيير الاسم --}}
+                                <div class="col-md-4 mb-3"><label for="carpets_laid_count" class="form-label">السجاد المفروش في الساحات</label><input type="number" class="form-control" id="carpets_laid_count" name="carpets_laid_count" min="0" value="{{ old('carpets_laid_count', $task->carpets_laid_count) }}"></div> {{-- 💡 تغيير الاسم --}}
+                                <div class="col-md-4 mb-3"><label for="large_containers_count" class="form-label">الحاويات الكبيرة المفرغة والمدامة</label><input type="number" class="form-control" id="large_containers_count" name="large_containers_count" min="0" value="{{ old('large_containers_count', $task->large_containers_count) }}"></div> {{-- 💡 تغيير الاسم --}}
+                                <div class="col-md-4 mb-3"><label for="small_containers_count" class="form-label">الحاويات الصغيرة المفرغة والمدامة</label><input type="number" class="form-control" id="small_containers_count" name="small_containers_count" min="0" value="{{ old('small_containers_count', $task->small_containers_count) }}"></div> {{-- 💡 تغيير الاسم --}}
+                                <div class="col-md-4 mb-3"><label for="total_external_partitions" class="form-label">القواطع الخارجية المدامة</label><input type="number" class="form-control" id="total_external_partitions" name="total_external_partitions" min="0" value="{{ old('total_external_partitions', $task->total_external_partitions) }}"></div> {{-- 💡 تغيير الاسم --}}
                             </div>
                             <div class="mb-4">
                                 <label for="notes" class="form-label">ملاحظات إضافية</label>
-                                <textarea class="form-control" id="notes" name="notes" rows="5" placeholder="أضف أي ملاحظات إضافية هنا...">{{ old('notes', $report->notes) }}</textarea>
-                                <div class="form-text">أي تفاصيل أو ملاحظات أخرى تتعلق بالتقرير.</div>
+                                <textarea class="form-control" id="notes" name="notes" rows="5" placeholder="أضف أي ملاحظات إضافية هنا...">{{ old('notes', $task->notes) }}</textarea> {{-- 💡 تغيير $report->notes إلى $task->notes --}}
+                                <div class="form-text">أي تفاصيل أو ملاحظات أخرى تتعلق بالمهمة.</div> {{-- 💡 تغيير النص --}}
+                            </div>
+                            {{-- 💡 حقول الصور --}}
+                            <div class="mb-4">
+                                <label for="before_images" class="form-label">صور قبل المهمة</label>
+                                <input type="file" class="form-control" id="before_images" name="before_images[]" multiple accept="image/*">
+                                <div class="form-text">يمكنك رفع صور متعددة قبل بدء المهمة.</div>
+                                <div class="mt-2 d-flex flex-wrap gap-2">
+                                    @if ($task->before_images)
+                                        @foreach ($task->before_images as $imagePath)
+                                            <div class="position-relative d-inline-block me-2 mb-2">
+                                                <img src="{{ Storage::url($imagePath) }}" alt="صورة قبل" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 remove-image" data-path="{{ $imagePath }}" style="border-radius: 50%; width: 25px; height: 25px; padding: 0; font-size: 0.7rem; line-height: 1; text-align: center;">&times;</button>
+                                                <input type="hidden" name="existing_before_images[]" value="{{ $imagePath }}">
+                                            </div>
+                                        @endforeach
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="after_images" class="form-label">صور بعد المهمة</label>
+                                <input type="file" class="form-control" id="after_images" name="after_images[]" multiple accept="image/*">
+                                <div class="form-text">يمكنك رفع صور متعددة بعد انتهاء المهمة.</div>
+                                <div class="mt-2 d-flex flex-wrap gap-2">
+                                    @if ($task->after_images)
+                                        @foreach ($task->after_images as $imagePath)
+                                            <div class="position-relative d-inline-block me-2 mb-2">
+                                                <img src="{{ Storage::url($imagePath) }}" alt="صورة بعد" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 remove-image" data-path="{{ $imagePath }}" style="border-radius: 50%; width: 25px; height: 25px; padding: 0; font-size: 0.7rem; line-height: 1; text-align: center;">&times;</button>
+                                                <input type="hidden" name="existing_after_images[]" value="{{ $imagePath }}">
+                                            </div>
+                                        @endforeach
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -434,8 +496,16 @@
 
 @section('scripts')
     <script>
-        // لا توجد حاجة لـ JavaScript معقد هنا لأن هذا النموذج يعرض بيانات مجمعة
-        // ولا يحتوي على حقول ديناميكية مثل نماذج إنشاء المهام الأصلية.
-        // الحقول كلها مرئية وقابلة للتعديل مباشرة.
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.remove-image').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (confirm('هل أنت متأكد من حذف هذه الصورة؟')) {
+                        this.closest('.position-relative').remove();
+                        // يمكنك إضافة منطق AJAX هنا لحذف الصورة من الخادم فوراً إذا أردت
+                        // أو الاعتماد على إرسال 'existing_images' المتبقية عند حفظ النموذج
+                    }
+                });
+            });
+        });
     </script>
 @endsection

@@ -5,17 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany; // للحفاظ على العلاقة إذا كنت تستخدمها
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage; // لاستخدام Storage facade
-use Illuminate\Support\Facades\Auth;     // لاستخدام Auth facade
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
-// استيراد جميع الموديلات المستخدمة في هذا الموديل
 use App\Models\User;
-use App\Models\Unit; // تم إضافته: لأنك تستخدم unit()
+use App\Models\Unit;
 use App\Models\UnitGoal;
-use App\Models\Employee; // تم إضافته: للعلاقة employees()
-use App\Models\EmployeeTask; // تم إضافته: للعلاقة employeeTasks()
+use App\Models\Employee;
+use App\Models\EmployeeTask;
 use App\Models\TaskImageReport;
 use App\Models\ActualResult;
 use App\Models\MonthlySanitationSummary;
@@ -28,38 +28,41 @@ class SanitationFacilityTask extends Model
         'date',
         'shift',
         'task_type',
-        'facility_name', // اسم المرفق (مثال: مسجد، مستشفى، دورة مياه)
-        'details',       // تفاصيل إضافية للمهمة
+        'facility_name',
+        'details',
         'status',
         'notes',
         'related_goal_id',
-        'progress',      // نسبة التقدم
-        'result_value',  // قيمة النتيجة (إذا كانت رقمية)
-        'resources_used', // الموارد الأخرى المستخدمة (JSON)
-        'verification_status', // حالة التحقق
-        'before_images', // مسارات صور قبل التنفيذ (JSON)
-        'after_images',  // مسارات صور بعد التنفيذ (JSON)
-        'seats_count',   // عدد المقاعد
-        'sinks_count',   // عدد الأحواض
-        'mixers_count',  // عدد الخلاطات
-        'mirrors_count', // عدد المرايا
-        'doors_count',   // عدد الأبواب
-        'toilets_count', // عدد المراحيض
-        'working_hours', // ساعات العمل لهذه المهمة
-        // 'created_by' و 'updated_by' يتم تعيينهما عبر أحداث الموديل تلقائياً لضمان الأمان
+        'progress',
+        'result_value',
+        'resources_used',
+        'verification_status',
+        'seats_count',
+        'mirrors_count',
+        'mixers_count',
+        'doors_count',
+        'sinks_count',
+        'toilets_count',
+        'working_hours',
+        'created_by',
+        'updated_by',
+        // ✅ يجب أن تكون قبل وبعد الصور قابلة للتعبئة الجماعية أيضًا إذا كنت تقوم بتخزينها مباشرة
+        // ومع ذلك، بما أنك تستخدم TaskImageReport، فلن تحتاجها هنا إذا كانت البيانات لا تُخزن مباشرة
+        // في هذا النموذج، بل عبر علاقة
     ];
 
     // تحويل أنواع البيانات عند القراءة والكتابة
     protected $casts = [
         'resources_used' => 'array',
+        'date' => 'date',
+        // ✅ إضافة هذه الأسطر لتحويل `before_images` و `after_images` إلى مصفوفات
+        // هذا أمر بالغ الأهمية لأنك تحاول عمل foreach عليها في Blade
         'before_images' => 'array',
         'after_images' => 'array',
-        'date' => 'date', // تحويل التاريخ إلى كائن Carbon
     ];
 
     /**
      * تعريف العلاقة: المهمة لها العديد من مهام الموظفين (عبر جدول وسيط EmployeeTask).
-     * هذا هو الأكثر شيوعاً عند تخزين بيانات إضافية (مثل التقييم) على جدول الربط.
      */
     public function employeeTasks(): HasMany
     {
@@ -99,54 +102,82 @@ class SanitationFacilityTask extends Model
     }
 
     /**
+     * علاقة One-to-One مع TaskImageReport
+     * ستجلب تقرير الصورة المرتبط بهذه المهمة (من نوع 'sanitation').
+     */
+    public function imageReport(): HasOne
+    {
+        return $this->hasOne(TaskImageReport::class, 'task_id', 'id')
+                     ->where('unit_type', 'sanitation');
+    }
+
+    /**
+     * يقوم بإرجاع عناوين URL للصور "قبل" المهمة من تقرير الصور المرتبط (Eager Loaded).
+     *
+     * @return array
+     */
+    public function getBeforeImagesAttribute(): array // ✅ تم تغيير getNameUrlsAttribute إلى getBeforeImagesAttribute
+    {
+        // إذا كنت تخزن المسارات مباشرة في هذا الموديل (SanitationFacilityTask)
+        // فستحتاج إلى التأكد من أن حقل `before_images` في قاعدة البيانات
+        // يخزن كـ JSON وتحويله باستخدام $casts
+        // وإلا، إذا كانت الصور تأتي من `TaskImageReport`، فأنت بحاجة إلى جلبها من هناك
+        // بناءً على رسالة الخطأ الأصلية، يبدو أن `before_images` يتم الوصول إليها مباشرة على
+        // SanitationFacilityTask وليس من خلال علاقة أو accessor مخصص.
+        // لذا، إذا كان لديك عمود 'before_images' في جدول sanitation_facility_tasks
+        // ولديه مسارات JSON، فإن $casts ستعالجه.
+        // ولكن بناءً على الكود الخاص بك، يبدو أنك تستخدم `TaskImageReport` لتخزين الصور.
+        //
+        // إذا كنت تستخدم `TaskImageReport`، يجب أن تستدعي العلاقة `imageReport`
+        // ومن ثم الـ accessor الخاص بـ `TaskImageReport`، كالتالي:
+        return optional($this->imageReport)->before_images ?? []; // ✅ تأكد من أن TaskImageReport لديه accessor اسمه `before_images` أو أن هذا هو اسم العمود الذي يتم قراءته.
+    }
+
+    /**
+     * يقوم بإرجاع عناوين URL للصور "بعد" المهمة من تقرير الصور المرتبط (Eager Loaded).
+     *
+     * @return array
+     */
+    public function getAfterImagesAttribute(): array // ✅ تم تغيير getNameUrlsAttribute إلى getAfterImagesAttribute
+    {
+        return optional($this->imageReport)->after_images ?? []; // ✅ تأكد من أن TaskImageReport لديه accessor اسمه `after_images` أو أن هذا هو اسم العمود الذي يتم قراءته.
+    }
+
+    /**
      * الأحداث التي يتم تشغيلها عند بدء تشغيل الموديل.
-     * هنا نقوم بتعيين created_by و updated_by تلقائياً، ومعالجة الملخصات والصور.
      */
     protected static function booted()
     {
-        // عند إنشاء مهمة جديدة وقبل حفظها في قاعدة البيانات
         static::creating(function ($task) {
-            // تعيين unit_id افتراضي (مثال: 2 لوحدة المنشآت الصحية)
             $task->unit_id = $task->unit_id ?? 2;
-            // تعيين created_by بمعرف المستخدم الحالي إذا كان هناك مستخدم مسجل الدخول
             if (Auth::check()) {
                 $task->created_by = Auth::id();
             }
         });
 
-        // عند حفظ المهمة (سواء كانت إنشاء لأول مرة أو تحديث موجود)
         static::saving(function ($task) {
-            // تعيين updated_by بمعرف المستخدم الحالي إذا كان هناك مستخدم مسجل الدخول
             if (Auth::check()) {
                 $task->updated_by = Auth::id();
             }
         });
 
-        // بعد إنشاء مهمة جديدة
         static::created(function ($task) {
             self::recalculateMonthlySummary($task);
-            self::handleTaskImageReport($task);
-            // إعادة حساب النتائج الفعلية إذا كانت المهمة مكتملة ولها unit_id و date
             if ($task->status === 'مكتمل' && $task->unit_id && $task->date) {
                 ActualResult::recalculateForUnitAndDate($task->unit_id, $task->date);
             }
         });
 
-        // بعد تحديث مهمة موجودة
         static::updated(function ($task) {
             self::recalculateMonthlySummary($task);
-            self::handleTaskImageReport($task);
-            // إعادة حساب النتائج الفعلية إذا تغيرت الحالة إلى 'مكتمل'
             if ($task->isDirty('status') && $task->status === 'مكتمل') {
                 ActualResult::recalculateForUnitAndDate($task->unit_id, $task->date);
             }
         });
 
-        // بعد حذف مهمة
         static::deleted(function ($task) {
             self::recalculateMonthlySummary($task);
-            self::cleanupTaskImages($task); // حذف الصور المرتبطة
-            // إعادة حساب النتائج الفعلية بعد حذف المهمة
+            self::cleanupTaskImages($task);
             if ($task->unit_id && $task->date) {
                 ActualResult::recalculateForUnitAndDate($task->unit_id, $task->date);
             }
@@ -155,31 +186,26 @@ class SanitationFacilityTask extends Model
 
     /**
      * يعيد حساب الملخصات الشهرية لوحدة المنشآت الصحية.
-     *
-     * @param SanitationFacilityTask $task
-     * @return void
      */
     protected static function recalculateMonthlySummary(self $task): void
     {
         if (!$task->unit_id || !$task->date || !$task->facility_name) {
-            return; // لا يمكن إعادة الحساب بدون هذه البيانات الأساسية
+            Log::warning("Skipping Monthly Sanitation Summary recalculation due to missing data for task ID: {$task->id}");
+            return;
         }
 
         $facilityName = $task->facility_name;
         $taskType = $task->task_type;
         $date = Carbon::parse($task->date);
         $month = $date->format('Y-m');
-        $unitId = $task->unit_id; // استخدم unit_id أيضاً في الملخص
+        $unitId = $task->unit_id;
 
-        // إنشاء معرف فريد للملخص الشهري
-        // تم إضافة unitId إلى الـ MD5 لضمان فرادة الملخص لكل وحدة ومنشأة ونوع مهمة
         $summaryId = md5("{$month}-{$facilityName}-{$taskType}-{$unitId}");
 
-        // حساب الإجماليات من قاعدة البيانات للمهام المطابقة
         $totals = self::query()
             ->whereYear('date', $date->year)
             ->whereMonth('date', $date->month)
-            ->where('unit_id', $unitId) // تصفية بالوحدة أيضاً
+            ->where('unit_id', $unitId)
             ->where('facility_name', $facilityName)
             ->where('task_type', $taskType)
             ->selectRaw('
@@ -193,15 +219,13 @@ class SanitationFacilityTask extends Model
             ')
             ->first();
 
-        // تحديث أو إنشاء سجل الملخص الشهري
         MonthlySanitationSummary::updateOrCreate(
             [
-                // يجب أن تتطابق هذه المفاتيح مع المفتاح الأساسي أو الفريد في جدول الملخص
-                'id' => $summaryId, // إذا كان الـ ID هو مزيج من هذه الحقول
+                'id' => $summaryId,
                 'month' => $month,
-                'facility_name' => $facilityName, // ✅ تم التعديل هنا: استخدام 'facility_name' بدلاً من 'id_facility_name'
+                'facility_name' => $facilityName,
                 'task_type' => $taskType,
-                'unit_id' => $unitId, // تأكد أن هذا العمود موجود في جدول الملخص
+                'unit_id' => $unitId,
             ],
             [
                 'total_seats' => $totals->total_seats,
@@ -213,94 +237,22 @@ class SanitationFacilityTask extends Model
                 'total_tasks' => $totals->total_tasks_count_for_summary,
             ]
         );
-    }
-
-    /**
-     * يتعامل مع إنشاء/تحديث تقارير صور المهام لوحدة المنشآت الصحية.
-     *
-     * @param SanitationFacilityTask $task
-     * @return void
-     */
-    protected static function handleTaskImageReport(self $task): void
-    {
-        // لا نحتاج لإنشاء تقرير إذا لم يكن هناك صور قبل أو بعد
-        if (empty($task->before_images) && empty($task->after_images)) {
-            return;
-        }
-
-        $reportData = [
-            'task_id' => $task->id,
-            'unit_type' => 'sanitation', // تم تغيير هذا ليكون أكثر وضوحاً لوحدة المنشآت الصحية
-            'date' => $task->date,
-            'location' => $task->facility_name, // استخدام facility_name كـ location
-            'task_type' => $task->task_type,
-            'status' => $task->status,
-            'notes' => $task->notes,
-        ];
-
-        // إضافة الصور فقط إذا كانت موجودة
-        if (!empty($task->before_images)) {
-            $reportData['before_images'] = $task->before_images;
-        }
-        if (!empty($task->after_images)) {
-            $reportData['after_images'] = $task->after_images;
-        }
-
-        TaskImageReport::updateOrCreate(
-            [
-                'task_id' => $task->id,
-                'unit_type' => 'sanitation', // نوع الوحدة
-            ],
-            $reportData
-        );
+        Log::info("Monthly Sanitation Summary recalculated for {$facilityName} - {$taskType} in {$month}.");
     }
 
     /**
      * يقوم بتنظيف الصور المرتبطة بمهام المنشآت الصحية عند حذفها.
-     *
-     * @param SanitationFacilityTask $task
-     * @return void
      */
     protected static function cleanupTaskImages(self $task): void
     {
-        // استخدام $task->id بدلاً من $this->id في الدوال static
         $report = TaskImageReport::where('task_id', $task->id)
                                  ->where('unit_type', 'sanitation')
                                  ->first();
 
         if ($report) {
-            // تأكد أن هذه الدالة موجودة في TaskImageReport Model وتقوم بحذف الملفات فعلياً
             $report->deleteRelatedImages();
-            $report->delete(); // حذف سجل التقرير من قاعدة البيانات
+            $report->delete();
+            Log::info("Cleaned up image report for SanitationFacilityTask ID: {$task->id}");
         }
-    }
-
-    /**
-     * يقوم بإرجاع عناوين URL للصور "قبل" المهمة من تقرير الصور.
-     *
-     * @return array
-     */
-    public function getBeforeImagesUrlsAttribute(): array
-    {
-        $report = TaskImageReport::where('task_id', $this->id)
-                                 ->where('unit_type', 'sanitation')
-                                 ->first();
-
-        // استخدام optional() لتجنب الأخطاء إذا لم يكن التقرير موجوداً
-        return optional($report)->getOriginalUrlsForTable($report->before_images) ?? [];
-    }
-
-    /**
-     * يقوم بإرجاع عناوين URL للصور "بعد" المهمة من تقرير الصور.
-     *
-     * @return array
-     */
-    public function getAfterImagesUrlsAttribute(): array
-    {
-        $report = TaskImageReport::where('task_id', $this->id)
-                                 ->where('unit_type', 'sanitation')
-                                 ->first();
-
-        return optional($report)->getOriginalUrlsForTable($report->after_images) ?? [];
     }
 }

@@ -18,8 +18,35 @@ class ImageReportController extends Controller
      */
     public function index()
     {
-        $taskImageReports = TaskImageReport::latest()->get();
-        return view('photo_reports.index', compact('taskImageReports'));
+        // تم تحديث اسم المتغير الذي يتم تمريره ليتوافق مع $photo_reports في View
+        $photo_reports = TaskImageReport::latest()->get();
+
+        // 💡 جديد: معالجة مسارات الصور لعرضها كصور مصغرة في جدول القائمة
+        foreach ($photo_reports as $report) {
+            // التأكد من أن before_images و after_images هي مصفوفات
+            // إذا كان النموذج يستخدم $casts لـ 'array'، فلن تحتاج إلى json_decode هنا
+            // ولكن لضمان التوافقية القصوى، سنقوم بإجراء فحص دفاعي
+            $beforeImages = $report->before_images;
+            if (!is_array($beforeImages)) {
+                $beforeImages = json_decode($beforeImages, true) ?? [];
+            }
+
+            $afterImages = $report->after_images;
+            if (!is_array($afterImages)) {
+                $afterImages = json_decode($afterImages, true) ?? [];
+            }
+
+            // تحويل مسارات الصور إلى URLs قابلة للاستخدام في الواجهة
+            $report->before_images_display_urls = collect($beforeImages)->map(function ($path) {
+                return Storage::url($path);
+            })->all();
+
+            $report->after_images_display_urls = collect($afterImages)->map(function ($path) {
+                return Storage::url($path);
+            })->all();
+        }
+
+        return view('photo_reports.index', compact('photo_reports'));
     }
 
     /**
@@ -46,45 +73,44 @@ class ImageReportController extends Controller
             'date' => 'required|date',
             'unit_type' => 'required|string|max:255',
             'location' => 'required|string|max:255',
+            'task_id' => 'nullable|string|max:255',
             'task_type' => 'nullable|string|max:255',
-            'task_id' => 'nullable', // تم إزالة قاعدة integer للسماح بإدخال نصي
+            'status' => 'required|string|in:completed,pending,cancelled',
+            'notes' => 'nullable|string',
             'before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'status' => 'required|string|in:قيد التنفيذ,مكتملة,معلقة', // تم تغييرها لتقبل القيم العربية
-            'notes' => 'nullable|string',
         ]);
 
         $beforeImagePaths = [];
         if ($request->hasFile('before_images')) {
-            foreach ($request->file('before_images') as $image) {
-                $path = $image->store('public/images/before', 'public');
-                $beforeImagePaths[] = str_replace('public/', '', $path);
+            foreach ($request->file('before_images') as $file) {
+                $path = $file->store('uploads/before_images', 'public');
+                $beforeImagePaths[] = $path;
             }
         }
 
         $afterImagePaths = [];
         if ($request->hasFile('after_images')) {
-            foreach ($request->file('after_images') as $image) {
-                $path = $image->store('public/images/after', 'public');
-                $afterImagePaths[] = str_replace('public/', '', $path);
+            foreach ($request->file('after_images') as $file) {
+                $path = $file->store('uploads/after_images', 'public');
+                $afterImagePaths[] = $path;
             }
         }
 
         TaskImageReport::create([
-            'report_title' => $request->report_title,
-            'date' => $request->date,
-            'unit_type' => $request->unit_type,
-            'location' => $request->location,
-            'task_type' => $request->task_type,
-            'task_id' => $request->task_id,
-            'before_images' => $beforeImagePaths,
-            'after_images' => $afterImagePaths,
-            'status' => $request->status,
-            'notes' => $request->notes,
+            'report_title' => $request->input('report_title'),
+            'date' => $request->input('date'),
+            'unit_type' => $request->input('unit_type'),
+            'location' => $request->input('location'),
+            'task_id' => $request->input('task_id'),
+            'task_type' => $request->input('task_type'),
+            'status' => $request->input('status'),
+            'notes' => $request->input('notes'),
+            'before_images' => $beforeImagePaths, // سيتم تخزينها كـ JSON تلقائيًا إذا كان الحقل في النموذج مصفوفة
+            'after_images' => $afterImagePaths,   // سيتم تخزينها كـ JSON تلقائيًا
         ]);
 
-        return redirect()->route('photo_reports.index')
-                         ->with('success', 'تم إنشاء تقرير المهام المصور بنجاح.');
+        return redirect()->route('photo_reports.index')->with('success', 'تم إنشاء التقرير المصور بنجاح.');
     }
 
     /**
@@ -95,7 +121,31 @@ class ImageReportController extends Controller
      */
     public function show(TaskImageReport $photo_report)
     {
-        return view('photo_reports.show', compact('photo_report'));
+        // تهيئة نوع الوحدة للعرض
+        $unitName = $photo_report->unit_type === 'cleaning' ? 'النظافة العامة' : 'المنشآت الصحية';
+
+        // 💡 تم التعديل: التأكد من أن before_images و after_images هي مصفوفات بشكل صريح
+        $beforeImages = $photo_report->before_images;
+        if (!is_array($beforeImages)) {
+            $beforeImages = json_decode($beforeImages, true) ?? [];
+        }
+
+        $afterImages = $photo_report->after_images;
+        if (!is_array($afterImages)) {
+            $afterImages = json_decode($afterImages, true) ?? [];
+        }
+
+        // تحويل مسارات الصور إلى URLs قابلة للاستخدام في الواجهة
+        $beforeImagesUrls = collect($beforeImages)->map(function ($path) {
+            return ['path' => $path, 'url' => Storage::url($path)];
+        })->all();
+
+        $afterImagesUrls = collect($afterImages)->map(function ($path) {
+            return ['path' => $path, 'url' => Storage::url($path)];
+        })->all();
+
+
+        return view('photo_reports.show', compact('photo_report', 'unitName', 'beforeImagesUrls', 'afterImagesUrls'));
     }
 
     /**
@@ -107,7 +157,7 @@ class ImageReportController extends Controller
     public function edit(TaskImageReport $photo_report)
     {
         $units = Unit::all(); // جلب جميع الوحدات
-        return view('photo_reports.edit', compact('photo_report', 'units')); // تمرير الوحدات
+        return view('photo_reports.edit', compact('photo_report', 'units'));
     }
 
     /**
@@ -124,136 +174,116 @@ class ImageReportController extends Controller
             'date' => 'required|date',
             'unit_type' => 'required|string|max:255',
             'location' => 'required|string|max:255',
+            'task_id' => 'nullable|string|max:255',
             'task_type' => 'nullable|string|max:255',
-            'task_id' => 'nullable', // تم إزالة قاعدة integer للسماح بإدخال نصي
-            'new_before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'new_after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'status' => 'required|string|in:قيد التنفيذ,مكتملة,معلقة', // تم تغييرها لتقبل القيم العربية
+            'status' => 'required|string|in:completed,pending,cancelled',
             'notes' => 'nullable|string',
-            'deleted_before_images' => 'nullable|json',
-            'deleted_after_images' => 'nullable|json',
+            'new_before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // للصور الجديدة
+            'new_after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',   // للصور الجديدة
+            'deleted_before_images' => 'nullable|json', // الصور التي تم حذفها
+            'deleted_after_images' => 'nullable|json',   // الصور التي تم حذفها
         ]);
 
-        // معالجة الصور المحذوفة
+        // التعامل مع الصور الموجودة وحذف الصور المحددة للحذف
+        // 💡 تم التعديل: التأكد من أن currentBeforeImages و currentAfterImages هي مصفوفات بشكل صريح
         $currentBeforeImages = $photo_report->before_images;
+        if (!is_array($currentBeforeImages)) {
+            $currentBeforeImages = json_decode($currentBeforeImages, true) ?? [];
+        }
+
         $currentAfterImages = $photo_report->after_images;
+        if (!is_array($currentAfterImages)) {
+            $currentAfterImages = json_decode($currentAfterImages, true) ?? [];
+        }
 
-        $deletedBeforeImages = json_decode($request->input('deleted_before_images', '[]'), true);
-        $deletedAfterImages = json_decode($request->input('deleted_after_images', '[]'), true);
-
-        // حذف الصور من التخزين وإزالتها من المصفوفة
+      $deletedBeforeImages = json_decode($request->input('deleted_before_images', '[]'), true) ?? [];
+$deletedAfterImages = json_decode($request->input('deleted_after_images', '[]'), true) ?? [];
+        // حذف الصور من التخزين
         foreach ($deletedBeforeImages as $path) {
             Storage::disk('public')->delete($path);
-            $currentBeforeImages = array_values(array_diff($currentBeforeImages, [$path]));
         }
         foreach ($deletedAfterImages as $path) {
             Storage::disk('public')->delete($path);
-            $currentAfterImages = array_values(array_diff($currentAfterImages, [$path]));
         }
+
+        // تصفية الصور المتبقية
+        $updatedBeforeImages = array_values(array_diff($currentBeforeImages, $deletedBeforeImages));
+        $updatedAfterImages = array_values(array_diff($currentAfterImages, $deletedAfterImages));
 
         // إضافة الصور الجديدة
         if ($request->hasFile('new_before_images')) {
-            foreach ($request->file('new_before_images') as $image) {
-                $path = $image->store('public/images/before', 'public');
-                $currentBeforeImages[] = str_replace('public/', '', $path);
+            foreach ($request->file('new_before_images') as $file) {
+                $path = $file->store('uploads/before_images', 'public');
+                $updatedBeforeImages[] = $path;
             }
         }
-
         if ($request->hasFile('new_after_images')) {
-            foreach ($request->file('new_after_images') as $image) {
-                $path = $image->store('public/images/after', 'public');
-                $currentAfterImages[] = str_replace('public/', '', $path);
+            foreach ($request->file('new_after_images') as $file) {
+                $path = $file->store('uploads/after_images', 'public');
+                $updatedAfterImages[] = $path;
             }
         }
 
         $photo_report->update([
-            'report_title' => $request->report_title,
-            'date' => $request->date,
-            'unit_type' => $request->unit_type,
-            'location' => $request->location,
-            'task_type' => $request->task_type,
-            'task_id' => $request->task_id,
-            'before_images' => $currentBeforeImages,
-            'after_images' => $currentAfterImages,
-            'status' => $request->status,
-            'notes' => $request->notes,
+            'report_title' => $request->input('report_title'),
+            'date' => $request->input('date'),
+            'unit_type' => $request->input('unit_type'),
+            'location' => $request->input('location'),
+            'task_id' => $request->input('task_id'),
+            'task_type' => $request->input('task_type'),
+            'status' => $request->input('status'),
+            'notes' => $request->input('notes'),
+            'before_images' => $updatedBeforeImages,
+            'after_images' => $updatedAfterImages,
         ]);
 
-        return redirect()->route('photo_reports.index')
-                         ->with('success', 'تم تحديث تقرير المهام المصور بنجاح.');
+        return redirect()->route('photo_reports.index')->with('success', 'تم تحديث التقرير المصور بنجاح.');
     }
 
     /**
-     * حذف تقرير مصور من قاعدة البيانات.
+     * حذف تقرير مصور محدد.
      *
      * @param  \App\Models\TaskImageReport  $photo_report
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(TaskImageReport $photo_report)
     {
-        // حذف جميع الصور المرتبطة بالتقرير من التخزين (قبل وبعد)
-        foreach ($photo_report->before_images as $imagePath) {
-            Storage::disk('public')->delete($imagePath);
+        // حذف الصور المرتبطة بالتقرير من التخزين قبل حذف التقرير نفسه
+        // 💡 تم التعديل: التأكد من أن beforeImages و afterImages هي مصفوفات بشكل صريح
+        $beforeImages = $photo_report->before_images;
+        if (!is_array($beforeImages)) {
+            $beforeImages = json_decode($beforeImages, true) ?? [];
         }
-        foreach ($photo_report->after_images as $imagePath) {
-            Storage::disk('public')->delete($imagePath);
+
+        $afterImages = $photo_report->after_images;
+        if (!is_array($afterImages)) {
+            $afterImages = json_decode($afterImages, true) ?? [];
+        }
+
+        foreach ($beforeImages as $path) {
+            Storage::disk('public')->delete($path);
+        }
+        foreach ($afterImages as $path) {
+            Storage::disk('public')->delete($path);
         }
 
         $photo_report->delete();
-
-        return redirect()->route('photo_reports.index')
-                         ->with('success', 'تم حذف تقرير المهام المصور بنجاح.');
+        return redirect()->route('photo_reports.index')->with('success', 'تم حذف التقرير المصور بنجاح.');
     }
 
     /**
-     * طباعة تقرير مصور واحد.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\TaskImageReport  $photo_report
-     * @return \Illuminate\View\View
-     */
-    public function print(Request $request, TaskImageReport $photo_report)
-    {
-        // إذا كان هناك بارامتر 'print' في الرابط، اعرض صفحة الطباعة المنفصلة
-        if ($request->has('print')) {
-            return view('photo_reports.print_only', compact('photo_report'));
-        }
-
-        // وإلا، اعرض صفحة التفاصيل العادية ضمن AdminLTE
-        return view('photo_reports.show', compact('photo_report'));
-    }
-
-    /**
-     * عرض نموذج اختيار الشهر والسنة ونوع الوحدة ونوع المهمة لتوليد التقرير الشهري.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function showMonthlyReportForm()
-    {
-        // جلب جميع الوحدات
-        $units = Unit::all();
-
-        // جلب أنواع المهام الفريدة من قاعدة البيانات
-        // هذا يفترض أن task_type موجود في جدول TaskImageReport
-        $taskTypes = TaskImageReport::distinct()->pluck('task_type')->filter()->sort()->values();
-
-        return view('photo_reports.monthly_report_form', compact('units', 'taskTypes'));
-    }
-
-    /**
-     * توليد تقرير PDF الشهري بناءً على الشهر والسنة ونوع الوحدة ونوع المهمة المحددين.
+     * يولد تقرير PDF شهري للتقارير المصورة بناءً على الشهر والسنة ونوع الوحدة ونوع المهمة المحددين.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function generateMonthlyReport(Request $request)
     {
-        $currentYear = date('Y');
         $request->validate([
-            'month' => 'required|integer|min:1|max:12',
-            'year' => 'required|integer|min:' . ($currentYear - 5) . '|max:' . $currentYear, // نطاق السنوات المناسب
-            'unit_type' => 'nullable|string', // يمكن أن يكون 'all' أو 'cleaning' أو 'sanitation'
-            'task_type' => 'nullable|string', // يمكن أن يكون 'all' أو اسم نوع مهمة
+            'month' => 'required|numeric|min:1|max:12',
+            'year' => 'required|numeric|min:2000|max:' . (Carbon::now()->year + 5),
+            'unit_type' => 'nullable|string',
+            'task_type' => 'nullable|string',
         ]);
 
         $month = $request->input('month');
@@ -261,9 +291,8 @@ class ImageReportController extends Controller
         $unitTypeFilter = $request->input('unit_type');
         $taskTypeFilter = $request->input('task_type');
 
-        // الحصول على التقارير للفترة والفلاتر المحددة
         $reportsQuery = TaskImageReport::whereYear('date', $year)
-                                     ->whereMonth('date', $month);
+                                        ->whereMonth('date', $month);
 
         if ($unitTypeFilter && $unitTypeFilter !== 'all') {
             $reportsQuery->where('unit_type', $unitTypeFilter);
@@ -292,13 +321,98 @@ class ImageReportController extends Controller
             $task_type_display = $taskTypeFilter;
         }
 
+        // إعداد الصور للملف الشخصي لـ PDF
+        foreach ($reports as $report) {
+            // 💡 تم التعديل: التأكد من أن beforeImages و afterImages هي مصفوفات بشكل صريح
+            $beforeImages = $report->before_images;
+            if (!is_array($beforeImages)) {
+                $beforeImages = json_decode($beforeImages, true) ?? [];
+            }
+
+            $afterImages = $report->after_images;
+            if (!is_array($afterImages)) {
+                $afterImages = json_decode($afterImages, true) ?? [];
+            }
+
+            $report->before_images_urls = collect($beforeImages)->map(function ($path) {
+                $absolutePath = public_path('storage/' . $path);
+                return [
+                    'path' => $path,
+                    'url' => Storage::url($path), // للاستخدام في الويب
+                    'absolute_path_for_pdf' => file_exists($absolutePath) ? $absolutePath : null, // للملف الشخصي PDF
+                    'exists' => file_exists($absolutePath)
+                ];
+            })->filter(function($item) { return $item['exists']; })->all(); // تصفية الصور غير الموجودة
+
+            $report->after_images_urls = collect($afterImages)->map(function ($path) {
+                $absolutePath = public_path('storage/' . $path);
+                return [
+                    'path' => $path,
+                    'url' => Storage::url($path),
+                    'absolute_path_for_pdf' => file_exists($absolutePath) ? $absolutePath : null,
+                    'caption' => '',
+                    'exists' => file_exists($absolutePath)
+                ];
+            })->filter(function($item) { return $item['exists']; })->all();
+
+            $report->before_images_count = count($report->before_images_urls);
+            $report->after_images_count = count($report->after_images_urls);
+        }
+
         // توليد PDF باستخدام dompdf
         $pdf = Pdf::loadView('photo_reports.monthly_report_pdf', compact('reports', 'monthName', 'year', 'unit_type_display', 'task_type_display'));
+        $pdf->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
+        $pdf->setPaper('A4', 'portrait'); // يمكن أن يكون portrait أو landscape
 
-        // تأكد من أن الصور في monthly_report_pdf تستخدم المسار المطلق
-        // مثال في الـ View: `<img src="{{ $image['absolute_path_for_pdf'] }}">`
-        // هذا يتطلب وجود 'absolute_path_for_pdf' accessor في TaskImageReport Model
+        return $pdf->stream('Monthly_Image_Report_' . $monthName . '_' . $year . '.pdf');
+    }
 
-        return $pdf->download('التقرير_الشهري_المصور_' . $monthName . '_' . $year . '.pdf');
+    /**
+     * 💡 دالة جديدة: طباعة تقرير مصور واحد في صفحة واحدة.
+     *
+     * @param  \App\Models\TaskImageReport  $photo_report
+     * @return \Illuminate\View\View
+     */
+    public function printSingleReport(TaskImageReport $photo_report)
+    {
+        // تهيئة نوع الوحدة للعرض
+        $unitName = $photo_report->unit_type === 'cleaning' ? 'النظافة العامة' : 'المنشآت الصحية';
+
+        // 💡 تم التعديل: التأكد من أن beforeImages و afterImages هي مصفوفات بشكل صريح
+        $beforeImages = $photo_report->before_images;
+        if (!is_array($beforeImages)) {
+            $beforeImages = json_decode($beforeImages, true) ?? [];
+        }
+
+        $afterImages = $photo_report->after_images;
+        if (!is_array($afterImages)) {
+            $afterImages = json_decode($afterImages, true) ?? [];
+        }
+
+        // معالجة مسارات الصور لتكون جاهزة للاستخدام في src بالـ PDF
+        $processedBeforeImages = [];
+        foreach ($beforeImages as $imagePath) {
+            $absolutePath = public_path('storage/' . $imagePath);
+            $processedBeforeImages[] = [
+                'path' => $imagePath,
+                'url' => Storage::url($imagePath), // للاستخدام في الويب
+                'absolute_path_for_pdf' => file_exists($absolutePath) ? $absolutePath : null, // للملف الشخصي PDF
+                'caption' => '', // يمكنك إضافة تسمية توضيحية هنا إذا كانت موجودة في بياناتك
+            ];
+        }
+
+        $processedAfterImages = [];
+        foreach ($afterImages as $imagePath) {
+            $absolutePath = public_path('storage/' . $imagePath);
+            $processedAfterImages[] = [
+                'path' => $imagePath,
+                'url' => Storage::url($imagePath),
+                'absolute_path_for_pdf' => file_exists($absolutePath) ? $absolutePath : null,
+                'caption' => '',
+            ];
+        }
+
+        // تمرير البيانات إلى الواجهة print_only
+        return view('photo_reports.print_only', compact('photo_report', 'unitName', 'processedBeforeImages', 'processedAfterImages'));
     }
 }

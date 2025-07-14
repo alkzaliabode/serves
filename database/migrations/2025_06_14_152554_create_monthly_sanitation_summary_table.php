@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('monthly_sanitation_summary', function (Blueprint $table) {
             $table->string('id')->primary(); // ID مركب من الشهر + المنشأة + المهمة
-            $table->string('month', 7);
+            $table->string('month', 7)->index();
             $table->string('facility_name');
             $table->string('task_type');
             $table->unsignedBigInteger('unit_id'); // ✅ إضافة عمود unit_id

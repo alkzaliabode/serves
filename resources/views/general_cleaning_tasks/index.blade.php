@@ -288,6 +288,25 @@
             box-shadow: none !important;
             border-color: transparent !important;
         }
+
+        /* Added styles for the filter row to ensure proper spacing and alignment */
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap; /* Allows items to wrap to the next line on smaller screens */
+            gap: 15px; /* Spacing between filter items */
+            margin-bottom: 15px;
+            align-items: flex-end; /* Aligns items to the bottom if they have different heights */
+        }
+
+        .filter-item {
+            flex: 1; /* Allows items to grow and shrink */
+            min-width: 180px; /* Minimum width for each filter item before wrapping */
+        }
+
+        /* Ensure form-group padding/margin works well within the filter-row */
+        .form-group {
+            margin-bottom: 0; /* Remove default margin-bottom if it causes issues with gap */
+        }
     </style>
 @endsection
 
@@ -313,12 +332,146 @@
                 @endif
 
                 <form action="{{ route('general-cleaning-tasks.index') }}" method="GET" class="mb-4">
-                    <div class="input-group">
-                        <input type="text" name="search" class="form-control" placeholder="بحث بالموقع، الحالة، الهدف، أو المنشئ..." value="{{ request('search') }}">
-                        <div class="input-group-append">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search"></i> بحث
-                            </button>
+                    <div class="filter-row">
+                        {{-- Global Search Input --}}
+                        <div class="filter-item">
+                            <div class="form-group">
+                                <label for="search">البحث العام</label>
+                                <input type="text" name="search" id="search" class="form-control" placeholder="بحث عام..." value="{{ request('search') }}">
+                            </div>
+                        </div>
+
+                        {{-- Date Filter --}}
+                        <div class="filter-item">
+                            <div class="form-group">
+                                <label for="start_date">تاريخ البدء</label>
+                                <input type="date" name="start_date" id="start_date" class="form-control" value="{{ request('start_date') }}">
+                            </div>
+                        </div>
+                        <div class="filter-item">
+                            <div class="form-group">
+                                <label for="end_date">تاريخ الانتهاء</label>
+                                <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request('end_date') }}">
+                            </div>
+                        </div>
+
+                        {{-- Shift Filter (الوجبة) --}}
+                        <div class="filter-item">
+                            <div class="form-group">
+                                <label for="shift">الوجبة</label>
+                                <select name="shift" id="shift" class="form-control">
+                                    <option value="">كل الوجبات</option>
+                                    {{-- تأكد من أن هذه القيم تتطابق تمامًا مع القيم المخزنة في قاعدة البيانات --}}
+                                    <option value="صباحي" {{ request('shift') == 'صباحي' ? 'selected' : '' }}>صباحي</option>
+                                    <option value="مسائي" {{ request('shift') == 'مسائي' ? 'selected' : '' }}>مسائي</option>
+                                    <option value="ليلي" {{ request('shift') == 'ليلي' ? 'selected' : '' }}>ليلي</option>
+                                    {{-- الأفضل أن تمرر الوجبات من المتحكم: @foreach($shifts as $s) <option value="{{ $s }}" {{ request('shift') == $s ? 'selected' : '' }}>{{ $s }}</option> @endforeach --}}
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Location Filter (الموقع) --}}
+                        <div class="filter-item">
+                            <div class="form-group">
+                                <label for="location">الموقع</label>
+                                <select name="location" id="location" class="form-control">
+                                    <option value="">كل المواقع</option>
+                                    {{-- هذا الجزء يعتمد على تمرير $uniqueLocations من المتحكم، تأكد من صحة القيم --}}
+                                    @foreach($uniqueLocations as $loc)
+                                        <option value="{{ $loc }}" {{ request('location') == $loc ? 'selected' : '' }}>{{ $loc }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Task Type Filter (نوع المهمة) --}}
+                        <div class="filter-item">
+                            <div class="form-group">
+                                <label for="task_type">نوع المهمة</label>
+                                <select name="task_type" id="task_type" class="form-control">
+                                    <option value="">كل الأنواع</option>
+                                    {{-- هنا يجب التأكد من القيم بشكل خاص --}}
+                                    <option value="إدامة" {{ request('task_type') == 'إدامة' ? 'selected' : '' }}>إدامة</option>
+                                    {{-- هذا هو السطر الذي قد يكون فيه الخطأ "ادامة وصيانة" --}}
+                                    {{-- تأكد من أن القيمة في قاعدة البيانات هي "صيانة نظافة" إذا كان هذا هو ما تريد عرضه --}}
+                                    <option value="صيانة " {{ request('task_type') == 'صيانة ' ? 'selected' : '' }}>صيانة </option>
+                                    {{-- أضف أي أنواع أخرى تتوقعها هنا --}}
+                                    {{-- الأفضل أن تمرر أنواع المهام من المتحكم: @foreach($taskTypes as $type) <option value="{{ $type }}" {{ request('task_type') == $type ? 'selected' : '' }}>{{ $type }}</option> @endforeach --}}
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Status Filter (الحالة) --}}
+                        <div class="filter-item">
+                            <div class="form-group">
+                                <label for="status">الحالة</label>
+                                <select name="status" id="status" class="form-control">
+                                    <option value="">كل الحالات</option>
+                                    {{-- هنا هو مكان تصحيح "مكتملة" / "مكتمل" --}}
+                                    {{-- إذا كانت القيمة المخزنة في DB هي "مكتمل" فالخيار يجب أن يكون value="مكتمل" والنص المعروض "مكتمل" --}}
+                                    {{-- أما إذا كانت القيمة المخزنة "مكتملة" فالخيار يجب أن يكون value="مكتملة" والنص المعروض "مكتملة" --}}
+                                    {{-- سأفترض أنك تريد "مكتملة" كقيمة ونص، ولكن تحقق من قاعدة البيانات لديك --}}
+                                    <option value="قيد الانتظار" {{ request('status') == 'قيد الانتظار' ? 'selected' : '' }}>قيد الانتظار</option>
+                                    <option value="قيد التنفيذ" {{ request('status') == 'قيد التنفيذ' ? 'selected' : '' }}>قيد التنفيذ</option>
+                                    <option value="مكتمل" {{ request('status') == 'مكتملة' ? 'selected' : '' }}>مكتملة</option> {{-- تم التأكد من الاتساق هنا --}}
+                                    <option value="ملغاة" {{ request('status') == 'ملغاة' ? 'selected' : '' }}>ملغاة</option>
+                                    {{-- الأفضل أن تمرر الحالات من المتحكم: @foreach($statuses as $s) <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ $s }}</option> @endforeach --}}
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Related Goal Filter (الهدف المرتبط) --}}
+                        <div class="filter-item">
+                            <div class="form-group">
+                                <label for="related_goal_id">الهدف المرتبط</label>
+                                <select name="related_goal_id" id="related_goal_id" class="form-control">
+                                    <option value="">كل الأهداف</option>
+                                    {{-- هذا الجزء يعتمد على تمرير $goals من المتحكم، تأكد من صحة القيم --}}
+                                    @foreach($goals as $goal)
+                                        <option value="{{ $goal->id }}" {{ request('related_goal_id') == $goal->id ? 'selected' : '' }}>{{ $goal->goal_text }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Executing Employees Filter (الموظفون المنفذون) --}}
+                        <div class="filter-item">
+                            <div class="form-group">
+                                <label for="employee_id">الموظف المنفذ</label>
+                                <select name="employee_id" id="employee_id" class="form-control">
+                                    <option value="">كل الموظفين</option>
+                                    {{-- هذا الجزء يعتمد على تمرير $employees من المتحكم، تأكد من صحة القيم --}}
+                                    @foreach($employees as $employee)
+                                        <option value="{{ $employee->id }}" {{ request('employee_id') == $employee->id ? 'selected' : '' }}>{{ $employee->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Creator Filter (المنشئ) --}}
+                        <div class="filter-item">
+                            <div class="form-group">
+                                <label for="creator_id">المنشئ</label>
+                                <select name="creator_id" id="creator_id" class="form-control">
+                                    <option value="">كل المنشئين</option>
+                                    {{-- هذا الجزء يعتمد على تمرير $creators من المتحكم، تأكد من صحة القيم --}}
+                                    @foreach($creators as $creator)
+                                        <option value="{{ $creator->id }}" {{ request('creator_id') == $creator->id ? 'selected' : '' }}>{{ $creator->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Filter and Reset Buttons --}}
+                        <div class="filter-item" style="align-self: flex-end;">
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter"></i> تطبيق الفلاتر
+                                </button>
+                                <a href="{{ route('general-cleaning-tasks.index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-redo"></i> إعادة تعيين
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -328,19 +481,19 @@
                         <thead>
                             <tr>
                                 <th>التاريخ
-                                    <a href="{{ route('general-cleaning-tasks.index', ['sort_by' => 'date', 'sort_order' => (request('sort_by') == 'date' && request('sort_order') == 'asc' ? 'desc' : 'asc'), 'search' => request('search')]) }}">
+                                    <a href="{{ route('general-cleaning-tasks.index', array_merge(request()->except(['sort_by', 'sort_order']), ['sort_by' => 'date', 'sort_order' => (request('sort_by') == 'date' && request('sort_order') == 'asc' ? 'desc' : 'asc')])) }}">
                                         @if(request('sort_by') == 'date' && request('sort_order') == 'asc') &uarr; @elseif(request('sort_by') == 'date' && request('sort_order') == 'desc') &darr; @else &harr; @endif
                                     </a>
                                 </th>
                                 <th>الوجبة</th>
                                 <th>الموقع
-                                    <a href="{{ route('general-cleaning-tasks.index', ['sort_by' => 'location', 'sort_order' => (request('sort_by') == 'location' && request('sort_order') == 'asc' ? 'desc' : 'asc'), 'search' => request('search')]) }}">
+                                    <a href="{{ route('general-cleaning-tasks.index', array_merge(request()->except(['sort_by', 'sort_order']), ['sort_by' => 'location', 'sort_order' => (request('sort_by') == 'location' && request('sort_order') == 'asc' ? 'desc' : 'asc')])) }}">
                                         @if(request('sort_by') == 'location' && request('sort_order') == 'asc') &uarr; @elseif(request('sort_by') == 'location' && request('sort_order') == 'desc') &darr; @else &harr; @endif
                                     </a>
                                 </th>
                                 <th>نوع المهمة</th>
                                 <th>الحالة
-                                    <a href="{{ route('general-cleaning-tasks.index', ['sort_by' => 'status', 'sort_order' => (request('sort_by') == 'status' && request('sort_order') == 'asc' ? 'desc' : 'asc'), 'search' => request('search')]) }}">
+                                    <a href="{{ route('general-cleaning-tasks.index', array_merge(request()->except(['sort_by', 'sort_order']), ['sort_by' => 'status', 'sort_order' => (request('sort_by') == 'status' && request('sort_order') == 'asc' ? 'desc' : 'asc')])) }}">
                                         @if(request('sort_by') == 'status' && request('sort_order') == 'asc') &uarr; @elseif(request('sort_by') == 'status' && request('sort_order') == 'desc') &darr; @else &harr; @endif
                                     </a>
                                 </th>
@@ -377,11 +530,7 @@
                                             <form action="{{ route('general-cleaning-tasks.destroy', $task) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm" {{-- onclick="return confirm('هل أنت متأكد من رغبتك في حذف هذه المهمة؟')" --}} title="حذف">
-                                                    {{--
-                                                        ملاحظة: تم إزالة `confirm()` المباشر بسبب مشاكل توافقه مع بيئات الـ iFrame.
-                                                        يُوصى باستخدام نافذة مشروطة (modal) مخصصة لتأكيد الحذف.
-                                                    --}}
+                                                <button type="submit" class="btn btn-danger btn-sm" title="حذف">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
@@ -404,3 +553,16 @@
         </div>
     </div>
 @endsection
+
+@section('scripts')
+    {{-- Optional: Include any specific JS for datepickers if not in admin_layout --}}
+    {{-- <script>
+        $(function () {
+            // Initialize datepickers if you're using a specific library like Bootstrap Datepicker or jQuery UI Datepicker
+            // $('#start_date, #end_date').datepicker({
+            //     format: 'yyyy-mm-dd',
+            //     autoclose: true,
+            //     todayHighlight: true
+            // });
+        });
+    </script> --}}

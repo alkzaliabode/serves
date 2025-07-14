@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('monthly_general_cleaning_summary', function (Blueprint $table) {
             $table->string('id')->primary(); // المفتاح الأساسي كـ string ليتوافق مع md5
-            $table->string('month', 7); // لتخزين الشهر والسنة (مثال: 2025-06)
+            $table->string('month', 7)->index(); // لتخزين الشهر والسنة (مثال: 2025-06)
             $table->string('location');
             $table->string('task_type');
             $table->foreignId('unit_id')->constrained('units')->onDelete('cascade'); // ✅ إضافة عمود unit_id ومفتاح خارجي

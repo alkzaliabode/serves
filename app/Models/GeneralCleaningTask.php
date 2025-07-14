@@ -5,14 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne; // ✅ تم استيراد HasOne
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth; // تم إبقاء استيراد Auth facade لأنه ضروري
+use Illuminate\Support\Facades\Auth;
 
 // تأكد من استيراد جميع الموديلات التي تستخدمها في هذا الموديل
 use App\Models\User;
-use App\Models\Unit; // تم إضافته: لأنك تستخدم unit() و unit_id
+use App\Models\Unit;
 use App\Models\UnitGoal;
-use App\Models\EmployeeTask; // تم إضافته: لأنك تستخدم employeeTasks()
+use App\Models\EmployeeTask;
 use App\Models\TaskImageReport;
 use App\Models\ActualResult;
 use App\Models\MonthlyGeneralCleaningSummary;
@@ -34,8 +35,8 @@ class GeneralCleaningTask extends Model
         'result_value',
         'resources_used',
         'verification_status',
-        'before_images',
-        'after_images',
+        // 'before_images', // ❌ تم حذفها، تُدار الآن عبر TaskImageReport
+        // 'after_images',  // ❌ تم حذفها، تُدار الآن عبر TaskImageReport
         'unit_id',
         'working_hours',
         'mats_count',
@@ -51,15 +52,16 @@ class GeneralCleaningTask extends Model
         'large_containers_count',
         'small_containers_count',
         'maintenance_details',
-        // 'created_by' و 'updated_by' يتم تعيينهما عبر الأحداث (Events) وليس عبر fillable
+        'created_by', // ✅ إضافة created_by إلى fillable
+        'updated_by', // ✅ إضافة updated_by إلى fillable
     ];
 
     // تحويل أنواع البيانات عند القراءة والكتابة
     protected $casts = [
         'date' => 'date', // لتحويل التاريخ إلى كائن Carbon تلقائياً
         'resources_used' => 'array', // إذا كان هذا العمود يخزن مصفوفة JSON
-        'before_images' => 'array',  // إذا كان هذا العمود يخزن مصفوفة JSON
-        'after_images' => 'array',   // إذا كان هذا العمود يخزن مصفوفة JSON
+        // 'before_images' => 'array',  // ❌ تم حذفها، تُدار الآن عبر TaskImageReport
+        // 'after_images' => 'array',   // ❌ تم حذفها، تُدار الآن عبر TaskImageReport
     ];
 
     /**
@@ -103,6 +105,40 @@ class GeneralCleaningTask extends Model
     }
 
     /**
+     * علاقة One-to-One مع TaskImageReport
+     * ستجلب تقرير الصورة المرتبط بهذه المهمة (من نوع 'cleaning').
+     */
+    public function imageReport(): HasOne
+    {
+        return $this->hasOne(TaskImageReport::class, 'task_id', 'id')
+                    ->where('unit_type', 'cleaning'); // تحديد النوع لضمان جلب التقرير الصحيح
+    }
+
+    /**
+     * يقوم بإرجاع عناوين URL للصور "قبل" المهمة من تقرير الصور المرتبط (Eager Loaded).
+     *
+     * @return array
+     */
+    public function getBeforeImagesUrlsAttribute(): array
+    {
+        // استخدام optional() لتجنب الأخطاء إذا لم يتم تحميل العلاقة (imageReport) أو كانت null
+        // والوصول إلى الـ accessor في TaskImageReport الذي يعالج المسارات
+        return optional($this->imageReport)->before_images_urls ?? [];
+    }
+
+    /**
+     * يقوم بإرجاع عناوين URL للصور "بعد" المهمة من تقرير الصور المرتبط (Eager Loaded).
+     *
+     * @return array
+     */
+    public function getAfterImagesUrlsAttribute(): array
+    {
+        // استخدام optional() لتجنب الأخطاء إذا لم يتم تحميل العلاقة (imageReport) أو كانت null
+        // والوصول إلى الـ accessor في TaskImageReport الذي يعالج المسارات
+        return optional($this->imageReport)->after_images_urls ?? [];
+    }
+
+    /**
      * الأحداث التي يتم تشغيلها عند بدء تشغيل الموديل.
      * هنا نقوم بتعيين created_by و updated_by تلقائياً.
      */
@@ -130,7 +166,14 @@ class GeneralCleaningTask extends Model
         // بعد إنشاء مهمة جديدة
         static::created(function ($task) {
             self::recalculateSummaries($task);
-            self::handleTaskImageReport($task);
+            // 💡 ملاحظة: دالة handleTaskImageReport() يجب أن تستقبل 'before_images' و 'after_images'
+            // من الـ Request أو من أي مصدر آخر، ثم تقوم بإنشاء أو تحديث TaskImageReport
+            // بناءً على هذه البيانات. هذه البيانات لم تعد جزءًا من $fillable لهذا النموذج.
+            // إذا كنت لا تزال تمررها عبر نموذج GeneralCleaningTask عند الإنشاء/التحديث، فستحتاج إلى معالجة ذلك.
+            // مثال:
+            // if ($task->isDirty('before_images') || $task->isDirty('after_images')) {
+            //     self::handleTaskImageReport($task);
+            // }
             // إعادة حساب النتائج الفعلية إذا كانت المهمة مكتملة ولها unit_id و date
             if ($task->status === 'مكتمل' && $task->unit_id && $task->date) {
                 ActualResult::recalculateForUnitAndDate($task->unit_id, $task->date);
@@ -140,7 +183,10 @@ class GeneralCleaningTask extends Model
         // بعد تحديث مهمة موجودة
         static::updated(function ($task) {
             self::recalculateSummaries($task);
-            self::handleTaskImageReport($task);
+            // نفس الملاحظة أعلاه بخصوص handleTaskImageReport
+            // if ($task->isDirty('before_images') || $task->isDirty('after_images')) {
+            //     self::handleTaskImageReport($task);
+            // }
             // إعادة حساب النتائج الفعلية إذا تغيرت الحالة إلى 'مكتمل'
             if ($task->isDirty('status') && $task->status === 'مكتمل') {
                 ActualResult::recalculateForUnitAndDate($task->unit_id, $task->date);
@@ -236,33 +282,44 @@ class GeneralCleaningTask extends Model
     /**
      * يتعامل مع إنشاء/تحديث تقارير صور المهام.
      *
+     * 💡 ملاحظة هامة: هذه الدالة تعتمد على أن البيانات 'before_images' و 'after_images'
+     * قد تم توفيرها في الكائن $task أثناء عملية الإنشاء/التحديث، حتى لو لم تكن في $fillable.
+     * إذا كنت تقوم بتحميل الصور بشكل منفصل في الكنترولر، ستحتاج إلى استدعاء TaskImageReport
+     * مباشرة هناك، أو تمرير بيانات الصور بطريقة أخرى.
+     *
      * @param GeneralCleaningTask $task
      * @return void
      */
     private static function handleTaskImageReport(self $task): void
     {
-        // لا نحتاج لإنشاء تقرير إذا لم يكن هناك صور قبل أو بعد
-        if (empty($task->before_images) && empty($task->after_images)) {
+        // افترض أن before_images و after_images متاحان كـ properties على كائن $task
+        // حتى لو لم تكن في الـ $fillable، قد يتم تعيينها مؤقتًا قبل الحفظ.
+        $beforeImages = $task->getAttribute('before_images');
+        $afterImages = $task->getAttribute('after_images');
+
+        if (empty($beforeImages) && empty($afterImages)) {
+            // إذا لم تكن هناك صور جديدة، تحقق مما إذا كان هناك تقرير موجود
+            // وإذا كان موجودًا ولكنه فارغ، يمكنك حذفه.
+            $existingReport = TaskImageReport::where('task_id', $task->id)
+                                             ->where('unit_type', 'cleaning')
+                                             ->first();
+            if ($existingReport && empty($existingReport->before_images) && empty($existingReport->after_images)) {
+                 $existingReport->delete(); // حذف التقرير الفارغ
+            }
             return;
         }
 
         $reportData = [
             'task_id' => $task->id,
-            'unit_type' => 'cleaning', // نوع الوحدة ثابت هنا
+            'unit_type' => 'cleaning',
             'date' => $task->date,
             'location' => $task->location,
             'task_type' => $task->task_type,
             'status' => $task->status,
             'notes' => $task->notes,
+            'before_images' => $beforeImages, // استخدام القيم المحمّلة أو الجديدة
+            'after_images' => $afterImages,  // استخدام القيم المحمّلة أو الجديدة
         ];
-
-        // إضافة الصور فقط إذا كانت موجودة
-        if (!empty($task->before_images)) {
-            $reportData['before_images'] = $task->before_images;
-        }
-        if (!empty($task->after_images)) {
-            $reportData['after_images'] = $task->after_images;
-        }
 
         TaskImageReport::updateOrCreate(
             [
@@ -271,35 +328,6 @@ class GeneralCleaningTask extends Model
             ],
             $reportData
         );
-    }
-
-    /**
-     * يقوم بإرجاع عناوين URL للصور "قبل" المهمة من تقرير الصور.
-     *
-     * @return array
-     */
-    public function getBeforeImagesUrlsAttribute(): array
-    {
-        $report = TaskImageReport::where('task_id', $this->id)
-            ->where('unit_type', 'cleaning')
-            ->first();
-
-        // استخدام optional() لتجنب الأخطاء إذا لم يكن التقرير موجوداً
-        return optional($report)->getOriginalUrlsForTable($report->before_images) ?? [];
-    }
-
-    /**
-     * يقوم بإرجاع عناوين URL للصور "بعد" المهمة من تقرير الصور.
-     *
-     * @return array
-     */
-    public function getAfterImagesUrlsAttribute(): array
-    {
-        $report = TaskImageReport::where('task_id', $this->id)
-            ->where('unit_type', 'cleaning')
-            ->first();
-
-        return optional($report)->getOriginalUrlsForTable($report->after_images) ?? [];
     }
 
     /**

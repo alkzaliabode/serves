@@ -3,262 +3,515 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\MonthlyGeneralCleaningSummary; // تأكد من وجود هذا النموذج
-use Carbon\Carbon; // تأكد من استيراد Carbon إذا كنت تستخدمه لمعالجة التواريخ
+use App\Models\GeneralCleaningTask; // تم تغيير النموذج المستهدف إلى GeneralCleaningTask
+use App\Models\Unit; // تم استيراد نموذج الوحدة لاستخدامه في الفلاتر والعرض
+use Carbon\Carbon;
 
 class MonthlyCleaningReportController extends Controller
 {
     /**
-     * Display the monthly general cleaning report (main view with filters).
-     * عرض تقرير النظافة العامة الشهري (العرض الرئيسي مع الفلاتر).
+     * Display the detailed general cleaning report (main view with filters and pagination).
+     * يعرض تقرير النظافة العامة التفصيلي (المهام الفردية) مع الفلاتر والترقيم.
      *
      * @param Request $request
      * @return \Illuminate\View\View
      */
     public function index(Request $request)
     {
-        // تهيئة المتغيرات للاستعلام
-        $query = MonthlyGeneralCleaningSummary::query();
+        $query = GeneralCleaningTask::query(); // الاستعلام من جدول المهام التفصيلية
 
-        // جلب معلمات البحث والتصفية من الطلب
-        $selectedMonth = $request->input('month', '');
-        $selectedLocation = $request->input('location', '');
-        $selectedTaskType = $request->input('task_type', '');
-        $searchQuery = $request->input('search', ''); // للبحث العام
+        // جلب معلمات البحث والتصفية
+        $selectedDate = $request->input('date'); // فلتر جديد: التاريخ
+        $selectedMonth = $request->input('month');
+        $selectedShift = $request->input('shift'); // فلتر جديد: الشفت
+        $selectedLocation = $request->input('location');
+        $selectedTaskType = $request->input('task_type');
+        $selectedUnitId = $request->input('unit_id'); // فلتر الوحدة
+        $searchQuery = $request->input('search');
 
-        // تطبيق فلتر الشهر
-        if (!empty($selectedMonth)) {
-            $query->where('month', $selectedMonth);
+        // تطبيق الفلاتر
+        if ($request->filled('date')) {
+            $query->whereDate('date', $selectedDate);
         }
-
-        // تطبيق فلتر الموقع
-        if (!empty($selectedLocation)) {
-            $query->where('location', $selectedLocation);
+        if ($request->filled('month')) {
+            $query->whereYear('date', Carbon::parse($selectedMonth)->year)
+                  ->whereMonth('date', Carbon::parse($selectedMonth)->month);
         }
-
-        // تطبيق فلتر نوع المهمة
-        if (!empty($selectedTaskType)) {
+        if ($request->filled('shift')) {
+            $query->where('shift', $selectedShift);
+        }
+        if ($request->filled('location')) {
+            $query->where('location', 'like', '%' . $selectedLocation . '%');
+        }
+        if ($request->filled('task_type')) {
             $query->where('task_type', $selectedTaskType);
         }
-
-        // تطبيق البحث العام على الأعمدة النصية
-        if (!empty($searchQuery)) {
+        if ($request->filled('unit_id')) {
+            $query->where('unit_id', $selectedUnitId);
+        }
+        if ($request->filled('search')) {
             $query->where(function ($q) use ($searchQuery) {
-                $q->where('month', 'like', '%' . $searchQuery . '%')
-                  ->orWhere('location', 'like', '%' . $searchQuery . '%')
-                  ->orWhere('task_type', 'like', '%' . $searchQuery . '%');
-                // يمكنك إضافة المزيد من الأعمدة هنا للبحث حسب الحاجة (مثلاً 'notes', 'description')
+                $q->where('location', 'like', '%' . $searchQuery . '%')
+                  ->orWhere('task_type', 'like', '%' . $searchQuery . '%')
+                  ->orWhere('notes', 'like', '%' . $searchQuery . '%')
+                  ->orWhere('shift', 'like', '%' . $searchQuery . '%'); // أضف الشفت للبحث العام
+                // أضف أي حقول نصية أخرى من GeneralCleaningTask للبحث
             });
         }
 
-        // تطبيق الفرز بناءً على طلب المستخدم
-        // الافتراضي هو الفرز حسب الشهر تنازليًا
-        $sortBy = $request->input('sort_by', 'month');
+        // تطبيق الفرز
+        $sortBy = $request->input('sort_by', 'date');
         $sortOrder = $request->input('sort_order', 'desc');
 
-        // قائمة الأعمدة المسموح بها للفرز (لمنع حقن SQL)
         $allowedSortColumns = [
-            'month', 'location', 'task_type',
-            'total_mats', 'total_pillows', 'total_fans',
-            'total_windows', 'total_carpets', 'total_blankets',
-            'total_beds', 'total_beneficiaries', 'total_trams',
-            'total_laid_carpets', 'total_large_containers', 'total_small_containers'
+            'date', 'shift', 'task_type', 'location', 'unit_id',
+            'mats_count', 'pillows_count', 'fans_count', 'windows_count',
+            'carpets_count', 'blankets_count', 'beds_count', 'beneficiaries_count',
+            'filled_trams_count', 'carpets_laid_count', 'large_containers_count',
+            'small_containers_count', 'working_hours'
         ];
 
-        // التحقق من صحة عمود الفرز
         if (!in_array($sortBy, $allowedSortColumns)) {
-            $sortBy = 'month'; // الرجوع إلى القيمة الافتراضية إذا كان العمود غير مسموح به
+            $sortBy = 'date';
         }
-        // التحقق من صحة ترتيب الفرز
         if (!in_array(strtolower($sortOrder), ['asc', 'desc'])) {
-            $sortOrder = 'desc'; // الرجوع إلى القيمة الافتراضية إذا كان الترتيب غير صحيح
+            $sortOrder = 'desc';
         }
-
         $query->orderBy($sortBy, $sortOrder);
 
-        // جلب النتائج
-        $reports = $query->get(); // أو paginate(15) إذا كنت تستخدم تقسيم الصفحات
+        // جلب النتائج مع الترقيم
+        $tasks = $query->with('unit')->paginate(10); // استخدام paginate() و eager load 'unit'
 
-        // جلب خيارات الفلاتر المتاحة من قاعدة البيانات
-        // استخدام pluck للحصول على مصفوفة مفتاح-قيمة لتناسب الـ <select>
-        $availableMonths = MonthlyGeneralCleaningSummary::select('month')->distinct()->orderBy('month', 'desc')->pluck('month', 'month')->toArray();
-        $availableLocations = MonthlyGeneralCleaningSummary::select('location')->distinct()->pluck('location', 'location')->toArray();
-        
-        // أنواع المهام المحددة (يمكن جلبها من قاعدة البيانات أو تعريفها يدويًا)
-        $availableTaskTypes = [
-            'إدامة' => 'إدامة',
-            'صيانة' => 'صيانة',
-            // أضف أي أنواع مهام أخرى هنا حسب البيانات الموجودة في قاعدة البيانات
-        ];
+        // جلب خيارات الفلاتر المتاحة من GeneralCleaningTask
+        $availableMonths = GeneralCleaningTask::selectRaw("DATE_FORMAT(date, '%Y-%m') as month_year")
+                                            ->distinct()
+                                            ->orderBy('month_year', 'desc')
+                                            ->pluck('month_year')
+                                            ->mapWithKeys(function ($item) {
+                                                return [$item => Carbon::parse($item)->translatedFormat('F Y')];
+                                            })->toArray();
 
-        // تمرير البيانات إلى واجهة العرض الرئيسية (index.blade.php)
+        $availableShifts = GeneralCleaningTask::distinct()->pluck('shift')->filter()->toArray();
+        $availableLocations = GeneralCleaningTask::distinct()->pluck('location')->toArray();
+        $availableTaskTypes = GeneralCleaningTask::distinct()->pluck('task_type')->toArray();
+        $units = Unit::all(); // جلب الوحدات لفلتر الوحدة
+
         return view('monthly-cleaning-report.index', compact(
-            'reports',
+            'tasks', // تغيير اسم المتغير إلى tasks
             'availableMonths',
+            'availableShifts',
             'availableLocations',
             'availableTaskTypes',
+            'units',
+            'selectedDate',
             'selectedMonth',
+            'selectedShift',
             'selectedLocation',
             'selectedTaskType',
+            'selectedUnitId',
             'searchQuery',
-            'sortBy', // تمرير متغيرات الفرز لاستخدامها في روابط أيقونات الفرز
+            'sortBy',
             'sortOrder'
         ));
     }
 
     /**
-     * Display the specified monthly general cleaning summary for editing.
-     * عرض ملخص النظافة العامة الشهري المحدد للتعديل.
+     * Show the form for creating a new general cleaning task.
+     * يعرض نموذج إضافة مهمة نظافة عامة جديدة.
      *
-     * @param string $id
+     * @return \Illuminate\View\View
+     */
+    public function create()
+    {
+        $units = Unit::all();
+        $availableShifts = ['صباحي', 'مسائي', 'ليلي']; // أو جلبها ديناميكياً إذا كانت مخزنة في قاعدة البيانات
+        $availableTaskTypes = ['إدامة', 'صيانة']; // أو جلبها ديناميكياً
+        // جلب أي بيانات أخرى ضرورية للنموذج (مثل الأهداف ذات الصلة)
+        return view('monthly-cleaning-report.create', compact('units', 'availableShifts', 'availableTaskTypes'));
+    }
+
+    /**
+     * Store a newly created general cleaning task in storage.
+     * يخزن مهمة نظافة عامة جديدة في قاعدة البيانات.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function store(Request $request)
+    {
+        $validatedData = $request->validate([
+            'date' => 'required|date',
+            'shift' => 'nullable|string|max:255',
+            'task_type' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
+            'quantity' => 'nullable|integer|min:0', // إذا كان لديك كمية عامة
+            'status' => 'required|string|max:255',
+            'notes' => 'nullable|string',
+            'unit_id' => 'required|exists:units,id', // يجب أن تكون وحدة موجودة
+            'working_hours' => 'nullable|numeric|min:0',
+            'mats_count' => 'nullable|integer|min:0',
+            'pillows_count' => 'nullable|integer|min:0',
+            'fans_count' => 'nullable|integer|min:0',
+            'windows_count' => 'nullable|integer|min:0',
+            'carpets_count' => 'nullable|integer|min:0',
+            'blankets_count' => 'nullable|integer|min:0',
+            'beds_count' => 'nullable|integer|min:0',
+            'beneficiaries_count' => 'nullable|integer|min:0',
+            'filled_trams_count' => 'nullable|integer|min:0',
+            'carpets_laid_count' => 'nullable|integer|min:0',
+            'large_containers_count' => 'nullable|integer|min:0',
+            'small_containers_count' => 'nullable|integer|min:0',
+            'maintenance_details' => 'nullable|string',
+            'before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // لتحميل الصور
+            'after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        // التعامل مع تحميل الصور
+        $beforeImagePaths = [];
+        if ($request->hasFile('before_images')) {
+            foreach ($request->file('before_images') as $image) {
+                $beforeImagePaths[] = $image->store('public/general_cleaning/before');
+            }
+        }
+        $afterImagePaths = [];
+        if ($request->hasFile('after_images')) {
+            foreach ($request->file('after_images') as $image) {
+                $afterImagePaths[] = $image->store('public/general_cleaning/after');
+            }
+        }
+
+        $validatedData['before_images'] = $beforeImagePaths;
+        $validatedData['after_images'] = $afterImagePaths;
+
+        GeneralCleaningTask::create($validatedData);
+
+        return redirect()->route('monthly-cleaning-report.index')->with('success', 'تم إضافة مهمة النظافة بنجاح!');
+    }
+
+    /**
+     * Show the form for editing the specified general cleaning task.
+     * يعرض نموذج تعديل مهمة النظافة العامة المحددة.
+     *
+     * @param  string  $id
      * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
     public function edit(string $id)
     {
-        $report = MonthlyGeneralCleaningSummary::findOrFail($id);
-        // يمكنك هنا جلب أي بيانات إضافية تحتاجها لنموذج التعديل، مثل قائمة الأهداف أو الموظفين
-        // على سبيل المثال: $goals = Goal::all(); $employees = Employee::all();
-        return view('monthly-cleaning-report.edit', compact('report'));
+        $task = GeneralCleaningTask::findOrFail($id); // البحث في GeneralCleaningTask
+        $units = Unit::all();
+        $availableShifts = ['صباحي', 'مسائي', 'ليلي'];
+        $availableTaskTypes = ['إدامة', 'صيانة'];
+        return view('monthly-cleaning-report.edit', compact('task', 'units', 'availableShifts', 'availableTaskTypes'));
     }
 
     /**
-     * Update the specified monthly general cleaning summary in storage.
-     * تحديث ملخص النظافة العامة الشهري المحدد في قاعدة البيانات.
+     * Update the specified general cleaning task in storage.
+     * يحدث مهمة النظافة العامة المحددة في قاعدة البيانات.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param string $id
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $id
      * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, string $id)
     {
-        // قواعد التحقق من صحة البيانات
+        $task = GeneralCleaningTask::findOrFail($id); // البحث في GeneralCleaningTask
+
         $validatedData = $request->validate([
-            'month'                     => 'required|string|max:7', // مثال: YYYY-MM
-            'location'                  => 'required|string|max:255',
-            'task_type'                 => 'required|string|in:إدامة,صيانة',
-            'total_mats'                => 'nullable|integer|min:0',
-            'total_pillows'             => 'nullable|integer|min:0',
-            'total_fans'                => 'nullable|integer|min:0',
-            'total_windows'             => 'nullable|integer|min:0',
-            'total_carpets'             => 'nullable|integer|min:0',
-            'total_blankets'            => 'nullable|integer|min:0',
-            'total_beds'                => 'nullable|integer|min:0',
-            'total_beneficiaries'       => 'nullable|integer|min:0',
-            'total_trams'               => 'nullable|integer|min:0',
-            'total_laid_carpets'        => 'nullable|integer|min:0',
-            'total_large_containers'    => 'nullable|integer|min:0',
-            'total_small_containers'    => 'nullable|integer|min:0',
-            'total_external_partitions' => 'nullable|integer|min:0',
-            'total_working_hours'       => 'nullable|numeric|min:0',
-            'notes'                     => 'nullable|string',
-            // أضف هنا أي حقول أخرى تحتاج إلى تحديثها
+            'date' => 'required|date',
+            'shift' => 'nullable|string|max:255',
+            'task_type' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
+            'quantity' => 'nullable|integer|min:0',
+            'status' => 'required|string|max:255',
+            'notes' => 'nullable|string',
+            'unit_id' => 'required|exists:units,id',
+            'working_hours' => 'nullable|numeric|min:0',
+            'mats_count' => 'nullable|integer|min:0',
+            'pillows_count' => 'nullable|integer|min:0',
+            'fans_count' => 'nullable|integer|min:0',
+            'windows_count' => 'nullable|integer|min:0',
+            'carpets_count' => 'nullable|integer|min:0',
+            'blankets_count' => 'nullable|integer|min:0',
+            'beds_count' => 'nullable|integer|min:0',
+            'beneficiaries_count' => 'nullable|integer|min:0',
+            'filled_trams_count' => 'nullable|integer|min:0',
+            'carpets_laid_count' => 'nullable|integer|min:0',
+            'large_containers_count' => 'nullable|integer|min:0',
+            'small_containers_count' => 'nullable|integer|min:0',
+            'maintenance_details' => 'nullable|string',
+            'before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'existing_before_images' => 'nullable|array', // للتعامل مع حذف الصور الموجودة
+            'existing_after_images' => 'nullable|array',
         ]);
 
-        $report = MonthlyGeneralCleaningSummary::findOrFail($id);
-        $report->update($validatedData);
+        // التعامل مع تحديث الصور (حذف الصور المحذوفة، إضافة صور جديدة)
+        $currentBeforeImages = $task->before_images ?? [];
+        $currentAfterImages = $task->after_images ?? [];
 
-        return redirect()->route('monthly-cleaning-report.index')->with('success', 'تم تحديث التقرير بنجاح!');
+        // تحديد الصور المراد الاحتفاظ بها
+        $keepBeforeImages = $request->input('existing_before_images', []);
+        $keepAfterImages = $request->input('existing_after_images', []);
+
+        // حذف الصور التي لم يعد يتم الاحتفاظ بها
+        foreach ($currentBeforeImages as $path) {
+            if (!in_array($path, $keepBeforeImages)) {
+                \Illuminate\Support\Facades\Storage::delete($path);
+            }
+        }
+        foreach ($currentAfterImages as $path) {
+            if (!in_array($path, $keepAfterImages)) {
+                \Illuminate\Support\Facades\Storage::delete($path);
+            }
+        }
+
+        // إضافة الصور الجديدة
+        $newBeforeImagePaths = $keepBeforeImages;
+        if ($request->hasFile('before_images')) {
+            foreach ($request->file('before_images') as $image) {
+                $newBeforeImagePaths[] = $image->store('public/general_cleaning/before');
+            }
+        }
+        $newAfterImagePaths = $keepAfterImages;
+        if ($request->hasFile('after_images')) {
+            foreach ($request->file('after_images') as $image) {
+                $newAfterImagePaths[] = $image->store('public/general_cleaning/after');
+            }
+        }
+
+        $validatedData['before_images'] = $newBeforeImagePaths;
+        $validatedData['after_images'] = $newAfterImagePaths;
+
+        $task->update($validatedData);
+
+        return redirect()->route('monthly-cleaning-report.index')->with('success', 'تم تحديث مهمة النظافة بنجاح!');
     }
 
     /**
-     * Remove the specified monthly general cleaning summary from storage.
-     * حذف ملخص النظافة العامة الشهري المحدد من قاعدة البيانات.
+     * Remove the specified general cleaning task from storage.
+     * يحذف مهمة النظافة العامة المحددة من قاعدة البيانات.
      *
      * @param string $id
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(string $id)
     {
-        $report = MonthlyGeneralCleaningSummary::findOrFail($id);
-        $report->delete();
+        $task = GeneralCleaningTask::findOrFail($id); // البحث في GeneralCleaningTask
+        // دالة cleanupTaskImages في حدث 'deleted' بالنموذج ستتكفل بحذف الصور المرتبطة.
+        $task->delete();
 
-        return redirect()->route('monthly-cleaning-report.index')->with('success', 'تم حذف التقرير بنجاح!');
+        return redirect()->route('monthly-cleaning-report.index')->with('success', 'تم حذف مهمة النظافة بنجاح!');
     }
 
     /**
-     * Display the monthly general cleaning report specifically for printing.
-     * عرض تقرير النظافة العامة الشهري خصيصًا للطباعة.
+     * Function to export the detailed report to CSV format.
+     * دالة لتصدير التقرير التفصيلي إلى صيغة CSV.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     */
+    public function export(Request $request)
+    {
+        $query = GeneralCleaningTask::query(); // الاستعلام من GeneralCleaningTask
+
+        // تطبيق نفس الفلاتر المستخدمة في دالة index
+        if ($request->filled('date')) {
+            $query->whereDate('date', $request->input('date'));
+        }
+        if ($request->filled('month')) {
+            $query->whereYear('date', Carbon::parse($request->input('month'))->year)
+                  ->whereMonth('date', Carbon::parse($request->input('month'))->month);
+        }
+        if ($request->filled('shift')) {
+            $query->where('shift', $request->input('shift'));
+        }
+        if ($request->filled('location')) {
+            $query->where('location', 'like', '%' . $request->input('location') . '%');
+        }
+        if ($request->filled('task_type')) {
+            $query->where('task_type', $request->input('task_type'));
+        }
+        if ($request->filled('unit_id')) {
+            $query->where('unit_id', $request->input('unit_id'));
+        }
+        if ($request->filled('search')) {
+            $searchQuery = $request->input('search');
+            $query->where(function ($q) use ($searchQuery) {
+                $q->where('location', 'like', '%' . $searchQuery . '%')
+                  ->orWhere('task_type', 'like', '%' . $searchQuery . '%')
+                  ->orWhere('notes', 'like', '%' . $searchQuery . '%')
+                  ->orWhere('shift', 'like', '%' . $searchQuery . '%');
+            });
+        }
+
+        $dataToExport = $query->with('unit')->orderBy('date', 'desc')->orderBy('shift', 'asc')->get();
+
+        $fileName = 'تقرير_النظافة_التفصيلي_' . now()->format('Y-m-d_H-i-s') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Encoding' => 'UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ];
+
+        $callback = function() use ($dataToExport) {
+            $file = fopen('php://output', 'w');
+            fwrite($file, "\xEF\xBB\xBF"); // BOM for UTF-8
+
+            // رؤوس الأعمدة باللغة العربية
+            fputcsv($file, [
+                'التاريخ', 'الشفت', 'الوحدة', 'الموقع', 'نوع المهمة',
+                'المنادر', 'الوسائد', 'المراوح', 'النوافذ', 'السجاد',
+                'البطانيات', 'الأسرة', 'المستفيدون', 'الترامز', 'السجاد المفروش',
+                'حاويات كبيرة', 'حاويات صغيرة', 'ساعات العمل', 'الملاحظات', 'تفاصيل الصيانة',
+                'حالة التحقق', 'الموارد المستخدمة', 'التقدم', 'قيمة النتيجة'
+            ]);
+
+            foreach ($dataToExport as $row) {
+                $unitName = $row->unit->name ?? 'N/A';
+                fputcsv($file, [
+                    Carbon::parse($row->date)->format('Y-m-d'),
+                    $row->shift,
+                    $unitName,
+                    $row->location,
+                    $row->task_type,
+                    $row->mats_count,
+                    $row->pillows_count,
+                    $row->fans_count,
+                    $row->windows_count,
+                    $row->carpets_count,
+                    $row->blankets_count,
+                    $row->beds_count,
+                    $row->beneficiaries_count,
+                    $row->filled_trams_count,
+                    $row->carpets_laid_count,
+                    $row->large_containers_count,
+                    $row->small_containers_count,
+                    $row->working_hours,
+                    $row->notes,
+                    $row->maintenance_details,
+                    $row->verification_status,
+                    is_array($row->resources_used) ? implode(', ', $row->resources_used) : $row->resources_used,
+                    $row->progress,
+                    $row->result_value,
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Display the detailed report in a printable format.
+     * يعرض التقرير التفصيلي بتنسيق مناسب للطباعة.
      *
      * @param Request $request
      * @return \Illuminate\View\View
      */
     public function print(Request $request)
     {
-        // تهيئة المتغيرات للاستعلام (نفس منطق جلب البيانات في دالة index)
-        $query = MonthlyGeneralCleaningSummary::query();
+        $query = GeneralCleaningTask::query(); // الاستعلام من GeneralCleaningTask
 
-        // جلب معلمات البحث والتصفية من الطلب
-        $selectedMonth = $request->input('month', '');
-        $selectedLocation = $request->input('location', '');
-        $selectedTaskType = $request->input('task_type', '');
-        $searchQuery = $request->input('search', ''); // للبحث العام
-
-        // تطبيق فلتر الشهر
-        if (!empty($selectedMonth)) {
-            $query->where('month', $selectedMonth);
+        // تطبيق نفس الفلاتر المستخدمة في دالة index
+        if ($request->filled('date')) {
+            $query->whereDate('date', $request->input('date'));
         }
-
-        // تطبيق فلتر الموقع
-        if (!empty($selectedLocation)) {
-            $query->where('location', $selectedLocation);
+        if ($request->filled('month')) {
+            $query->whereYear('date', Carbon::parse($request->input('month'))->year)
+                  ->whereMonth('date', Carbon::parse($request->input('month'))->month);
         }
-
-        // تطبيق فلتر نوع المهمة
-        if (!empty($selectedTaskType)) {
-            $query->where('task_type', $selectedTaskType);
+        if ($request->filled('shift')) {
+            $query->where('shift', $request->input('shift'));
         }
-
-        // تطبيق البحث العام على الأعمدة النصية
-        if (!empty($searchQuery)) {
+        if ($request->filled('location')) {
+            $query->where('location', 'like', '%' . $request->input('location') . '%');
+        }
+        if ($request->filled('task_type')) {
+            $query->where('task_type', $request->input('task_type'));
+        }
+        if ($request->filled('unit_id')) {
+            $query->where('unit_id', $request->input('unit_id'));
+        }
+        if ($request->filled('search')) {
+            $searchQuery = $request->input('search');
             $query->where(function ($q) use ($searchQuery) {
-                $q->where('month', 'like', '%' . $searchQuery . '%')
-                  ->orWhere('location', 'like', '%' . $searchQuery . '%')
-                  ->orWhere('task_type', 'like', '%' . $searchQuery . '%');
+                $q->where('location', 'like', '%' . $searchQuery . '%')
+                  ->orWhere('task_type', 'like', '%' . $searchQuery . '%')
+                  ->orWhere('notes', 'like', '%' . $searchQuery . '%')
+                  ->orWhere('shift', 'like', '%' . $searchQuery . '%');
             });
         }
 
-        // الترتيب للطباعة (يمكن أن يكون نفس ترتيب العرض أو ترتيب ثابت للطباعة)
-        $sortBy = $request->input('sort_by', 'month');
-        $sortOrder = $request->input('sort_order', 'desc');
+        $tasks = $query->with('unit')->orderBy('date', 'desc')->orderBy('shift', 'asc')->get();
 
-        $allowedSortColumns = [
-            'month', 'location', 'task_type',
-            'total_mats', 'total_pillows', 'total_fans',
-            'total_windows', 'total_carpets', 'total_blankets',
-            'total_beds', 'total_beneficiaries', 'total_trams',
-            'total_laid_carpets', 'total_large_containers', 'total_small_containers'
-        ];
+        // 💡 حساب مجاميع الحقول الكمية وساعات العمل
+        $totalMats = $tasks->sum('mats_count');
+        $totalPillows = $tasks->sum('pillows_count');
+        $totalFans = $tasks->sum('fans_count');
+        $totalWindows = $tasks->sum('windows_count');
+        $totalCarpets = $tasks->sum('carpets_count');
+        $totalBlankets = $tasks->sum('blankets_count');
+        $totalBeds = $tasks->sum('beds_count');
+        $totalBeneficiaries = $tasks->sum('beneficiaries_count');
+        $totalTrams = $tasks->sum('filled_trams_count');
+        $totalCarpetsLaid = $tasks->sum('carpets_laid_count');
+        $totalLargeContainers = $tasks->sum('large_containers_count');
+        $totalSmallContainers = $tasks->sum('small_containers_count');
+        $totalWorkingHours = $tasks->sum('working_hours');
+        // إذا كان لديك حقل 'total_external_partitions' في نموذج GeneralCleaningTask
+        $totalExternalPartitions = $tasks->sum('total_external_partitions');
 
-        if (!in_array($sortBy, $allowedSortColumns)) {
-            $sortBy = 'month';
-        }
-        if (!in_array(strtolower($sortOrder), ['asc', 'desc'])) {
-            $sortOrder = 'desc';
-        }
-
-        $query->orderBy($sortBy, $sortOrder);
-
-        // جلب النتائج
-        $reports = $query->get();
 
         // جلب خيارات الفلاتر المتاحة (نفسها المطلوبة في العرض)
-        $availableMonths = MonthlyGeneralCleaningSummary::select('month')->distinct()->orderBy('month', 'desc')->pluck('month', 'month')->toArray();
-        $availableLocations = MonthlyGeneralCleaningSummary::select('location')->distinct()->pluck('location', 'location')->toArray();
-        $availableTaskTypes = [
-            'إدامة' => 'إدامة',
-            'صيانة' => 'صيانة',
-        ];
+        $availableMonths = GeneralCleaningTask::selectRaw("DATE_FORMAT(date, '%Y-%m') as month_year")
+                                                        ->distinct()
+                                                        ->orderBy('month_year', 'desc')
+                                                        ->get()
+                                                        ->mapWithKeys(function ($item) {
+                                                            $monthValue = Carbon::parse($item->month_year)->format('Y-m');
+                                                            $monthLabel = Carbon::parse($item->month_year)->translatedFormat('F Y');
+                                                            return [$monthValue => $monthLabel];
+                                                        })
+                                                        ->toArray();
+        $availableLocations = GeneralCleaningTask::select('location')->distinct()->pluck('location')->toArray();
+        $availableTaskTypes = GeneralCleaningTask::select('task_type')->distinct()->pluck('task_type')->toArray();
+        $availableShifts = GeneralCleaningTask::distinct()->pluck('shift')->filter()->toArray(); // جلب الشفتات المتاحة
 
-        // تمرير البيانات إلى واجهة عرض الطباعة (report.blade.php)
+        // جلب قيم الفلاتر لعرضها في رأس التقرير المطبوع
+        $filters = $request->only(['date', 'month', 'shift', 'location', 'task_type', 'unit_id']);
+
+        if ($request->filled('month')) {
+            $filters['month_display'] = Carbon::parse($request->month)->translatedFormat('F Y');
+        } else {
+            $filters['month_display'] = null;
+        }
+
+        if ($request->filled('unit_id')) {
+            $unit = Unit::find($request->unit_id);
+            $filters['unit_name'] = $unit->name ?? 'N/A';
+        }
+
         return view('monthly-cleaning-report.report', compact(
-            'reports',
+            'tasks',
+            'filters',
             'availableMonths',
             'availableLocations',
             'availableTaskTypes',
-            'selectedMonth',
-            'selectedLocation',
-            'selectedTaskType',
-            'searchQuery'
+            'availableShifts',
+            'totalMats', // 💡 تمرير المجاميع الجديدة
+            'totalPillows',
+            'totalFans',
+            'totalWindows',
+            'totalCarpets',
+            'totalBlankets',
+            'totalBeds',
+            'totalBeneficiaries',
+            'totalTrams',
+            'totalCarpetsLaid',
+            'totalLargeContainers',
+            'totalSmallContainers',
+            'totalWorkingHours',
+            'totalExternalPartitions' // تأكد من وجود هذا الحقل في النموذج
         ));
     }
 }

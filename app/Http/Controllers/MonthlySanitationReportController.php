@@ -194,7 +194,7 @@ class MonthlySanitationReportController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\View\View
      */
-    public function print(Request $request) // ✅ Print function is here
+    public function print(Request $request)
     {
         $query = MonthlySanitationSummary::query();
 
@@ -217,6 +217,16 @@ class MonthlySanitationReportController extends Controller
                                ->orderBy('facility_name', 'asc')
                                ->get();
 
+        // 💡 حساب مجاميع الحقول الكمية لتقرير المنشآت الصحية
+        $totalSeats = $monthlySummaries->sum('total_seats');
+        $totalMirrors = $monthlySummaries->sum('total_mirrors');
+        $totalMixers = $monthlySummaries->sum('total_mixers');
+        $totalDoors = $monthlySummaries->sum('total_doors');
+        $totalSinks = $monthlySummaries->sum('total_sinks');
+        $totalToilets = $monthlySummaries->sum('total_toilets');
+        $totalTasks = $monthlySummaries->sum('total_tasks');
+
+
         // Fetch filter values to display in the printed report header
         $filters = $request->only(['month', 'facility_name', 'task_type']);
         if ($request->filled('month')) {
@@ -232,6 +242,16 @@ class MonthlySanitationReportController extends Controller
             $filters['unit_name'] = $unit->name ?? 'N/A';
         }
 
-        return view('monthly_sanitation_report.print', compact('monthlySummaries', 'filters'));
+        return view('monthly_sanitation_report.print', compact(
+            'monthlySummaries',
+            'filters',
+            'totalSeats', // 💡 تمرير المجاميع الجديدة
+            'totalMirrors',
+            'totalMixers',
+            'totalDoors',
+            'totalSinks',
+            'totalToilets',
+            'totalTasks'
+        ));
     }
 }

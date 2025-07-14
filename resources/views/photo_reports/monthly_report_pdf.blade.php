@@ -1,4 +1,3 @@
-{{-- resources/views/photo_reports/monthly_report_pdf.blade.php --}}
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -7,6 +6,7 @@
     <title>تقرير الصور الشهري - {{ \Carbon\Carbon::create(null, $month, 1)->monthName }} {{ $year }}</title>
     <style>
         /* الخطوط */
+        /* 💡 تأكد أن مسارات الخطوط هذه صحيحة وأن الملفات موجودة في public/fonts/ */
         @font-face {
             font-family: 'Amiri';
             src: url('{{ public_path('fonts/Amiri-Regular.ttf') }}') format('truetype');
@@ -33,7 +33,7 @@
         }
 
         body {
-            font-family: 'Amiri', serif;
+            font-family: 'Amiri', serif !important; /* 💡 تم إضافة !important */
             line-height: 1.6;
             margin: 0;
             padding: 0;
@@ -48,7 +48,7 @@
             box-sizing: border-box;
         }
         h1, h2, h3, h4, h5, h6 {
-            font-family: 'Amiri', serif;
+            font-family: 'Amiri', serif !important; /* 💡 تم إضافة !important */
             color: #0056b3; /* لون أزرق داكن للعناوين */
             text-align: center;
             margin-bottom: 10px;
@@ -154,7 +154,8 @@
                         @foreach($report->before_images_urls as $image)
                             @if($image['exists'] && $image['absolute_path_for_pdf'])
                                 <div class="image-item">
-                                    <img src="{{ $image['absolute_path_for_pdf'] }}" alt="صورة قبل التنفيذ">
+                                    {{-- 💡 استخدام المسار المطلق للصورة في PDF --}}
+                                    <img src="{{ $image['absolute_path_for_pdf'] }}" alt="صورة قبل التنفيذ" onerror="this.onerror=null;this.src='{{ public_path('images/placeholder-image.png') }}';">
                                     <span>المسار: {{ $image['path'] }}</span>
                                 </div>
                             @endif
@@ -170,7 +171,8 @@
                         @foreach($report->after_images_urls as $image)
                             @if($image['exists'] && $image['absolute_path_for_pdf'])
                                 <div class="image-item">
-                                    <img src="{{ $image['absolute_path_for_pdf'] }}" alt="صورة بعد التنفيذ">
+                                    {{-- 💡 استخدام المسار المطلق للصورة في PDF --}}
+                                    <img src="{{ $image['absolute_path_for_pdf'] }}" alt="صورة بعد التنفيذ" onerror="this.onerror=null;this.src='{{ public_path('images/placeholder-image.png') }}';">
                                     <span>المسار: {{ $image['path'] }}</span>
                                 </div>
                             @endif

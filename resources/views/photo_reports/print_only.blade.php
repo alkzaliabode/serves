@@ -5,6 +5,8 @@
     مع التركيز الشديد على احتواء المحتوى في صفحة A4 أفقية واحدة،
     وتكبير الصور قدر الإمكان ضمن هذا القيد، وتنظيم الخطوط بفعالية.
     تم تصحيح خطأ TypeError: count() في قسم صور بعد التنفيذ.
+    💡 تم إضافة شعارين في رأس التقرير وتنسيق المحتوى بينهما.
+    ✅ تم التحديث: عرض صور "بعد التنفيذ" على اليسار وصور "قبل التنفيذ" على اليمين، كبيرة وكاملة.
 --}}
 
 <!DOCTYPE html>
@@ -47,6 +49,18 @@
             margin-bottom: 12px; /* تقليل المسافة بعد العنوان */
             padding-bottom: 8px;
             border-bottom: 1px solid #ddd;
+            display: flex; /* 💡 استخدام فليكس بوكس لتنظيم الشعار والعناوين */
+            align-items: center; /* 💡 توسيط العناصر عمودياً */
+            justify-content: space-between; /* 💡 دفع العناصر إلى الأطراف مع توسيط النص */
+        }
+        .header-print .logo {
+            width: 60px; /* 💡 حجم الشعار */
+            height: 60px; /* 💡 حجم الشعار */
+            object-fit: contain; /* 💡 لضمان احتواء الصورة داخل أبعادها */
+        }
+        .header-print .text-content {
+            flex-grow: 1; /* 💡 للسماح للنص بأخذ المساحة المتاحة والتوسط */
+            text-align: center; /* 💡 توسيط النص */
         }
         .title-print { font-size: 18px; font-weight: bold; margin: 0; color: #333; }
         .subtitle-print { font-size: 13px; margin: 2px 0; color: #555; }
@@ -99,40 +113,39 @@
             margin-bottom: 6px;
         }
 
-        /* Image Gallery */
-        .gallery-container-print {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 7mm; /* مسافة بين الصور (معدلة أكثر) */
-            justify-content: start;
-            margin-top: 12px; /* تقليل المسافة قبل المعرض */
+        /* Image Pairing Section - New Styles */
+        .image-pair-container {
+            display: flex; /* استخدام Flexbox لترتيب العناصر جنباً إلى جنب */
+            justify-content: space-around; /* توزيع المساحة بالتساوي بين الصور */
+            align-items: center; /* محاذاة الصور عمودياً في المنتصف */
+            margin-bottom: 15mm; /* مسافة بين كل زوج من الصور والزوج التالي */
+            page-break-inside: avoid; /* منع تقسيم زوج الصور عبر صفحتين */
+            flex-wrap: wrap; /* السماح للصور بالانتقال إلى سطر جديد إذا كانت الشاشة صغيرة */
         }
-        .gallery-item-print {
-            /* 3 صور في الصف: (100% / 3) - (gap * 2 / 3) */
-            flex: 0 0 calc(33.333% - 4.66mm);
-            max-width: calc(33.333% - 4.66mm);
-            border: 1px solid #ddd;
-            padding: 2mm; /* تقليل الهوامش الداخلية للصورة */
-            box-sizing: border-box;
-            background-color: #fdfdfd;
-            page-break-inside: avoid;
-            box-shadow: 0 0 2px rgba(0,0,0,0.05); /* ظل أخف */
+
+        .image-pair-item {
+            width: 48%; /* تحديد عرض كل صورة لتكون تقريباً نصف الصفحة مع بعض الهوامش */
+            margin: 1%; /* هامش بسيط بين الصورتين */
+            box-sizing: border-box; /* للتأكد من أن العرض يشمل الهوامش والحدود */
+            text-align: center; /* لمحاذاة التسميات التوضيحية */
         }
-        .gallery-item-print img {
-            width: 100%;
-            height: 95px; /* ارتفاع الصور (متوازن لاحتوائها) */
-            object-fit: cover; /* لملء المساحة والحفاظ على نسبة العرض إلى الارتفاع */
-            display: block;
-            margin-bottom: 3mm;
-            border-bottom: 1px solid #f5f5f5;
+
+        .image-pair-item img {
+            max-width: 100%; /* التأكد من أن الصورة لا تتجاوز عرض حاويتها */
+            height: auto; /* الحفاظ على نسبة العرض إلى الارتفاع */
+            object-fit: contain; /* التأكد من ظهور الصورة كاملة داخل الإطار دون قص */
+            border: 1px solid #eee; /* إضافة حدود خفيفة للصور */
+            padding: 2mm; /* مساحة داخل الحدود */
+            background-color: #f9f9f9; /* خلفية خفيفة */
         }
-        .gallery-item-print .caption-print {
-            font-size: 8px; /* حجم خط تعليق الصورة أصغر */
-            text-align: center;
-            color: #777;
-            line-height: 1.1;
-            padding-top: 1mm;
+
+        .image-label {
+            font-weight: bold;
+            margin-top: 5mm; /* مسافة أعلى تسمية الصورة */
+            font-size: 11pt;
+            color: #555;
         }
+
         .text-center-print {
             text-align: center;
             font-size: 10.5px;
@@ -176,19 +189,21 @@
             .info-section p, p { font-size: 10px; margin-bottom: 3px; }
             .info-section strong { width: 85px; }
             h4 { font-size: 12px; margin-top: 12px; margin-bottom: 6px; padding-bottom: 4px;}
-            .gallery-container-print {
-                gap: 6mm; /* تقليل المسافة بين الصور في الطباعة النهائية */
-                margin-top: 10px;
+            /* New print adjustments for image pairing */
+            .image-pair-container {
+                margin-bottom: 10mm; /* تقليل المسافة بين أزواج الصور في الطباعة */
             }
-            .gallery-item-print {
-                flex: 0 0 calc(33.333% - 4mm);
-                max-width: calc(33.333% - 4mm);
-                padding: 1.5mm;
+            .image-pair-item {
+                width: 49%; /* زيادة عرض الصورة قليلاً في الطباعة */
+                margin: 0.5%; /* تقليل الهامش بين الصورتين */
             }
-            .gallery-item-print img {
-                height: 85px; /* ارتفاع الصورة في الطباعة النهائية */
+            .image-pair-item img {
+                padding: 1.5mm; /* تقليل البادينغ حول الصورة في الطباعة */
             }
-            .gallery-item-print .caption-print { font-size: 7.5px; padding-top: 1mm;}
+            .image-label {
+                font-size: 10pt; /* تصغير حجم تسمية الصورة في الطباعة */
+                margin-top: 3mm;
+            }
             .badge-print { font-size: 7.5px; }
             .text-center-print { font-size: 10px; padding: 8px 0;}
             hr { margin: 12px 0; }
@@ -198,11 +213,28 @@
 <body>
     <div class="container-print" lang="ar" dir="rtl">
         <div class="header-print">
-            <div class="title-print">تقرير المهام المصور</div>
-            <div class="subtitle-print">تفاصيل التقرير والصور المرفقة</div>
-            <div class="print-date">
-                <span>تاريخ الطباعة: {{ now()->format('Y-m-d H:i') }}</span>
+            {{-- الشعار الأول على اليمين --}}
+            <img src="{{ asset('images/logo.png') }}"
+                 alt="شعار المؤسسة 1"
+                 class="logo"
+                 onerror="this.onerror=null; this.src='https://placehold.co/60x60/CCCCCC/666666?text=شعار1';"
+                 title="إذا لم يظهر الشعار الأول، تأكد من مساره في مجلد public/images">
+
+            {{-- محتوى النص في المنتصف --}}
+            <div class="text-content">
+                <div class="title-print">تقرير المهام المصور</div>
+                <div class="subtitle-print">تفاصيل التقرير والصور المرفقة</div>
+                <div class="print-date">
+                    <span>تاريخ الطباعة: {{ now()->format('Y-m-d H:i') }}</span>
+                </div>
             </div>
+
+            {{-- الشعار الثاني على اليسار --}}
+            <img src="{{ asset('images/another_logo.png') }}" {{-- افترض أن لديك ملف صورة آخر هنا --}}
+                 alt="شعار المؤسسة 2"
+                 class="logo"
+                 onerror="this.onerror=null; this.src='https://placehold.co/60x60/CCCCCC/666666?text=شعار2';"
+                 title="إذا لم يظهر الشعار الثاني، تأكد من مساره في مجلد public/images">
         </div>
 
         <div class="info-section">
@@ -231,38 +263,58 @@
 
         <hr>
 
-        <h4>صور قبل التنفيذ:</h4>
-        @if(!empty($photo_report->before_images_urls) && count($photo_report->before_images_urls) > 0)
-            <div class="gallery-container-print">
-                @foreach($photo_report->before_images_urls as $image)
-                    <div class="gallery-item-print">
-                        <img src="{{ e($image['url']) }}" alt="صورة قبل التنفيذ" onerror="this.onerror=null;this.src='{{ asset('images/placeholder-image.png') }}';">
-                        @if(isset($image['caption']) && !empty($image['caption']))
-                            <div class="caption-print">{{ e($image['caption']) }}</div>
-                        @endif
-                    </div>
-                @endforeach
-            </div>
+        {{-- قسم عرض الصور قبل وبعد بتخطيط جديد --}}
+        {{--
+            ملاحظة هامة: هذا الجزء يفترض أن الكنترولر يمرر مصفوفة $pairedImages
+            التي تحتوي على أزواج من الصور (قبل وبعد) لتسهيل عرضها جنباً إلى جنب.
+            إذا لم يتم ذلك في الكنترولر، فستحتاج إلى معالجة قبل تمرير البيانات هنا
+            أو تعديل هذا الجزء للتعامل مع مصفوفتي before_images_urls و after_images_urls بشكل منفصل
+            ثم دمجها منطقياً هنا إذا كانت الفهارس متطابقة.
+        --}}
+        @php
+            $maxImages = max(
+                count($photo_report->before_images_urls ?? []),
+                count($photo_report->after_images_urls ?? [])
+            );
+            $pairedImages = [];
+            for ($i = 0; $i < $maxImages; $i++) {
+                $pairedImages[] = [
+                    'before' => ($photo_report->before_images_urls[$i] ?? null),
+                    'after' => ($photo_report->after_images_urls[$i] ?? null),
+                ];
+            }
+        @endphp
+
+        @if(count($pairedImages) > 0)
+            @foreach($pairedImages as $pair)
+                <div class="image-pair-container">
+                    {{-- الصورة بعد العمل (على اليسار) --}}
+                    @if($pair['after'] && $pair['after']['exists'])
+                        <div class="image-pair-item" dir="ltr">
+                            <p class="image-label">صورة بعد التنفيذ:</p>
+                            <img src="{{ e($pair['after']['url']) }}" alt="صورة بعد التنفيذ" onerror="this.onerror=null;this.src='{{ asset('images/placeholder-image.png') }}';">
+                            @if(isset($pair['after']['caption']) && !empty($pair['after']['caption']))
+                                <div class="caption-print">{{ e($pair['after']['caption']) }}</div>
+                            @endif
+                        </div>
+                    @endif
+
+                    {{-- الصورة قبل العمل (على اليمين) --}}
+                    @if($pair['before'] && $pair['before']['exists'])
+                        <div class="image-pair-item" dir="ltr">
+                            <p class="image-label">صورة قبل التنفيذ:</p>
+                            <img src="{{ e($pair['before']['url']) }}" alt="صورة قبل التنفيذ" onerror="this.onerror=null;this.src='{{ asset('images/placeholder-image.png') }}';">
+                            @if(isset($pair['before']['caption']) && !empty($pair['before']['caption']))
+                                <div class="caption-print">{{ e($pair['before']['caption']) }}</div>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            @endforeach
         @else
-            <p class="text-center-print">لا توجد صور قبل التنفيذ مرفقة بهذا التقرير.</p>
+            <p class="text-center-print">لا توجد صور قبل أو بعد التنفيذ مرفقة بهذا التقرير.</p>
         @endif
 
-        <h4>صور بعد التنفيذ:</h4>
-        {{-- تم تصحيح الخطأ هنا: after_reports_urls إلى after_images_urls --}}
-        @if(!empty($photo_report->after_images_urls) && count($photo_report->after_images_urls) > 0)
-            <div class="gallery-container-print">
-                @foreach($photo_report->after_images_urls as $image)
-                    <div class="gallery-item-print">
-                        <img src="{{ e($image['url']) }}" alt="صورة بعد التنفيذ" onerror="this.onerror=null;this.src='{{ asset('images/placeholder-image.png') }}';">
-                        @if(isset($image['caption']) && !empty($image['caption']))
-                            <div class="caption-print">{{ e($image['caption']) }}</div>
-                        @endif
-                    </div>
-                @endforeach
-            </div>
-        @else
-            <p class="text-center-print">لا توجد صور بعد التنفيذ مرفقة بهذا التقرير.</p>
-        @endif
     </div>
 
     {{-- الأزرار الخاصة بالطباعة والإغلاق (تظهر فقط في المتصفح، تختفي عند الطباعة الفعلية) --}}

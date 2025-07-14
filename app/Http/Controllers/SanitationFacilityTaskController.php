@@ -3,16 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\SanitationFacilityTask;
-use App\Models\Unit; // افتراض أن لديك نموذج Unit
-use App\Models\UnitGoal; // افتراض أن لديك نموذج UnitGoal
-use App\Models\Employee; // افتراض أن لديك نموذج Employee
-use App\Models\EmployeeTask; // النموذج الوسيط لربط الموظفين بالمهام
-use App\Models\User; // استيراد نموذج المستخدم لإرسال الإشعارات
-use App\Notifications\TaskUpdatedNotification; // استيراد الإشعار المخصص
+use App\Models\Unit;
+use App\Models\UnitGoal;
+use App\Models\Employee;
+use App\Models\EmployeeTask;
+use App\Models\User;
+use App\Notifications\TaskUpdatedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage; // لاستخدام تخزين الملفات
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log; // لاستخدام Log للتحقق
+use Illuminate\Validation\ValidationException; // لاستخدام استثناء التحقق
 
 class SanitationFacilityTaskController extends Controller
 {
@@ -23,7 +24,7 @@ class SanitationFacilityTaskController extends Controller
     {
         $query = SanitationFacilityTask::with(['creator', 'editor', 'relatedGoal', 'unit', 'employeeTasks.employee']);
 
-        // فلاتر البحث
+        // فلاتر البحث العام
         if ($request->has('search') && $request->input('search') != '') {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -70,20 +71,19 @@ class SanitationFacilityTaskController extends Controller
             $query->whereDate('date', '<=', $request->input('to_date'));
         }
 
-        // الفرز الافتراضي (يمكن توسيعه ليشمل أعمدة مختلفة)
+        // الفرز
         $sortBy = $request->input('sort_by', 'date');
         $sortOrder = $request->input('sort_order', 'desc');
-        // تأكد أن الأعمدة المتاحة للفرز موجودة في الجدول
         if (in_array($sortBy, ['date', 'facility_name', 'task_type', 'shift', 'status', 'working_hours'])) {
             $query->orderBy($sortBy, $sortOrder);
         } else {
-            $query->orderBy('date', 'desc'); // الترتيب الافتراضي إذا كان الفرز غير صالح
+            $query->orderBy('date', 'desc');
         }
 
-        $tasks = $query->paginate(10); // 10 عناصر في كل صفحة
+        $tasks = $query->paginate(10);
 
-        $employees = Employee::orderBy('name')->get(); // لجلب الموظفين لفلتر الموظفين المنفذين
-        $goals = UnitGoal::all(); // لجلب الأهداف لفلتر الأهداف المرتبطة (إذا أردت إضافته)
+        $employees = Employee::orderBy('name')->get();
+        $goals = UnitGoal::all();
 
         return view('sanitation_facility_tasks.index', compact('tasks', 'employees', 'goals'));
     }
@@ -95,7 +95,7 @@ class SanitationFacilityTaskController extends Controller
     {
         $units = Unit::all();
         $goals = UnitGoal::all();
-        $employees = Employee::orderBy('name')->get(); // لجلب الموظفين لنموذج المنفذين
+        $employees = Employee::orderBy('name')->get();
 
         return view('sanitation_facility_tasks.create', compact('units', 'goals', 'employees'));
     }
@@ -105,12 +105,15 @@ class SanitationFacilityTaskController extends Controller
      */
     public function store(Request $request)
     {
-        // سجل جميع بيانات الطلب للتحقق
         Log::info('SanitationFacilityTaskController@store - Request Data:', $request->all());
 
-        $validatedData = $request->validate($this->rules());
+        try {
+            $validatedData = $request->validate($this->rules());
+        } catch (ValidationException $e) {
+            Log::error('SanitationFacilityTaskController@store - Validation Error:', $e->errors());
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        }
 
-        // معالجة صور ما قبل التنفيذ
         $beforeImagePaths = [];
         if ($request->hasFile('before_images')) {
             foreach ($request->file('before_images') as $image) {
@@ -119,7 +122,6 @@ class SanitationFacilityTaskController extends Controller
             }
         }
 
-        // معالجة صور ما بعد التنفيذ
         $afterImagePaths = [];
         if ($request->hasFile('after_images')) {
             foreach ($request->file('after_images') as $image) {
@@ -128,36 +130,31 @@ class SanitationFacilityTaskController extends Controller
             }
         }
 
-        // معالجة الموارد المستخدمة
         $resourcesUsed = $request->input('resources_used') ?: [];
 
         $task = SanitationFacilityTask::create(array_merge($validatedData, [
-            // created_by و updated_by و unit_id يتم تعيينها في booted method في الموديل
             'before_images' => $beforeImagePaths,
             'after_images' => $afterImagePaths,
             'resources_used' => $resourcesUsed,
         ]));
 
-        // حفظ الموظفين والتقييمات
         if ($request->has('employeeTasks')) {
             foreach ($request->input('employeeTasks') as $employeeTaskData) {
-                // سجل بيانات كل مهمة موظف للتحقق
-                Log::info('SanitationFacilityTaskController@store - Employee Task Data:', $employeeTaskData);
+                if (isset($employeeTaskData['employee_id']) && isset($employeeTaskData['employee_rating'])) {
+                    Log::info('SanitationFacilityTaskController@store - Employee Task Data:', $employeeTaskData);
+                    $task->employeeTasks()->create([
+                        'employee_id' => $employeeTaskData['employee_id'],
+                        'employee_rating' => $employeeTaskData['employee_rating'],
+                    ]);
 
-                $task->employeeTasks()->create([
-                    'employee_id' => $employeeTaskData['employee_id'],
-                    'employee_rating' => $employeeTaskData['employee_rating'],
-                ]);
-
-                // إرسال إشعار للموظف المعين (إذا كان لديه حساب مستخدم)
-                $assignedUser = User::where('employee_id', $employeeTaskData['employee_id'])->first();
-                if ($assignedUser) {
-                    $assignedUser->notify(new TaskUpdatedNotification($task, 'assigned', 'تم تعيين مهمة جديدة لك: ' . $task->facility_name . ' - ' . $task->task_type));
+                    $assignedUser = User::where('employee_id', $employeeTaskData['employee_id'])->first();
+                    if ($assignedUser) {
+                        $assignedUser->notify(new TaskUpdatedNotification($task, 'assigned', 'تم تعيين مهمة جديدة لك: ' . $task->facility_name . ' - ' . $task->task_type));
+                    }
                 }
             }
         }
 
-        // إرسال إشعار للمشرفين بعد إنشاء المهمة
         $supervisors = User::whereHas('roles', function ($query) {
             $query->where('name', 'supervisor');
         })->get();
@@ -178,7 +175,6 @@ class SanitationFacilityTaskController extends Controller
         $goals = UnitGoal::all();
         $employees = Employee::orderBy('name')->get();
 
-        // تحميل علاقة employeeTasks مسبقاً
         $sanitationFacilityTask->load('employeeTasks');
 
         return view('sanitation_facility_tasks.edit', compact('sanitationFacilityTask', 'units', 'goals', 'employees'));
@@ -189,15 +185,18 @@ class SanitationFacilityTaskController extends Controller
      */
     public function update(Request $request, SanitationFacilityTask $sanitationFacilityTask)
     {
-        // سجل جميع بيانات الطلب للتحقق
         Log::info('SanitationFacilityTaskController@update - Request Data:', $request->all());
 
-        $validatedData = $request->validate($this->rules());
+        try {
+            $validatedData = $request->validate($this->rules());
+        } catch (ValidationException $e) {
+            Log::error('SanitationFacilityTaskController@update - Validation Error:', $e->errors());
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        }
 
         // معالجة صور ما قبل التنفيذ
         $beforeImagePaths = $sanitationFacilityTask->before_images ?: [];
         if ($request->hasFile('before_images')) {
-            // حذف الصور القديمة إذا تم رفع صور جديدة
             foreach ($beforeImagePaths as $oldPath) {
                 Storage::disk('public')->delete($oldPath);
             }
@@ -206,18 +205,16 @@ class SanitationFacilityTaskController extends Controller
                 $path = $image->store('sanitation_facility_tasks/before', 'public');
                 $beforeImagePaths[] = $path;
             }
-        } else if ($request->input('remove_before_images') == '1') { // إذا أرسل المستخدم طلب حذف كل الصور
+        } else if ($request->boolean('remove_before_images')) { // استخدم boolean() للتحقق من قيمة صحيحة/خاطئة
             foreach ($beforeImagePaths as $oldPath) {
                 Storage::disk('public')->delete($oldPath);
             }
             $beforeImagePaths = [];
         }
 
-
         // معالجة صور ما بعد التنفيذ
         $afterImagePaths = $sanitationFacilityTask->after_images ?: [];
         if ($request->hasFile('after_images')) {
-            // حذف الصور القديمة
             foreach ($afterImagePaths as $oldPath) {
                 Storage::disk('public')->delete($oldPath);
             }
@@ -226,45 +223,43 @@ class SanitationFacilityTaskController extends Controller
                 $path = $image->store('sanitation_facility_tasks/after', 'public');
                 $afterImagePaths[] = $path;
             }
-        } else if ($request->input('remove_after_images') == '1') { // إذا أرسل المستخدم طلب حذف كل الصور
+        } else if ($request->boolean('remove_after_images')) {
             foreach ($afterImagePaths as $oldPath) {
                 Storage::disk('public')->delete($oldPath);
             }
             $afterImagePaths = [];
         }
 
-        // معالجة الموارد المستخدمة
         $resourcesUsed = $request->input('resources_used') ?: [];
 
         $sanitationFacilityTask->update(array_merge($validatedData, [
-            // updated_by يتم تعيينه في booted method في الموديل
             'before_images' => $beforeImagePaths,
             'after_images' => $afterImagePaths,
             'resources_used' => $resourcesUsed,
         ]));
 
-        // تحديث الموظفين والتقييمات: حذف الكل وإعادة الإضافة لضمان التوافق مع Repeater
+        // تحديث الموظفين والتقييمات: حذف الكل وإعادة الإضافة
         $oldAssignedEmployeeIds = $sanitationFacilityTask->employeeTasks->pluck('employee_id')->toArray();
-        $sanitationFacilityTask->employeeTasks()->delete();
+        $sanitationFacilityTask->employeeTasks()->delete(); // حذف العلاقات القديمة
         $newAssignedEmployeeIds = [];
 
         if ($request->has('employeeTasks')) {
             foreach ($request->input('employeeTasks') as $employeeTaskData) {
-                // سجل بيانات كل مهمة موظف للتحقق
-                Log::info('SanitationFacilityTaskController@update - Employee Task Data:', $employeeTaskData);
+                if (isset($employeeTaskData['employee_id']) && isset($employeeTaskData['employee_rating'])) {
+                    Log::info('SanitationFacilityTaskController@update - Employee Task Data:', $employeeTaskData);
+                    $sanitationFacilityTask->employeeTasks()->create([
+                        'employee_id' => $employeeTaskData['employee_id'],
+                        'employee_rating' => $employeeTaskData['employee_rating'],
+                    ]);
+                    $newAssignedEmployeeIds[] = $employeeTaskData['employee_id'];
 
-                $sanitationFacilityTask->employeeTasks()->create([
-                    'employee_id' => $employeeTaskData['employee_id'],
-                    'employee_rating' => $employeeTaskData['employee_rating'],
-                ]);
-                $newAssignedEmployeeIds[] = $employeeTaskData['employee_id'];
-
-                // إرسال إشعار للموظف المعين (إذا كان لديه حساب مستخدم)
-                // إذا كان الموظف جديدًا على المهمة أو تم تحديث المهمة
-                if (!in_array($employeeTaskData['employee_id'], $oldAssignedEmployeeIds)) {
-                    $assignedUser = User::where('employee_id', $employeeTaskData['employee_id'])->first();
-                    if ($assignedUser) {
-                        $assignedUser->notify(new TaskUpdatedNotification($sanitationFacilityTask, 'assigned', 'تم تعيين مهمة جديدة لك أو تحديثها: ' . $sanitationFacilityTask->facility_name . ' - ' . $sanitationFacilityTask->task_type));
+                    // إرسال إشعار للموظف المعين
+                    // إذا كان الموظف جديدًا على المهمة أو تم تحديث المهمة بشكل عام
+                    if (!in_array($employeeTaskData['employee_id'], $oldAssignedEmployeeIds)) {
+                        $assignedUser = User::where('employee_id', $employeeTaskData['employee_id'])->first();
+                        if ($assignedUser) {
+                            $assignedUser->notify(new TaskUpdatedNotification($sanitationFacilityTask, 'assigned', 'تم تعيين مهمة جديدة لك أو تحديثها: ' . $sanitationFacilityTask->facility_name . ' - ' . $sanitationFacilityTask->task_type));
+                        }
                     }
                 }
             }
@@ -321,9 +316,11 @@ class SanitationFacilityTaskController extends Controller
             'resources_used.*.quantity' => 'required_with:resources_used|numeric|min:0',
             'resources_used.*.unit' => 'required_with:resources_used|string|max:255',
             'before_images' => 'nullable|array',
-            'before_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB
+            'before_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB لكل صورة
             'after_images' => 'nullable|array',
-            'after_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB
+            'after_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB لكل صورة
+            'remove_before_images' => 'nullable|boolean', // حقل جديد للإشارة إلى حذف الصور
+            'remove_after_images' => 'nullable|boolean',   // حقل جديد للإشارة إلى حذف الصور
             'seats_count' => 'nullable|integer|min:0',
             'sinks_count' => 'nullable|integer|min:0',
             'mixers_count' => 'nullable|integer|min:0',
