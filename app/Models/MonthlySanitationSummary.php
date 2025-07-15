@@ -5,38 +5,36 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class MonthlySanitationSummary extends Model
+class SanitationTask extends Model
 {
-    // تعيين اسم الجدول يدوياً إذا كان يختلف عن convention (monthly_sanitation_summaries)
-    protected $table = 'monthly_sanitation_summary';
+    // تعيين اسم الجدول يدوياً
+    protected $table = 'sanitation_tasks';
 
     // الأعمدة القابلة للتعبئة الجماعية
     protected $fillable = [
-        'id', // يجب أن يكون قابلاً للتعبئة إذا كان مخصصاً
-        'month',
+        'date', // تاريخ المهمة الفردية
         'facility_name',
         'task_type',
         'unit_id',
-        'total_seats',
-        'total_mirrors',
-        'total_mixers',
-        'total_doors',
-        'total_sinks',
-        'total_toilets',
-        'total_tasks',
+        'seats_count',    // عدد المقاعد لهذه المهمة
+        'mirrors_count',  // عدد المرايا لهذه المهمة
+        'mixers_count',   // عدد الخلاطات لهذه المهمة
+        'doors_count',    // عدد الأبواب لهذه المهمة
+        'sinks_count',    // عدد الأحواض لهذه المهمة
+        'toilets_count',  // عدد المراحيض لهذه المهمة
+        'notes',          // ملاحظات خاصة بهذه المهمة
     ];
 
-    // تحديد المفتاح الأساسي كـ string إذا لم يكن auto-incrementing integer
-    protected $keyType = 'string';
-    public $incrementing = false;
+    // تحديد المفتاح الأساسي كـ integer (افتراضي)
+    // إذا كنت تستخدم UUIDs، يجب تعيين protected $keyType = 'string'; public $incrementing = false;
 
-    // تحويل أنواع البيانات (إذا كان لديك أي أعمدة JSON أو تواريخ تحتاج لتحويل خاص)
+    // تحويل أنواع البيانات
     protected $casts = [
-        // 'month' => 'date:Y-m', // يمكن استخدامه لتحويل الشهر إلى كائن تاريخ
+        'date' => 'date', // تحويل حقل التاريخ إلى كائن Carbon
     ];
 
     /**
-     * العلاقة: الملخص الشهري ينتمي إلى وحدة معينة.
+     * العلاقة: المهمة الصحية تنتمي إلى وحدة معينة.
      *
      * @return BelongsTo
      */

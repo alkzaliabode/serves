@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقرير المنشآت الصحية الشهري - طباعة</title>
+    <title>تقرير المنشآت الصحية - طباعة</title>
     <style>
         @page { size: A4 landscape; margin: 10mm; } /* تنسيق أفقي للحصول على مساحة أكبر */
         body {
@@ -190,14 +190,21 @@
                  class="logo"
                  onerror="this.onerror=null; this.src='https://placehold.co/60x60/CCCCCC/666666?text=شعار1';"
                  title="إذا لم يظهر الشعار الأول، تأكد من مساره في مجلد public/images">
-
-            {{-- محتوى النص في المنتصف --}}
+ {{-- محتوى النص في المنتصف --}}
             <div class="text-content">
-                <div class="title">تقرير المنشآت الصحية الشهري</div>
-                <div class="subtitle">ملخصات الأداء الشهرية</div>
+                <div class="title">تقريرالمنشآت الصحية التفصيلي</div>
+                <div class="subtitle">قسم مدينة الإمام الحسين (ع) للزائرين</div>
+                <div class="subtitle">البيانات بتاريخ: {{ now()->translatedFormat('d F Y') }}</div>
                 <div class="filters-display">
-                    @if(!empty($filters['month_display']))
-                        <span>الشهر: {{ $filters['month_display'] }}</span>
+                    @if (!empty($filters['date']))
+                        <span>التاريخ: {{ \Carbon\Carbon::parse($filters['date'])->translatedFormat('d F Y') }}</span>
+                    @endif
+                    @if(!empty($filters['start_date_display']) && !empty($filters['end_date_display']))
+                        <span> | الفترة: من {{ Carbon\Carbon::parse($filters['start_date_display'])->format('d/m/Y') }} إلى {{ Carbon\Carbon::parse($filters['end_date_display'])->format('d/m/Y') }}</span>
+                    @elseif(!empty($filters['start_date_display']))
+                        <span> | من تاريخ: {{ Carbon\Carbon::parse($filters['start_date_display'])->format('d/m/Y') }}</span>
+                    @elseif(!empty($filters['end_date_display']))
+                        <span> | إلى تاريخ: {{ Carbon\Carbon::parse($filters['end_date_display'])->format('d/m/Y') }}</span>
                     @endif
                     @if(!empty($filters['facility_name']))
                         <span> | اسم المنشأة: {{ $filters['facility_name'] }}</span>
@@ -208,10 +215,9 @@
                     @if(!empty($filters['unit_name']))
                         <span> | الوحدة: {{ $filters['unit_name'] }}</span>
                     @endif
-                    @if(empty($filters['month_display']) && empty($filters['facility_name']) && empty($filters['task_type']) && empty($filters['unit_name']))
-                        <span>(جميع الفلاتر غير مطبقة)</span>
+                    @if(!empty($filters['search']))
+                        <span> | بحث: "{{ $filters['search'] }}"</span>
                     @endif
-                    <span> | تاريخ الطباعة: {{ now()->format('Y-m-d H:i') }}</span>
                 </div>
             </div>
 
@@ -223,48 +229,49 @@
                  title="إذا لم يظهر الشعار الثاني، تأكد من مساره في مجلد public/images">
         </div>
 
-        @if($monthlySummaries->isEmpty())
+        @if($tasks->isEmpty()) {{-- تم التعديل هنا --}}
             <div style="text-align: center; padding: 20px; border: 1px solid #ccc; background-color: #f9f9f9;">
-                لا توجد بيانات لتقرير المنشآت الصحية الشهرية بهذه المعايير.
+                لا توجد مهام للمنشآت الصحية لعرضها بهذه المعايير. {{-- تم تعديل النص --}}
             </div>
         @else
             <table>
                 <thead>
                     <tr>
-                        <th>الشهر</th>
+                        <th>التاريخ</th> {{-- تم التعديل --}}
                         <th>اسم المنشأة</th>
                         <th>نوع المهمة</th>
                         <th>الوحدة</th>
-                        <th>إجمالي المقاعد</th>
-                        <th>إجمالي المرايا</th>
-                        <th>إجمالي الخلاطات</th>
-                        <th>إجمالي الأبواب</th>
-                        <th>إجمالي الأحواض</th>
-                        <th>إجمالي المراحيض</th>
-                        <th>إجمالي المهام</th>
+                        <th>المقاعد</th> {{-- تم التعديل --}}
+                        <th>المرايا</th> {{-- تم التعديل --}}
+                        <th>الخلاطات</th> {{-- تم التعديل --}}
+                        <th>الأبواب</th> {{-- تم التعديل --}}
+                        <th>المغاسل</th> {{-- تم التعديل من الأحواض --}}
+                        <th>الحمامات</th> {{-- تم التعديل من المراحيض --}}
+                        <th>ملاحظات</th> {{-- تم التعديل --}}
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($monthlySummaries as $summary)
+                    @foreach($tasks as $task) {{-- تم التعديل هنا --}}
                         <tr>
-                            <td>{{ Carbon\Carbon::parse($summary->month)->format('Y / m') }}</td>
-                            <td>{{ $summary->facility_name }}</td>
-                            <td>{{ $summary->task_type }}</td>
-                            <td>{{ $summary->unit->name ?? 'N/A' }}</td>
-                            <td>{{ $summary->total_seats }}</td>
-                            <td>{{ $summary->total_mirrors }}</td>
-                            <td>{{ $summary->total_mixers }}</td>
-                            <td>{{ $summary->total_doors }}</td>
-                            <td>{{ $summary->total_sinks }}</td>
-                            <td>{{ $summary->total_toilets }}</td>
-                            <td>{{ $summary->total_tasks }}</td>
+                            {{-- تم التعديل هنا لعرض تاريخ المهمة بالصيغة الرقمية --}}
+                            <td>{{ Carbon\Carbon::parse($task->date)->format('d/m/Y') }}</td>
+                            <td>{{ $task->facility_name }}</td>
+                            <td>{{ $task->task_type }}</td>
+                            <td>{{ $task->unit->name ?? 'N/A' }}</td>
+                            <td>{{ $task->seats_count }}</td> {{-- تم التعديل هنا --}}
+                            <td>{{ $task->mirrors_count }}</td> {{-- تم التعديل هنا --}}
+                            <td>{{ $task->mixers_count }}</td> {{-- تم التعديل هنا --}}
+                            <td>{{ $task->doors_count }}</td> {{-- تم التعديل هنا --}}
+                            <td>{{ $task->sinks_count }}</td> {{-- تم التعديل هنا (المغاسل) --}}
+                            <td>{{ $task->toilets_count }}</td> {{-- تم التعديل هنا (الحمامات) --}}
+                            <td>{{ $task->notes }}</td> {{-- تم التعديل هنا --}}
                         </tr>
                     @endforeach
                 </tbody>
             </table>
 
             <div class="summary-section">
-                <h4>ملخص إحصائي للفترة المحددة (المنشآت الصحية)</h4>
+                <h4>ملخص إحصائي للفترة المحددة من صيانة وادامة  (المنشآت الصحية)</h4>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <span>إجمالي المقاعد:</span> <strong>{{ $totalSeats }}</strong>
@@ -279,10 +286,10 @@
                         <span>إجمالي الأبواب:</span> <strong>{{ $totalDoors }}</strong>
                     </div>
                     <div class="summary-item">
-                        <span>إجمالي الأحواض:</span> <strong>{{ $totalSinks }}</strong>
+                        <span>إجمالي المغاسل:</span> <strong>{{ $totalSinks }}</strong> {{-- تم التعديل من الأحواض --}}
                     </div>
                     <div class="summary-item">
-                        <span>إجمالي المراحيض:</span> <strong>{{ $totalToilets }}</strong>
+                        <span>إجمالي الحمامات:</span> <strong>{{ $totalToilets }}</strong> {{-- تم التعديل من المراحيض --}}
                     </div>
                     <div class="summary-item">
                         <span>إجمالي المهام المنجزة:</span> <strong>{{ $totalTasks }}</strong>
@@ -292,7 +299,7 @@
         @endif
 
         <div class="footer">
-            &copy; {{ date('Y') }} نظام إدارة المهام. جميع الحقوق محفوظة.
+            &copy; {{ date('Y') }} نظام إدارة المهام. جميع الحقوق محفوظة للشعبة الخدمية .
         </div>
     </div>
 

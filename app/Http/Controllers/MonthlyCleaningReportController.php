@@ -68,7 +68,7 @@ class MonthlyCleaningReportController extends Controller
             'mats_count', 'pillows_count', 'fans_count', 'windows_count',
             'carpets_count', 'blankets_count', 'beds_count', 'beneficiaries_count',
             'filled_trams_count', 'carpets_laid_count', 'large_containers_count',
-            'small_containers_count', 'working_hours'
+            'small_containers_count', 'working_hours', 'external_partitions_count' // ✅ إضافة external_partitions_count
         ];
 
         if (!in_array($sortBy, $allowedSortColumns)) {
@@ -84,12 +84,12 @@ class MonthlyCleaningReportController extends Controller
 
         // جلب خيارات الفلاتر المتاحة من GeneralCleaningTask
         $availableMonths = GeneralCleaningTask::selectRaw("DATE_FORMAT(date, '%Y-%m') as month_year")
-                                            ->distinct()
-                                            ->orderBy('month_year', 'desc')
-                                            ->pluck('month_year')
-                                            ->mapWithKeys(function ($item) {
-                                                return [$item => Carbon::parse($item)->translatedFormat('F Y')];
-                                            })->toArray();
+                                             ->distinct()
+                                             ->orderBy('month_year', 'desc')
+                                             ->pluck('month_year')
+                                             ->mapWithKeys(function ($item) {
+                                                 return [$item => Carbon::parse($item)->translatedFormat('F Y')];
+                                             })->toArray();
 
         $availableShifts = GeneralCleaningTask::distinct()->pluck('shift')->filter()->toArray();
         $availableLocations = GeneralCleaningTask::distinct()->pluck('location')->toArray();
@@ -162,6 +162,7 @@ class MonthlyCleaningReportController extends Controller
             'large_containers_count' => 'nullable|integer|min:0',
             'small_containers_count' => 'nullable|integer|min:0',
             'maintenance_details' => 'nullable|string',
+            'external_partitions_count' => 'nullable|integer|min:0', // ✅ إضافة هذا الحقل لقواعد التحقق
             'before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // لتحميل الصور
             'after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
@@ -239,6 +240,7 @@ class MonthlyCleaningReportController extends Controller
             'large_containers_count' => 'nullable|integer|min:0',
             'small_containers_count' => 'nullable|integer|min:0',
             'maintenance_details' => 'nullable|string',
+            'external_partitions_count' => 'nullable|integer|min:0', // ✅ إضافة هذا الحقل لقواعد التحقق
             'before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'existing_before_images' => 'nullable|array', // للتعامل مع حذف الصور الموجودة
@@ -363,7 +365,7 @@ class MonthlyCleaningReportController extends Controller
                 'المنادر', 'الوسائد', 'المراوح', 'النوافذ', 'السجاد',
                 'البطانيات', 'الأسرة', 'المستفيدون', 'الترامز', 'السجاد المفروش',
                 'حاويات كبيرة', 'حاويات صغيرة', 'ساعات العمل', 'الملاحظات', 'تفاصيل الصيانة',
-                'حالة التحقق', 'الموارد المستخدمة', 'التقدم', 'قيمة النتيجة'
+                'حالة التحقق', 'الموارد المستخدمة', 'التقدم', 'قيمة النتيجة', 'القواطع الخارجية المدامة' // ✅ إضافة رأس العمود هنا
             ]);
 
             foreach ($dataToExport as $row) {
@@ -393,6 +395,7 @@ class MonthlyCleaningReportController extends Controller
                     is_array($row->resources_used) ? implode(', ', $row->resources_used) : $row->resources_used,
                     $row->progress,
                     $row->result_value,
+                    $row->external_partitions_count, // ✅ إضافة قيمة الحقل هنا
                 ]);
             }
             fclose($file);
@@ -458,21 +461,21 @@ class MonthlyCleaningReportController extends Controller
         $totalLargeContainers = $tasks->sum('large_containers_count');
         $totalSmallContainers = $tasks->sum('small_containers_count');
         $totalWorkingHours = $tasks->sum('working_hours');
-        // إذا كان لديك حقل 'total_external_partitions' في نموذج GeneralCleaningTask
-        $totalExternalPartitions = $tasks->sum('total_external_partitions');
+        // ✅ التصحيح: يجب أن يكون external_partitions_count وليس total_external_partitions
+        $totalExternalPartitions = $tasks->sum('external_partitions_count');
 
 
         // جلب خيارات الفلاتر المتاحة (نفسها المطلوبة في العرض)
         $availableMonths = GeneralCleaningTask::selectRaw("DATE_FORMAT(date, '%Y-%m') as month_year")
-                                                        ->distinct()
-                                                        ->orderBy('month_year', 'desc')
-                                                        ->get()
-                                                        ->mapWithKeys(function ($item) {
-                                                            $monthValue = Carbon::parse($item->month_year)->format('Y-m');
-                                                            $monthLabel = Carbon::parse($item->month_year)->translatedFormat('F Y');
-                                                            return [$monthValue => $monthLabel];
-                                                        })
-                                                        ->toArray();
+                                             ->distinct()
+                                             ->orderBy('month_year', 'desc')
+                                             ->get()
+                                             ->mapWithKeys(function ($item) {
+                                                 $monthValue = Carbon::parse($item->month_year)->format('Y-m');
+                                                 $monthLabel = Carbon::parse($item->month_year)->translatedFormat('F Y');
+                                                 return [$monthValue => $monthLabel];
+                                             })
+                                             ->toArray();
         $availableLocations = GeneralCleaningTask::select('location')->distinct()->pluck('location')->toArray();
         $availableTaskTypes = GeneralCleaningTask::select('task_type')->distinct()->pluck('task_type')->toArray();
         $availableShifts = GeneralCleaningTask::distinct()->pluck('shift')->filter()->toArray(); // جلب الشفتات المتاحة

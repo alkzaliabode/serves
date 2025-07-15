@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\GeneralCleaningTask;
-use App\Models\Unit;      // افتراض أن لديك نموذج Unit
-use App\Models\UnitGoal;  // افتراض أن لديك نموذج UnitGoal
-use App\Models\Employee;  // افتراض أن لديك نموذج Employee
-use App\Models\User;      // استيراد نموذج المستخدم لإرسال الإشعارات
+use App\Models\Unit;        // افتراض أن لديك نموذج Unit
+use App\Models\UnitGoal;    // افتراض أن لديك نموذج UnitGoal
+use App\Models\Employee;    // افتراض أن لديك نموذج Employee
+use App\Models\User;        // استيراد نموذج المستخدم لإرسال الإشعارات
 use App\Models\EmployeeTask; // افتراض أن لديك نموذج EmployeeTask للجدول المحوري
 use App\Notifications\TaskUpdatedNotification; // استيراد الإشعار المخصص
 use Illuminate\Http\Request;
@@ -20,7 +20,10 @@ class GeneralCleaningTaskController extends Controller
     /**
      * قم بتهيئة المتحكم بسياسات الأذونات.
      */
-   
+    // public function __construct()
+    // {
+    //     $this->authorizeResource(GeneralCleaningTask::class, 'general_cleaning_task');
+    // }
 
     /**
      * عرض قائمة بالموارد.
@@ -123,7 +126,11 @@ class GeneralCleaningTaskController extends Controller
         $goals = UnitGoal::all();
         $employees = Employee::orderBy('name')->get();
 
-        return view('general_cleaning_tasks.create', compact('units', 'goals', 'employees'));
+        // ✅ جلب ID لوحدة "النظافة العامة"
+        $generalCleaningUnit = Unit::where('name', 'النظافة العامة')->first();
+        $generalCleaningUnitId = $generalCleaningUnit ? $generalCleaningUnit->id : null;
+
+        return view('general_cleaning_tasks.create', compact('units', 'goals', 'employees', 'generalCleaningUnitId'));
     }
 
     /**
@@ -136,6 +143,17 @@ class GeneralCleaningTaskController extends Controller
         $validatedData = $request->validate($this->rules());
 
         try {
+            // ✅ جلب ID لوحدة "النظافة العامة" تلقائيًا
+            $generalCleaningUnit = Unit::where('name', 'النظافة العامة')->first();
+            $unitId = $generalCleaningUnit ? $generalCleaningUnit->id : null;
+
+            if (is_null($unitId)) {
+                // يمكنك التعامل مع هذه الحالة إذا لم يتم العثور على وحدة "النظافة العامة"
+                // مثلاً، رمي استثناء أو إعادة توجيه مع رسالة خطأ
+                Log::error('Unit "النظافة العامة" not found for General Cleaning Task.');
+                return redirect()->back()->with('error', 'حدث خطأ: لم يتم العثور على وحدة النظافة العامة.')->withInput();
+            }
+
             // معالجة صور ما قبل التنفيذ
             $beforeImagePaths = $this->handleImageUpload($request, 'before_images', 'general_cleaning_tasks/before');
 
@@ -147,7 +165,7 @@ class GeneralCleaningTaskController extends Controller
 
             $task = GeneralCleaningTask::create(array_merge($validatedData, [
                 'created_by' => Auth::id(),
-                'unit_id' => $request->input('unit_id'), // استخدم unit_id من النموذج مباشرة
+                'unit_id' => $unitId, // ✅ استخدام unit_id الذي تم جلبه تلقائيًا
                 'before_images' => $beforeImagePaths,
                 'after_images' => $afterImagePaths,
                 'resources_used' => $resourcesUsed,
@@ -205,7 +223,8 @@ class GeneralCleaningTaskController extends Controller
     {
         // $this->authorize('update', $generalCleaningTask); // يتم تغطيتها بـ authorizeResource
 
-        $validatedData = $request->validate($this->rules());
+        // ✅ لا نتحقق من unit_id هنا لأنه لا يتغير في التحديثات
+        $validatedData = $request->validate($this->rules($generalCleaningTask)); // تمرير المهمة للتحقق من القواعد
 
         try {
             // معالجة صور ما قبل التنفيذ
@@ -218,7 +237,7 @@ class GeneralCleaningTaskController extends Controller
             $resourcesUsed = $request->input('resources_used') ?: [];
 
             $generalCleaningTask->update(array_merge($validatedData, [
-                'edited_by' => Auth::id(), // تسجيل المستخدم الذي قام بالتعديل
+                'updated_by' => Auth::id(), // تسجيل المستخدم الذي قام بالتعديل
                 'before_images' => $beforeImagePaths,
                 'after_images' => $afterImagePaths,
                 'resources_used' => $resourcesUsed,
@@ -269,7 +288,7 @@ class GeneralCleaningTaskController extends Controller
             'date' => 'required|date',
             'shift' => ['required', Rule::in(['صباحي', 'مسائي', 'ليلي'])],
             'status' => ['required', Rule::in(['مكتمل', 'قيد التنفيذ', 'ملغى'])],
-            'unit_id' => 'required|exists:units,id', // التأكد من وجود الوحدة
+            // 'unit_id' => 'required|exists:units,id', // ✅ تم إزالة هذه القاعدة لأن unit_id يتم تعيينه تلقائيًا
             'related_goal_id' => 'required|exists:unit_goals,id',
             'task_type' => ['required', Rule::in(['إدامة', 'صيانة'])],
             'location' => 'required|string|max:255',

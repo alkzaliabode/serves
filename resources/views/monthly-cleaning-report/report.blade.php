@@ -229,7 +229,7 @@
                         <span>بحث: "{{ $filters['searchQuery'] }}"</span>
                     @endif
                     @if(empty($filters['date']) && empty($filters['month_display']) && empty($filters['shift']) && empty($filters['location']) && empty($filters['task_type']) && empty($filters['unit_name']) && empty($filters['searchQuery']))
-                        <span>(جميع الفلاتر غير مطبقة)</span>
+                      
                     @endif
                 </div>
             </div>

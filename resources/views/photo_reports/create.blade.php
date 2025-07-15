@@ -1,5 +1,3 @@
-{{-- resources/views/photo_reports/create.blade.php --}}
-
 @extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
 @section('title', 'إنشاء تقرير مصور جديد')
@@ -398,8 +396,8 @@
                                 <label for="status" class="form-label">الحالة</label>
                                 <select class="form-select" id="status" name="status" required>
                                     <option value="قيد التنفيذ" {{ old('status') == 'قيد التنفيذ' ? 'selected' : '' }}>قيد التنفيذ</option>
-                                    <option value="مكتملة" {{ old('status') == 'مكتملة' ? 'selected' : '' }}>مكتملة</option>
-                                    <option value="معلقة" {{ old('status') == 'معلقة' ? 'selected' : '' }}>معلقة</option>
+                                    <option value="مكتمل" {{ old('status') == 'مكتمل' ? 'selected' : '' }}>مكتمل</option> {{-- تم التعديل هنا --}}
+                                    <option value="ملغى" {{ old('status') == 'ملغى' ? 'selected' : '' }}>ملغى</option> {{-- تم التعديل هنا --}}
                                 </select>
                             </div>
                             <div class="mb-4">
@@ -477,4 +475,4 @@
             handleImagePreview(this, 'after-images-preview');
         });
     </script>
-@endsection
+@endsect

@@ -30,6 +30,8 @@ return new class extends Migration
             $table->integer('total_large_containers')->default(0);
             $table->integer('total_small_containers')->default(0);
             $table->integer('total_tasks')->default(0); // ✅ إضافة عمود total_tasks بشكل صحيح
+            $table->float('total_working_hours')->default(0); // ✅ تم إضافة هذا العمود
+            $table->integer('total_external_partitions')->default(0); // ✅ هذا العمود كان موجودًا بالفعل
 
             // يمكن إضافة مفتاح فريد مركب لضمان عدم وجود تكرار للملخصات
             // $table->unique(['month', 'location', 'task_type', 'unit_id'], 'monthly_general_cleaning_unique');

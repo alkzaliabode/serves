@@ -59,6 +59,7 @@ return new class extends Migration
             $table->integer('carpets_laid_count')->default(0); // عدد السجاد الذي تم فرشه
             $table->integer('large_containers_count')->default(0); // عدد الحاويات الكبيرة
             $table->integer('small_containers_count')->default(0); // عدد الحاويات الصغيرة
+            $table->integer('external_partitions_count')->default(0); // ✅ تم إزالة after() هنا
 
             $table->timestamps(); // أعمدة created_at و updated_at
         });

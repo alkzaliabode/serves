@@ -10,7 +10,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-
 use App\Models\User;
 use App\Models\Unit;
 use App\Models\UnitGoal;
@@ -46,17 +45,16 @@ class SanitationFacilityTask extends Model
         'working_hours',
         'created_by',
         'updated_by',
-        // ✅ يجب أن تكون قبل وبعد الصور قابلة للتعبئة الجماعية أيضًا إذا كنت تقوم بتخزينها مباشرة
-        // ومع ذلك، بما أنك تستخدم TaskImageReport، فلن تحتاجها هنا إذا كانت البيانات لا تُخزن مباشرة
-        // في هذا النموذج، بل عبر علاقة
+        // ✅ إضافة هذه الحقول للسماح بتعبئة بيانات الصور مؤقتًا قبل معالجتها
+        'before_images',
+        'after_images',
     ];
 
     // تحويل أنواع البيانات عند القراءة والكتابة
     protected $casts = [
         'resources_used' => 'array',
         'date' => 'date',
-        // ✅ إضافة هذه الأسطر لتحويل `before_images` و `after_images` إلى مصفوفات
-        // هذا أمر بالغ الأهمية لأنك تحاول عمل foreach عليها في Blade
+        // ✅ تحويل `before_images` و `after_images` إلى مصفوفات
         'before_images' => 'array',
         'after_images' => 'array',
     ];
@@ -108,39 +106,29 @@ class SanitationFacilityTask extends Model
     public function imageReport(): HasOne
     {
         return $this->hasOne(TaskImageReport::class, 'task_id', 'id')
-                     ->where('unit_type', 'sanitation');
+                    ->where('unit_type', 'sanitation');
     }
 
     /**
      * يقوم بإرجاع عناوين URL للصور "قبل" المهمة من تقرير الصور المرتبط (Eager Loaded).
+     * يستخدم هذا كـ accessor لـ $task->before_images
      *
      * @return array
      */
-    public function getBeforeImagesAttribute(): array // ✅ تم تغيير getNameUrlsAttribute إلى getBeforeImagesAttribute
+    public function getBeforeImagesAttribute(): array
     {
-        // إذا كنت تخزن المسارات مباشرة في هذا الموديل (SanitationFacilityTask)
-        // فستحتاج إلى التأكد من أن حقل `before_images` في قاعدة البيانات
-        // يخزن كـ JSON وتحويله باستخدام $casts
-        // وإلا، إذا كانت الصور تأتي من `TaskImageReport`، فأنت بحاجة إلى جلبها من هناك
-        // بناءً على رسالة الخطأ الأصلية، يبدو أن `before_images` يتم الوصول إليها مباشرة على
-        // SanitationFacilityTask وليس من خلال علاقة أو accessor مخصص.
-        // لذا، إذا كان لديك عمود 'before_images' في جدول sanitation_facility_tasks
-        // ولديه مسارات JSON، فإن $casts ستعالجه.
-        // ولكن بناءً على الكود الخاص بك، يبدو أنك تستخدم `TaskImageReport` لتخزين الصور.
-        //
-        // إذا كنت تستخدم `TaskImageReport`، يجب أن تستدعي العلاقة `imageReport`
-        // ومن ثم الـ accessor الخاص بـ `TaskImageReport`، كالتالي:
-        return optional($this->imageReport)->before_images ?? []; // ✅ تأكد من أن TaskImageReport لديه accessor اسمه `before_images` أو أن هذا هو اسم العمود الذي يتم قراءته.
+        return optional($this->imageReport)->before_images ?? [];
     }
 
     /**
      * يقوم بإرجاع عناوين URL للصور "بعد" المهمة من تقرير الصور المرتبط (Eager Loaded).
+     * يستخدم هذا كـ accessor لـ $task->after_images
      *
      * @return array
      */
-    public function getAfterImagesAttribute(): array // ✅ تم تغيير getNameUrlsAttribute إلى getAfterImagesAttribute
+    public function getAfterImagesAttribute(): array
     {
-        return optional($this->imageReport)->after_images ?? []; // ✅ تأكد من أن TaskImageReport لديه accessor اسمه `after_images` أو أن هذا هو اسم العمود الذي يتم قراءته.
+        return optional($this->imageReport)->after_images ?? [];
     }
 
     /**
@@ -166,6 +154,8 @@ class SanitationFacilityTask extends Model
             if ($task->status === 'مكتمل' && $task->unit_id && $task->date) {
                 ActualResult::recalculateForUnitAndDate($task->unit_id, $task->date);
             }
+            // ✅ استدعاء إنشاء أو تحديث التقرير المصور بعد الإنشاء
+            self::handleTaskImageReport($task);
         });
 
         static::updated(function ($task) {
@@ -173,6 +163,8 @@ class SanitationFacilityTask extends Model
             if ($task->isDirty('status') && $task->status === 'مكتمل') {
                 ActualResult::recalculateForUnitAndDate($task->unit_id, $task->date);
             }
+            // ✅ استدعاء تحديث التقرير المصور عند التعديل
+            self::handleTaskImageReport($task);
         });
 
         static::deleted(function ($task) {
@@ -186,6 +178,9 @@ class SanitationFacilityTask extends Model
 
     /**
      * يعيد حساب الملخصات الشهرية لوحدة المنشآت الصحية.
+     *
+     * @param SanitationFacilityTask $task
+     * @return void
      */
     protected static function recalculateMonthlySummary(self $task): void
     {
@@ -241,7 +236,60 @@ class SanitationFacilityTask extends Model
     }
 
     /**
+     * يقوم بإنشاء أو تحديث تقرير الصور المرتبط بمهام المنشآت الصحية.
+     *
+     * @param SanitationFacilityTask $task
+     * @return void
+     */
+    private static function handleTaskImageReport(self $task): void
+    {
+        // افترض أن 'before_images' و 'after_images' يتم تمريرها إلى النموذج
+        // كجزء من البيانات عند الإنشاء أو التحديث (مثل Request::all())
+        $beforeImages = $task->getAttribute('before_images');
+        $afterImages = $task->getAttribute('after_images');
+
+        // إذا لم تكن هناك صور "قبل" أو "بعد" وتم إرسالها (أو كانت فارغة)،
+        // تحقق مما إذا كان هناك تقرير موجود مسبقًا بدون صور واحذفه.
+        if (empty($beforeImages) && empty($afterImages)) {
+            $existingReport = TaskImageReport::where('task_id', $task->id)
+                                             ->where('unit_type', 'sanitation')
+                                             ->first();
+            if ($existingReport && empty($existingReport->before_images) && empty($existingReport->after_images)) {
+                $existingReport->delete();
+                Log::info("Deleted empty Task Image Report for SanitationFacilityTask ID: {$task->id}");
+            }
+            return; // لا يوجد صور للتعامل معها، لذا ننهي الدالة
+        }
+
+        // إعداد البيانات لإنشاء/تحديث TaskImageReport
+        $reportData = [
+            'task_id' => $task->id,
+            'unit_type' => 'sanitation', // تحديد نوع الوحدة كـ 'sanitation'
+            'date' => $task->date,
+            'location' => $task->facility_name, // استخدام facility_name كـ location في التقرير
+            'task_type' => $task->task_type,
+            'status' => $task->status,
+            'notes' => $task->notes,
+            'before_images' => $beforeImages,
+            'after_images' => $afterImages,
+        ];
+
+        // إنشاء أو تحديث TaskImageReport
+        TaskImageReport::updateOrCreate(
+            [
+                'task_id' => $task->id,
+                'unit_type' => 'sanitation',
+            ],
+            $reportData
+        );
+        Log::info("Task Image Report created/updated for SanitationFacilityTask ID: {$task->id}");
+    }
+
+    /**
      * يقوم بتنظيف الصور المرتبطة بمهام المنشآت الصحية عند حذفها.
+     *
+     * @param SanitationFacilityTask $task
+     * @return void
      */
     protected static function cleanupTaskImages(self $task): void
     {
@@ -250,8 +298,8 @@ class SanitationFacilityTask extends Model
                                  ->first();
 
         if ($report) {
-            $report->deleteRelatedImages();
-            $report->delete();
+            $report->deleteRelatedImages(); // دالة في TaskImageReport لحذف ملفات الصور من التخزين
+            $report->delete(); // حذف سجل التقرير من قاعدة البيانات
             Log::info("Cleaned up image report for SanitationFacilityTask ID: {$task->id}");
         }
     }

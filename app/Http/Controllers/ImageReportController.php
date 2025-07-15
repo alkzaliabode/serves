@@ -8,6 +8,7 @@ use App\Models\Unit; // تأكد من استيراد نموذج الوحدة
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon; // استيراد Carbon للتعامل مع التواريخ
 use Barryvdh\DomPDF\Facade\Pdf; // استيراد الواجهة لـ DomPDF
+use Illuminate\Validation\Rule; // ✅ استيراد Rule لاستخدامه في قواعد التحقق
 
 class ImageReportController extends Controller
 {
@@ -68,14 +69,14 @@ class ImageReportController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([ // ✅ استخدام متغير لتخزين البيانات المتحقق منها
             'report_title' => 'required|string|max:255',
             'date' => 'required|date',
             'unit_type' => 'required|string|max:255',
             'location' => 'required|string|max:255',
             'task_id' => 'nullable|string|max:255',
             'task_type' => 'nullable|string|max:255',
-            'status' => 'required|string|in:completed,pending,cancelled',
+            'status' => ['required', 'string', Rule::in(['مكتمل', 'قيد التنفيذ', 'ملغى'])],
             'notes' => 'nullable|string',
             'before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -97,17 +98,20 @@ class ImageReportController extends Controller
             }
         }
 
+        // ✅ إنشاء مصفوفة البيانات المراد حفظها، مع استبعاد الحقول غير الموجودة في قاعدة البيانات
         TaskImageReport::create([
-            'report_title' => $request->input('report_title'),
-            'date' => $request->input('date'),
-            'unit_type' => $request->input('unit_type'),
-            'location' => $request->input('location'),
-            'task_id' => $request->input('task_id'),
-            'task_type' => $request->input('task_type'),
-            'status' => $request->input('status'),
-            'notes' => $request->input('notes'),
-            'before_images' => $beforeImagePaths, // سيتم تخزينها كـ JSON تلقائيًا إذا كان الحقل في النموذج مصفوفة
-            'after_images' => $afterImagePaths,   // سيتم تخزينها كـ JSON تلقائيًا
+            'report_title' => $validatedData['report_title'],
+            'date' => $validatedData['date'],
+            'unit_type' => $validatedData['unit_type'],
+            'location' => $validatedData['location'],
+            'task_id' => $validatedData['task_id'],
+            'task_type' => $validatedData['task_type'],
+            'status' => $validatedData['status'],
+            'notes' => $validatedData['notes'],
+            'before_images' => $beforeImagePaths,
+            'after_images' => $afterImagePaths,
+            // 'before_images_count' و 'after_images_count' ليسا أعمدة في قاعدة البيانات
+            // لذلك لا يجب تمريرهما هنا.
         ]);
 
         return redirect()->route('photo_reports.index')->with('success', 'تم إنشاء التقرير المصور بنجاح.');
@@ -169,14 +173,14 @@ class ImageReportController extends Controller
      */
     public function update(Request $request, TaskImageReport $photo_report)
     {
-        $request->validate([
+        $validatedData = $request->validate([ // ✅ استخدام متغير لتخزين البيانات المتحقق منها
             'report_title' => 'required|string|max:255',
             'date' => 'required|date',
             'unit_type' => 'required|string|max:255',
             'location' => 'required|string|max:255',
             'task_id' => 'nullable|string|max:255',
             'task_type' => 'nullable|string|max:255',
-            'status' => 'required|string|in:completed,pending,cancelled',
+            'status' => ['required', 'string', Rule::in(['مكتمل', 'قيد التنفيذ', 'ملغى'])],
             'notes' => 'nullable|string',
             'new_before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // للصور الجديدة
             'new_after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',   // للصور الجديدة
@@ -196,8 +200,8 @@ class ImageReportController extends Controller
             $currentAfterImages = json_decode($currentAfterImages, true) ?? [];
         }
 
-      $deletedBeforeImages = json_decode($request->input('deleted_before_images', '[]'), true) ?? [];
-$deletedAfterImages = json_decode($request->input('deleted_after_images', '[]'), true) ?? [];
+        $deletedBeforeImages = json_decode($request->input('deleted_before_images', '[]'), true) ?? [];
+        $deletedAfterImages = json_decode($request->input('deleted_after_images', '[]'), true) ?? [];
         // حذف الصور من التخزين
         foreach ($deletedBeforeImages as $path) {
             Storage::disk('public')->delete($path);
@@ -224,17 +228,20 @@ $deletedAfterImages = json_decode($request->input('deleted_after_images', '[]'),
             }
         }
 
+        // ✅ إنشاء مصفوفة البيانات المراد حفظها، مع استبعاد الحقول غير الموجودة في قاعدة البيانات
         $photo_report->update([
-            'report_title' => $request->input('report_title'),
-            'date' => $request->input('date'),
-            'unit_type' => $request->input('unit_type'),
-            'location' => $request->input('location'),
-            'task_id' => $request->input('task_id'),
-            'task_type' => $request->input('task_type'),
-            'status' => $request->input('status'),
-            'notes' => $request->input('notes'),
+            'report_title' => $validatedData['report_title'],
+            'date' => $validatedData['date'],
+            'unit_type' => $validatedData['unit_type'],
+            'location' => $validatedData['location'],
+            'task_id' => $validatedData['task_id'],
+            'task_type' => $validatedData['task_type'],
+            'status' => $validatedData['status'],
+            'notes' => $validatedData['notes'],
             'before_images' => $updatedBeforeImages,
             'after_images' => $updatedAfterImages,
+            // 'before_images_count' و 'after_images_count' ليسا أعمدة في قاعدة البيانات
+            // لذلك لا يجب تمريرهما هنا.
         ]);
 
         return redirect()->route('photo_reports.index')->with('success', 'تم تحديث التقرير المصور بنجاح.');
@@ -292,7 +299,7 @@ $deletedAfterImages = json_decode($request->input('deleted_after_images', '[]'),
         $taskTypeFilter = $request->input('task_type');
 
         $reportsQuery = TaskImageReport::whereYear('date', $year)
-                                        ->whereMonth('date', $month);
+                                         ->whereMonth('date', $month);
 
         if ($unitTypeFilter && $unitTypeFilter !== 'all') {
             $reportsQuery->where('unit_type', $unitTypeFilter);

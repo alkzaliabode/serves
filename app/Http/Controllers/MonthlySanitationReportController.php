@@ -2,77 +2,130 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MonthlySanitationSummary;
+use App\Models\SanitationFacilityTask; // استخدام النموذج الصحيح للمهام الفردية
 use App\Models\Unit; // تأكد من استيراد نموذج الوحدة
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon; // استخدام Carbon للتعامل مع التواريخ
+use Illuminate\Validation\ValidationException; // لاستخدام ValidationException في دوال التعديل والتخزين
 
 class MonthlySanitationReportController extends Controller
 {
     /**
-     * Display the monthly sanitation summaries report (main view with filters).
-     * عرض تقرير الملخصات الشهرية للمنشآت الصحية (العرض الرئيسي مع الفلاتر).
+     * Display the detailed sanitation tasks report (main view with filters).
+     * عرض تقرير المهام الصحية التفصيلي (العرض الرئيسي مع الفلاتر).
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\View\View
      */
     public function index(Request $request)
     {
-        $query = MonthlySanitationSummary::query();
+        $query = SanitationFacilityTask::query(); // الاستعلام من جدول المهام الفردية الصحيح
 
-        // Filter by month
-        if ($request->filled('month')) {
-            $query->where('month', $request->month);
+        // جلب معلمات البحث والتصفية
+        $selectedDate = $request->input('date');
+        $selectedStartDate = $request->input('start_date');
+        $selectedEndDate = $request->input('end_date');
+        $selectedFacilityName = $request->input('facility_name');
+        $selectedTaskType = $request->input('task_type');
+        $selectedUnitId = $request->input('unit_id');
+        $searchQuery = $request->input('search'); // فلتر البحث العام
+
+        // تطبيق فلاتر التاريخ
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('date', [$selectedStartDate, $selectedEndDate]);
+        } elseif ($request->filled('date')) {
+            $query->whereDate('date', $selectedDate);
         }
 
         // Filter by facility name
         if ($request->filled('facility_name')) {
-            $query->where('facility_name', 'like', '%' . $request->facility_name . '%');
+            $query->where('facility_name', 'like', '%' . $selectedFacilityName . '%');
         }
 
         // Filter by task type
         if ($request->filled('task_type')) {
-            $query->where('task_type', $request->task_type);
+            $query->where('task_type', $selectedTaskType);
         }
 
-        // Filter by unit (if multiple units exist)
+        // Filter by unit
         if ($request->filled('unit_id')) {
-            $query->where('unit_id', $request->unit_id);
+            $query->where('unit_id', $selectedUnitId);
         }
 
-        // Fetch summaries sorted by month descending
-        $monthlySummaries = $query->orderBy('month', 'desc')
-                               ->orderBy('facility_name', 'asc')
-                               ->paginate(10); // Set number of items per page
+        // Filter by general search query
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('facility_name', 'like', '%' . $search . '%')
+                  ->orWhere('task_type', 'like', '%' . $search . '%')
+                  ->orWhere('notes', 'like', '%' . $search . '%');
+            });
+        }
 
-        // Fetch list of units for the filter (if you have a units table)
+        // تطبيق الفرز
+        $sortBy = $request->get('sort_by', 'date'); // الافتراضي هو الفرز حسب التاريخ
+        $sortOrder = $request->get('sort_order', 'desc'); // الافتراضي هو تنازلي
+
+        // تأكد من أن الأعمدة موجودة في الجدول لتجنب الأخطاء
+        $allowedSorts = ['date', 'facility_name', 'task_type', 'unit_id', 'seats_count', 'mirrors_count', 'mixers_count', 'doors_count', 'sinks_count', 'toilets_count', 'notes', 'shift', 'status', 'working_hours']; // أضف الأعمدة الجديدة من SanitationFacilityTask
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('date', 'desc'); // fallback
+        }
+
+        // جلب المهام مع الترحيل (pagination)
+        $tasks = $query->with('unit')->paginate(10); // تحميل علاقة الوحدة
+
+        // جلب الوحدات وأسماء المنشآت وأنواع المهام المتاحة للفلاتر من جدول المهام الفردية
         $units = Unit::all();
+        $availableFacilityNames = SanitationFacilityTask::select('facility_name')->distinct()->pluck('facility_name');
+        $availableTaskTypes = SanitationFacilityTask::select('task_type')->distinct()->pluck('task_type');
 
-        // Fetch unique facility names and task types from summaries for filters
-        $facilityNames = MonthlySanitationSummary::select('facility_name')->distinct()->pluck('facility_name');
-        $taskTypes = MonthlySanitationSummary::select('task_type')->distinct()->pluck('task_type');
-
-        return view('monthly_sanitation_report.index', compact('monthlySummaries', 'units', 'facilityNames', 'taskTypes'));
+        return view('monthly_sanitation_report.index', compact(
+            'tasks', // تمرير المهام الفردية
+            'units',
+            'availableFacilityNames',
+            'availableTaskTypes',
+            'selectedDate',
+            'selectedStartDate',
+            'selectedEndDate',
+            'selectedFacilityName',
+            'selectedTaskType',
+            'selectedUnitId',
+            'searchQuery',
+            'sortBy',
+            'sortOrder'
+        ));
     }
 
+    // تم إزالة دوال create و store من هنا، حيث يتم التعامل معها في SanitationFacilityTaskController
+    // يجب أن يوجه زر "إضافة مهمة" في الواجهة الأمامية إلى sanitation-facility-tasks.create
+
     /**
-     * Show the form for editing the specified monthly sanitation summary.
-     * عرض نموذج تعديل ملخص المنشآت الصحية الشهري المحدد.
+     * Show the form for editing the specified sanitation task.
+     * عرض نموذج تعديل المهمة الصحية المحددة.
      *
      * @param  string  $id
      * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
     public function edit(string $id)
     {
-        $report = MonthlySanitationSummary::findOrFail($id);
-        // You might need to pass other data like units if your edit form uses them
+        $task = SanitationFacilityTask::findOrFail($id); // استخدام النموذج الصحيح
         $units = Unit::all();
-        return view('monthly_sanitation_report.edit', compact('report', 'units'));
+        // بما أن هذا الكنترولر مخصص للتقرير، فمن الأفضل أن يتم التعديل الفعلي للمهمة عبر SanitationFacilityTaskController.
+        // يمكن هنا إعادة التوجيه إلى صفحة التعديل في الكنترولر الآخر.
+        // return redirect()->route('sanitation-facility-tasks.edit', $id);
+        // أو إذا كنت تريد عرض نموذج التعديل هنا مباشرة، تأكد من تمرير البيانات اللازمة
+        // مثل الأهداف والموظفين إذا كانت مطلوبة في نموذج التعديل الخاص بك.
+        // $goals = UnitGoal::all(); // إذا كان نموذج SanitationFacilityTask مرتبطاً بالأهداف
+        // $employees = Employee::orderBy('name')->get(); // إذا كان نموذج SanitationFacilityTask مرتبطاً بالموظفين
+        return view('monthly_sanitation_report.edit', compact('task', 'units')); // , 'goals', 'employees'
     }
 
     /**
-     * Update the specified monthly sanitation summary in storage.
-     * تحديث ملخص المنشآت الصحية الشهري المحدد في قاعدة البيانات.
+     * Update the specified sanitation task in storage.
+     * تحديث المهمة الصحية المحددة في قاعدة البيانات.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  string  $id
@@ -80,40 +133,50 @@ class MonthlySanitationReportController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $validatedData = $request->validate([
-            'month'             => 'required|string|max:7', // YYYY-MM format
-            'facility_name'     => 'required|string|max:255',
-            'task_type'         => 'required|string|in:إدامة,صيانة',
-            'unit_id'           => 'nullable|exists:units,id', // Validate if unit_id exists in units table
-            'total_seats'       => 'nullable|integer|min:0',
-            'total_mirrors'     => 'nullable|integer|min:0',
-            'total_mixers'      => 'nullable|integer|min:0',
-            'total_doors'       => 'nullable|integer|min:0',
-            'total_sinks'       => 'nullable|integer|min:0',
-            'total_toilets'     => 'nullable|integer|min:0',
-            'total_tasks'       => 'nullable|integer|min:0',
-            // Add other fields from your MonthlySanitationSummary model here
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'date'          => 'required|date',
+                'shift'         => 'required|in:صباحي,مسائي,ليلي', // أضفنا هذا من SanitationFacilityTaskController
+                'task_type'     => 'required|string|in:إدامة,صيانة',
+                'facility_name' => 'required|string|max:255',
+                'details'       => 'required|string|max:1000', // أضفنا هذا من SanitationFacilityTaskController
+                'status'        => 'required|in:مكتمل,قيد التنفيذ,ملغى', // أضفنا هذا من SanitationFacilityTaskController
+                'notes'         => 'nullable|string|max:1000',
+                'related_goal_id' => 'required|exists:unit_goals,id', // أضفنا هذا من SanitationFacilityTaskController
+                'progress'      => 'nullable|numeric|min:0|max:100', // أضفنا هذا من SanitationFacilityTaskController
+                'result_value'  => 'nullable|numeric', // أضفنا هذا من SanitationFacilityTaskController
+                'seats_count'   => 'nullable|integer|min:0',
+                'sinks_count'   => 'nullable|integer|min:0',
+                'mixers_count'  => 'nullable|integer|min:0',
+                'mirrors_count' => 'nullable|integer|min:0',
+                'doors_count'   => 'nullable|integer|min:0',
+                'toilets_count' => 'nullable|integer|min:0',
+                'working_hours' => 'required|numeric|min:0|max:24', // أضفنا هذا من SanitationFacilityTaskController
+                // لا نقوم بمعالجة الصور أو employeeTasks هنا، حيث أن SanitationFacilityTaskController هو المسؤول عن ذلك
+            ]);
+        } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        }
 
-        $report = MonthlySanitationSummary::findOrFail($id);
-        $report->update($validatedData);
+        $task = SanitationFacilityTask::findOrFail($id); // استخدام النموذج الصحيح
+        $task->update($validatedData);
 
-        return redirect()->route('monthly-sanitation-report.index')->with('success', 'تم تحديث التقرير بنجاح!');
+        return redirect()->route('monthly-sanitation-report.index')->with('success', 'تم تحديث المهمة بنجاح!');
     }
 
     /**
-     * Remove the specified monthly sanitation summary from storage.
-     * حذف ملخص المنشآت الصحية الشهري المحدد من قاعدة البيانات.
+     * Remove the specified sanitation task from storage.
+     * حذف المهمة الصحية المحددة من قاعدة البيانات.
      *
      * @param  string  $id
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(string $id)
     {
-        $report = MonthlySanitationSummary::findOrFail($id);
-        $report->delete();
+        $task = SanitationFacilityTask::findOrFail($id); // استخدام النموذج الصحيح
+        $task->delete();
 
-        return redirect()->route('monthly-sanitation-report.index')->with('success', 'تم حذف التقرير بنجاح!');
+        return redirect()->route('monthly-sanitation-report.index')->with('success', 'تم حذف المهمة بنجاح!');
     }
 
     /**
@@ -125,12 +188,15 @@ class MonthlySanitationReportController extends Controller
      */
     public function export(Request $request)
     {
-        $query = MonthlySanitationSummary::query();
+        $query = SanitationFacilityTask::query(); // الاستعلام من جدول المهام الفردية الصحيح
 
-        // Apply filters before export
-        if ($request->filled('month')) {
-            $query->where('month', $request->input('month'));
+        // تطبيق نفس الفلاتر المستخدمة في دالة index
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('date', [$request->input('start_date'), $request->input('end_date')]);
+        } elseif ($request->filled('date')) {
+            $query->whereDate('date', $request->input('date'));
         }
+
         if ($request->filled('facility_name')) {
             $query->where('facility_name', 'like', '%' . $request->input('facility_name') . '%');
         }
@@ -140,8 +206,15 @@ class MonthlySanitationReportController extends Controller
         if ($request->filled('unit_id')) {
             $query->where('unit_id', $request->unit_id);
         }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('facility_name', 'like', '%' . $search . '%')
+                  ->orWhere('task_type', 'like', '%' . $search . '%')
+                  ->orWhere('notes', 'like', '%' . $search . '%');
+            });
+        }
 
-        // Fetch data to export
         $dataToExport = $query->get();
 
         $fileName = 'تقرير_المنشآت_الصحية_' . now()->format('Y-m-d_H-i-s') . '.csv';
@@ -157,28 +230,27 @@ class MonthlySanitationReportController extends Controller
             // Add BOM for UTF-8 compatibility with Excel
             fwrite($file, "\xEF\xBB\xBF");
 
-            // Column headers
+            // Column headers for individual tasks
             fputcsv($file, [
-                'الشهر', 'اسم المنشأة', 'نوع المهمة', 'الوحدة', 'إجمالي المقاعد', 'إجمالي المرايا',
-                'إجمالي الخلاطات', 'إجمالي الأبواب', 'إجمالي الأحواض', 'إجمالي المراحيض', 'إجمالي المهام'
+                'التاريخ', 'اسم المنشأة', 'نوع المهمة', 'الوحدة', 'المقاعد', 'المرايا',
+                'الخلاطات', 'الأبواب', 'الأحواض', 'المراحيض', 'ملاحظات'
             ]);
 
             // Row data
             foreach ($dataToExport as $row) {
-                // Get unit name if the relationship exists
                 $unitName = $row->unit->name ?? 'N/A';
                 fputcsv($file, [
-                    Carbon::parse($row->month)->format('Y / m'),
+                    Carbon::parse($row->date)->format('Y / m / d'),
                     $row->facility_name,
                     $row->task_type,
                     $unitName,
-                    $row->total_seats,
-                    $row->total_mirrors,
-                    $row->total_mixers,
-                    $row->total_doors,
-                    $row->total_sinks,
-                    $row->total_toilets,
-                    $row->total_tasks,
+                    $row->seats_count,
+                    $row->mirrors_count,
+                    $row->mixers_count,
+                    $row->doors_count,
+                    $row->sinks_count,
+                    $row->toilets_count,
+                    $row->notes,
                 ]);
             }
             fclose($file);
@@ -196,12 +268,15 @@ class MonthlySanitationReportController extends Controller
      */
     public function print(Request $request)
     {
-        $query = MonthlySanitationSummary::query();
+        $query = SanitationFacilityTask::query(); // الاستعلام من جدول المهام الفردية الصحيح
 
         // Apply the same filters used in the index function
-        if ($request->filled('month')) {
-            $query->where('month', $request->month);
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('date', [$request->input('start_date'), $request->input('end_date')]);
+        } elseif ($request->filled('date')) {
+            $query->whereDate('date', $request->date);
         }
+
         if ($request->filled('facility_name')) {
             $query->where('facility_name', 'like', '%' . $request->facility_name . '%');
         }
@@ -211,41 +286,58 @@ class MonthlySanitationReportController extends Controller
         if ($request->filled('unit_id')) {
             $query->where('unit_id', $request->unit_id);
         }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('facility_name', 'like', '%' . $search . '%')
+                  ->orWhere('task_type', 'like', '%' . $search . '%')
+                  ->orWhere('notes', 'like', '%' . $search . '%');
+            });
+        }
 
         // Fetch all filtered data for printing (no pagination here)
-        $monthlySummaries = $query->orderBy('month', 'desc')
-                               ->orderBy('facility_name', 'asc')
-                               ->get();
+        $tasks = $query->with('unit')->orderBy('date', 'desc')->orderBy('facility_name', 'asc')->get();
 
-        // 💡 حساب مجاميع الحقول الكمية لتقرير المنشآت الصحية
-        $totalSeats = $monthlySummaries->sum('total_seats');
-        $totalMirrors = $monthlySummaries->sum('total_mirrors');
-        $totalMixers = $monthlySummaries->sum('total_mixers');
-        $totalDoors = $monthlySummaries->sum('total_doors');
-        $totalSinks = $monthlySummaries->sum('total_sinks');
-        $totalToilets = $monthlySummaries->sum('total_toilets');
-        $totalTasks = $monthlySummaries->sum('total_tasks');
+        // حساب مجاميع الحقول الكمية من المهام الفردية المجلوبة
+        $totalSeats = $tasks->sum('seats_count');
+        $totalMirrors = $tasks->sum('mirrors_count');
+        $totalMixers = $tasks->sum('mixers_count');
+        $totalDoors = $tasks->sum('doors_count');
+        $totalSinks = $tasks->sum('sinks_count');
+        $totalToilets = $tasks->sum('toilets_count');
+        // لا يوجد "total_tasks" كعمود مباشر في المهام الفردية، يمكن أن يكون عدد المهام المجلوبة
+        $totalTasks = $tasks->count();
 
 
         // Fetch filter values to display in the printed report header
-        $filters = $request->only(['month', 'facility_name', 'task_type']);
-        if ($request->filled('month')) {
-            // Convert month to a suitable format for display in the printed report
-            $filters['month_display'] = Carbon::parse($request->month)->format('F Y');
+        $filters = $request->only(['date', 'facility_name', 'task_type', 'unit_id', 'start_date', 'end_date', 'search']);
+        if ($request->filled('date')) {
+            $filters['date_display'] = Carbon::parse($request->date)->translatedFormat('d F Y');
         } else {
-            $filters['month_display'] = null; // Ensure no empty value if month is not selected
+            $filters['date_display'] = null;
         }
 
-        // Add unit name to displayed filters if selected
+        if ($request->filled('start_date')) {
+            $filters['start_date_display'] = Carbon::parse($request->start_date)->translatedFormat('d F Y');
+        } else {
+            $filters['start_date_display'] = null;
+        }
+
+        if ($request->filled('end_date')) {
+            $filters['end_date_display'] = Carbon::parse($request->end_date)->translatedFormat('d F Y');
+        } else {
+            $filters['end_date_display'] = null;
+        }
+
         if ($request->filled('unit_id')) {
             $unit = Unit::find($request->unit_id);
-            $filters['unit_name'] = $unit->name ?? 'N/A';
+            $filters['unit_name'] = $unit->name ?? 'غير معروف';
         }
 
         return view('monthly_sanitation_report.print', compact(
-            'monthlySummaries',
+            'tasks', // تمرير المهام الفردية
             'filters',
-            'totalSeats', // 💡 تمرير المجاميع الجديدة
+            'totalSeats',
             'totalMirrors',
             'totalMixers',
             'totalDoors',

@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log; // تأكد من استيراد Log
+use Illuminate\Support\Facades\Log;
 
 class TaskImageReport extends Model
 {
-    // الأعمدة القابلة للتعبئة الجماعية (Mass Assignment)
+    /**
+     * Mass assignable attributes.
+     */
     protected $fillable = [
         'report_title',
         'date',
@@ -25,24 +26,27 @@ class TaskImageReport extends Model
         'after_images_count',
     ];
 
-    // تحويل أنواع البيانات
+    /**
+     * Attribute casting.
+     */
     protected $casts = [
         'date' => 'date',
         'before_images' => 'array',
         'after_images' => 'array',
     ];
 
-    // تحديد الـ Accessors التي ستُضاف تلقائياً إلى مصفوفة الـ JSON
+    /**
+     * Accessors to append to JSON output.
+     */
     protected $appends = [
         'before_images_urls',
         'after_images_urls',
-        // يمكنك إضافة 'before_images_for_table', 'after_images_for_table' إذا كنت بحاجة إليها في الـ JSON
+        'before_images_for_table',
+        'after_images_for_table',
     ];
 
     /**
-     * Accessor للحصول على عناوين URL لصور "قبل" التنفيذ مع تفاصيل إضافية.
-     *
-     * @return array
+     * Accessor: Full URLs for before images.
      */
     public function getBeforeImagesUrlsAttribute(): array
     {
@@ -50,9 +54,7 @@ class TaskImageReport extends Model
     }
 
     /**
-     * Accessor للحصول على عناوين URL لصور "بعد" التنفيذ مع تفاصيل إضافية.
-     *
-     * @return array
+     * Accessor: Full URLs for after images.
      */
     public function getAfterImagesUrlsAttribute(): array
     {
@@ -60,61 +62,11 @@ class TaskImageReport extends Model
     }
 
     /**
-     * دالة مساعدة لمعالجة مسارات الصور للحصول على URLs والمسارات المطلقة للـ PDF.
-     *
-     * @param array|null $images
-     * @return array
-     */
-    private function processImages(?array $images): array
-    {
-        if (empty($images)) {
-            return [];
-        }
-
-        return collect($images)->filter()->map(function ($imagePath) {
-            // قم بتنظيف المسار بحيث يبدأ مباشرة من مجلد القرص 'public'
-            // هذا سيتعامل مع المسارات التي قد تبدأ بـ 'public/' أو 'storage/'
-            $cleanPath = str_replace('public/', '', $imagePath);
-            $cleanPath = str_replace('storage/', '', $cleanPath);
-
-            // سجل المسار النظيف للتحقق منه
-            Log::debug("Processing image path: Original='{$imagePath}', Cleaned='{$cleanPath}'");
-            
-            // التحقق من وجود الصورة في نظام الملفات
-            $exists = Storage::disk('public')->exists($cleanPath);
-            
-            return [
-                'url' => $exists ? Storage::disk('public')->url($cleanPath) : null,
-                'path' => $cleanPath, // المسار النسبي داخل storage/app/public
-                'exists' => $exists,
-                // المسار المطلق اللازم لـ Dompdf أو أي معالج PDF آخر
-                'absolute_path_for_pdf' => $exists ? public_path('storage/' . $cleanPath) : null
-            ];
-        })->filter(fn($item) => $item['exists'] ?? false)->toArray(); // فلترة أي عناصر غير موجودة أو غير صالحة
-    }
-
-    /**
-     * Accessor للحصول على عناوين URL لعدد محدود من صور "قبل" التنفيذ للعرض في الجداول.
-     *
-     * @return array
+     * Get only first 3 before image URLs for use in tables or previews.
      */
     public function getBeforeImagesForTableAttribute(): array
     {
-        return collect($this->getBeforeImagesUrlsAttribute())
-            ->take(3) // جلب أول 3 صور فقط
-            ->pluck('url') // استخراج الـ URL فقط
-            ->filter() // إزالة أي قيم null إذا كانت الصورة غير موجودة
-            ->toArray();
-    }
-
-    /**
-     * Accessor للحصول على عناوين URL لعدد محدود من صور "بعد" التنفيذ للعرض في الجداول.
-     *
-     * @return array
-     */
-    public function getAfterImagesForTableAttribute(): array
-    {
-        return collect($this->getAfterImagesUrlsAttribute())
+        return collect($this->before_images_urls)
             ->take(3)
             ->pluck('url')
             ->filter()
@@ -122,50 +74,75 @@ class TaskImageReport extends Model
     }
 
     /**
-     * دالة لحذف الصور الفعلية المرتبطة بهذا التقرير من نظام الملفات.
+     * Get only first 3 after image URLs for use in tables or previews.
+     */
+    public function getAfterImagesForTableAttribute(): array
+    {
+        return collect($this->after_images_urls)
+            ->take(3)
+            ->pluck('url')
+            ->filter()
+            ->toArray();
+    }
+
+    /**
+     * Processes image paths to return URLs, paths, and existence status.
+     */
+    private function processImages(?array $images): array
+    {
+        if (empty($images)) {
+            return [];
+        }
+
+        return collect($images)->filter()->map(function ($path) {
+            $cleanPath = str_replace(['public/', 'storage/'], '', $path);
+            $exists = Storage::disk('public')->exists($cleanPath);
+
+            Log::debug("Processing image", [
+                'original' => $path,
+                'cleaned' => $cleanPath,
+                'exists' => $exists
+            ]);
+
+            return [
+                'url' => $exists ? Storage::disk('public')->url($cleanPath) : null,
+                'path' => $cleanPath,
+                'exists' => $exists,
+                'absolute_path_for_pdf' => $exists ? public_path('storage/' . $cleanPath) : null,
+            ];
+        })->filter(fn($item) => $item['exists'])->values()->toArray();
+    }
+
+    /**
+     * Delete stored before/after images from disk.
      */
     public function deleteRelatedImages(): void
     {
-        // حذف صور "قبل" التنفيذ
-        foreach ($this->before_images ?? [] as $path) {
-            $cleanPath = str_replace('public/', '', $path);
-            $cleanPath = str_replace('storage/', '', $cleanPath);
-
-            if (Storage::disk('public')->exists($cleanPath)) {
-                Storage::disk('public')->delete($cleanPath);
-                Log::info("Deleted before image: {$cleanPath} for TaskImageReport ID: {$this->id}");
-            } else {
-                Log::warning("Before image not found for deletion: {$cleanPath} for TaskImageReport ID: {$this->id}");
-            }
-        }
-
-        // حذف صور "بعد" التنفيذ
-        foreach ($this->after_images ?? [] as $path) {
-            $cleanPath = str_replace('public/', '', $path);
-            $cleanPath = str_replace('storage/', '', $cleanPath);
-
-            if (Storage::disk('public')->exists($cleanPath)) {
-                Storage::disk('public')->delete($cleanPath);
-                Log::info("Deleted after image: {$cleanPath} for TaskImageReport ID: {$this->id}");
-            } else {
-                Log::warning("After image not found for deletion: {$cleanPath} for TaskImageReport ID: {$this->id}");
+        foreach (['before_images', 'after_images'] as $type) {
+            foreach ($this->$type ?? [] as $path) {
+                $cleanPath = str_replace(['public/', 'storage/'], '', $path);
+                if (Storage::disk('public')->exists($cleanPath)) {
+                    Storage::disk('public')->delete($cleanPath);
+                    Log::info("Deleted {$type} image", ['path' => $cleanPath, 'report_id' => $this->id]);
+                } else {
+                    Log::warning("{$type} image not found for deletion", ['path' => $cleanPath, 'report_id' => $this->id]);
+                }
             }
         }
     }
 
     /**
-     * الأحداث التي يتم تشغيلها عند بدء تشغيل الموديل.
+     * Model boot method to hook into lifecycle events.
      */
-    protected static function booted()
+    protected static function booted(): void
     {
-        static::saving(function ($report) {
-            // تحديث count_images بناءً على عدد الصور الفعلية المخزنة
+        static::saving(function (self $report) {
             $report->before_images_count = count($report->before_images ?? []);
             $report->after_images_count = count($report->after_images ?? []);
         });
 
-        static::deleted(function ($report) {
-            $report->deleteRelatedImages(); // ضمان حذف الصور عند حذف التقرير
+        static::deleted(function (self $report) {
+            $report->deleteRelatedImages();
         });
     }
 }

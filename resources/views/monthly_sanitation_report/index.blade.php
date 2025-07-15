@@ -1,15 +1,28 @@
 {{-- resources/views/monthly-sanitation-report/index.blade.php --}}
+{{--
+    هذا الملف هو قالب صفحة تقرير المنشآت الصحية التفصيلي للعرض على الشاشة.
+    تم تحديث تصميمه ليعرض المهام الفردية (حسب التاريخ ونوع المهمة والمنشأة) بدلاً من الملخصات الشهرية.
+    يشمل ذلك:
+    - بطاقة فلاتر محسنة مع فلاتر جديدة للتاريخ ونوع المهمة والوحدة واسم المنشأة.
+    - أيقونات فرز في رؤوس الأعمدة.
+    - تنسيقات محسنة للجدول لجعلها أكثر تناسقاً ونظافة.
+    - دعم لرسائل الجلسة (Session messages).
+    - تم تفعيل Pagination للجدول.
+    - تمت إضافة أزرار التعديل والحذف لكل سجل مهمة.
+    - تمت إضافة زر "إضافة مهمة" جديدة.
+    - تمت إضافة فلتر "بحث عام".
+--}}
 
 @extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
 
-@section('title', 'تقرير المنشآت الصحية الشهري') {{-- تحديد عنوان الصفحة --}}
+@section('title', 'تقرير المنشآت الصحية التفصيلي') {{-- تحديد عنوان الصفحة --}}
 
-@section('page_title', '📊 تقرير المنشآت الصحية الشهري') {{-- عنوان الصفحة داخل AdminLTE --}}
+@section('page_title', '📊 تقرير المنشآت الصحية التفصيلي') {{-- عنوان الصفحة داخل AdminLTE --}}
 
 @section('breadcrumb') {{-- Breadcrumb لـ AdminLTE --}}
     <li class="breadcrumb-item"><a href="{{ route('home') }}">الرئيسية</a></li>
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">لوحة التحكم</a></li>
-    <li class="breadcrumb-item active">تقرير المنشآت الصحية الشهري</li>
+    <li class="breadcrumb-item active">تقرير المنشآت الصحية التفصيلي</li>
 @endsection
 
 @section('styles')
@@ -31,7 +44,7 @@
             background-color: rgba(255, 255, 255, 0.15) !important; /* خلفية رأس البطاقة أكثر شفافية */
             border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; /* حدود سفلية شفافة وواضحة */
         }
-        
+
         /* General text size increase and distinctive color for main texts */
         body,
         .card-body {
@@ -289,109 +302,225 @@
 @endsection
 
 @section('content')
-    <div class="card"> {{-- تم إزالة card-primary card-outline --}}
+    {{-- رسائل الجلسة (مثلاً للنجاح) --}}
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title">ملخصات المنشآت الصحية الشهرية</h3>
+            <h3 class="card-title">
+                <i class="fas fa-filter me-1"></i>
+                خيارات التقرير
+            </h3>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
+                    <i data-lte-icon="plus" class="bi bi-plus-lg"></i>
+                    <i data-lte-icon="minus" class="bi bi-dash-lg" style="display: none;"></i>
+                </button>
+            </div>
         </div>
         <div class="card-body">
-            @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
-
-            <form action="{{ route('monthly-sanitation-report.index') }}" method="GET" class="mb-4">
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label for="month" class="form-label">الشهر</label>
-                        <input type="month" class="form-control" id="month" name="month" value="{{ request('month') }}">
+            <form id="filter-form" action="{{ route('monthly-sanitation-report.index') }}" method="GET" class="form-filters-print">
+                <div class="row g-3 align-items-end mb-3">
+                    <div class="col-md-3">
+                        <label for="date" class="form-label">التاريخ</label>
+                        <input type="date" name="date" id="date" class="form-control" value="{{ $selectedDate ?? '' }}">
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">تاريخ البداية</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ $selectedStartDate ?? '' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">تاريخ النهاية</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ $selectedEndDate ?? '' }}">
+                    </div>
+                    <div class="col-md-3">
                         <label for="facility_name" class="form-label">اسم المنشأة</label>
-                        <select class="form-select" id="facility_name" name="facility_name">
+                        <select class="form-select" id="facility_name" name="facility_name" aria-label="اسم المنشأة">
                             <option value="">كل المنشآت</option>
-                            @foreach($facilityNames as $name)
-                                <option value="{{ $name }}" {{ request('facility_name') == $name ? 'selected' : '' }}>{{ $name }}</option>
+                            @foreach($availableFacilityNames as $name)
+                                <option value="{{ $name }}" {{ ($selectedFacilityName ?? '') == $name ? 'selected' : '' }}>{{ $name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-3">
                         <label for="task_type" class="form-label">نوع المهمة</label>
-                        <select class="form-select" id="task_type" name="task_type">
+                        <select class="form-select" id="task_type" name="task_type" aria-label="نوع المهمة">
                             <option value="">كل الأنواع</option>
-                            @foreach($taskTypes as $type)
-                                <option value="{{ $type }}" {{ request('task_type') == $type ? 'selected' : '' }}>{{ $type }}</option>
+                            @foreach($availableTaskTypes as $type)
+                                <option value="{{ $type }}" {{ ($selectedTaskType ?? '') == $type ? 'selected' : '' }}>{{ $type }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3 d-flex align-items-end">
+                    <div class="col-md-3">
+                        <label for="unit_id" class="form-label">الوحدة</label>
+                        <select class="form-select" id="unit_id" name="unit_id" aria-label="الوحدة">
+                            <option value="">كل الوحدات</option>
+                            @foreach($units as $unit)
+                                <option value="{{ $unit->id }}" {{ ($selectedUnitId ?? '') == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="search" class="form-label">بحث عام</label>
+                        <input type="text" name="search" id="search" class="form-control" placeholder="بحث بالكلمات المفتاحية..." value="{{ $searchQuery ?? '' }}">
+                    </div>
+                    <div class="col-12 d-flex justify-content-end mt-3">
                         <button type="submit" class="btn btn-primary me-2">
-                            <i class="fas fa-filter"></i> تصفية
+                            <i class="fas fa-filter"></i> تطبيق الفلاتر
                         </button>
                         <a href="{{ route('monthly-sanitation-report.index') }}" class="btn btn-secondary me-2">
                             <i class="fas fa-sync-alt"></i> إعادة تعيين
                         </a>
-                        {{-- زر التصدير (يبقى كما هو، يرتبط بـ Controller Export) --}}
-                        <a href="{{ route('monthly-sanitation-report.export', request()->query()) }}" class="btn btn-success me-2">
-                            <i class="fas fa-file-excel"></i> تصدير (CSV)
+                        {{-- تم تحديث هذا الزر ليوجه إلى SanitationFacilityTaskController --}}
+                        <a href="{{ route('sanitation-facility-tasks.create') }}" class="btn btn-success me-2">
+                            <i class="fas fa-plus"></i> إضافة مهمة
                         </a>
-                        {{-- زر الطباعة (الآن يرتبط بمسار طباعة مخصص) --}}
-                        <a href="{{ route('monthly-sanitation-report.print', request()->query()) }}" target="_blank" class="btn btn-info">
-                            <i class="fas fa-print"></i> طباعة
-                        </a>
+                        <button type="button" onclick="printReport()" class="btn btn-success me-2">
+                            <i class="fas fa-print"></i> طباعة التقرير
+                        </button>
+                        <button type="button" onclick="exportToCsv()" class="btn btn-info btn-export-print">
+                            <i class="fas fa-file-excel"></i> تصدير CSV
+                        </button>
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
 
-            @if($monthlySummaries->isEmpty())
+    <div class="card card-info card-outline">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-list me-1"></i>
+                نتائج التقرير
+            </h3>
+        </div>
+        <div class="card-body p-0">
+            <h4 class="text-md font-weight-bold mb-3 mt-3 text-secondary d-print-none text-center">
+                بيانات تقرير المنشآت الصحية التفصيلي
+                <span class="text-primary">
+                    @if (!empty($selectedDate))
+                        (تاريخ: {{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d F Y') }})
+                    @endif
+                    @if (!empty($selectedStartDate) && !empty($selectedEndDate))
+                        (الفترة: من {{ \Carbon\Carbon::parse($selectedStartDate)->translatedFormat('d F Y') }} إلى {{ \Carbon\Carbon::parse($selectedEndDate)->translatedFormat('d F Y') }})
+                    @elseif (!empty($selectedStartDate))
+                        (من تاريخ: {{ \Carbon\Carbon::parse($selectedStartDate)->translatedFormat('d F Y') }})
+                    @elseif (!empty($selectedEndDate))
+                        (إلى تاريخ: {{ \Carbon\Carbon::parse($selectedEndDate)->translatedFormat('d F Y') }})
+                    @endif
+                    @if (!empty($selectedFacilityName))
+                        (اسم المنشأة: {{ $selectedFacilityName }})
+                    @endif
+                    @if (!empty($selectedTaskType))
+                        (نوع المهمة: {{ $selectedTaskType }})
+                    @endif
+                    @if (!empty($selectedUnitId))
+                        (الوحدة: {{ $units->find($selectedUnitId)->name ?? 'غير معروف' }})
+                    @endif
+                    @if (!empty($searchQuery))
+                        (بحث: "{{ $searchQuery }}")
+                    @endif
+                </span>
+            </h4>
+
+            @if($tasks->isEmpty()) {{-- تم التعديل هنا --}}
                 <div class="alert alert-info" role="alert">
-                    لا توجد بيانات لتقرير المنشآت الصحية الشهرية بهذه المعايير.
+                    لا توجد مهام للمنشآت الصحية لعرضها بهذه المعايير.
                 </div>
             @else
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped text-center table-hover"> {{-- إضافة table-hover --}}
+                    <table class="table table-bordered table-striped text-center table-sm">
                         <thead>
-                            <tr>
-                                <th>الشهر</th>
-                                <th>اسم المنشأة</th>
-                                <th>نوع المهمة</th>
-                                <th>الوحدة</th>
-                                <th>إجمالي المقاعد</th>
-                                <th>إجمالي المرايا</th>
-                                <th>إجمالي الخلاطات</th>
-                                <th>إجمالي الأبواب</th>
-                                <th>إجمالي الأحواض</th>
-                                <th>إجمالي المراحيض</th>
-                                <th>إجمالي المهام</th>
-                                <th>الإجراءات</th> {{-- عمود جديد للإجراءات --}}
+                            <tr class="bg-light">
+                                <th>التاريخ
+                                    <a href="{{ route('monthly-sanitation-report.index', array_merge(request()->query(), ['sort_by' => 'date', 'sort_order' => (($sortBy ?? '') == 'date' && ($sortOrder ?? '') == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if(($sortBy ?? '') == 'date' && ($sortOrder ?? '') == 'asc') <i class="bi bi-sort-up"></i> @elseif(($sortBy ?? '') == 'date' && ($sortOrder ?? '') == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th>اسم المنشأة
+                                    <a href="{{ route('monthly-sanitation-report.index', array_merge(request()->query(), ['sort_by' => 'facility_name', 'sort_order' => (($sortBy ?? '') == 'facility_name' && ($sortOrder ?? '') == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if(($sortBy ?? '') == 'facility_name' && ($sortOrder ?? '') == 'asc') <i class="bi bi-sort-up"></i> @elseif(($sortBy ?? '') == 'facility_name' && ($sortOrder ?? '') == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th>نوع المهمة
+                                    <a href="{{ route('monthly-sanitation-report.index', array_merge(request()->query(), ['sort_by' => 'task_type', 'sort_order' => (($sortBy ?? '') == 'task_type' && ($sortOrder ?? '') == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if(($sortBy ?? '') == 'task_type' && ($sortOrder ?? '') == 'asc') <i class="bi bi-sort-up"></i> @elseif(($sortBy ?? '') == 'task_type' && ($sortOrder ?? '') == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th>الوحدة
+                                    <a href="{{ route('monthly-sanitation-report.index', array_merge(request()->query(), ['sort_by' => 'unit_id', 'sort_order' => (($sortBy ?? '') == 'unit_id' && ($sortOrder ?? '') == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if(($sortBy ?? '') == 'unit_id' && ($sortOrder ?? '') == 'asc') <i class="bi bi-sort-up"></i> @elseif(($sortBy ?? '') == 'unit_id' && ($sortOrder ?? '') == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th class="text-nowrap">المقاعد
+                                    <a href="{{ route('monthly-sanitation-report.index', array_merge(request()->query(), ['sort_by' => 'seats_count', 'sort_order' => (($sortBy ?? '') == 'seats_count' && ($sortOrder ?? '') == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if(($sortBy ?? '') == 'seats_count' && ($sortOrder ?? '') == 'asc') <i class="bi bi-sort-up"></i> @elseif(($sortBy ?? '') == 'seats_count' && ($sortOrder ?? '') == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th class="text-nowrap">المرايا
+                                    <a href="{{ route('monthly-sanitation-report.index', array_merge(request()->query(), ['sort_by' => 'mirrors_count', 'sort_order' => (($sortBy ?? '') == 'mirrors_count' && ($sortOrder ?? '') == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if(($sortBy ?? '') == 'mirrors_count' && ($sortOrder ?? '') == 'asc') <i class="bi bi-sort-up"></i> @elseif(($sortBy ?? '') == 'mirrors_count' && ($sortOrder ?? '') == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th class="text-nowrap">الخلاطات
+                                    <a href="{{ route('monthly-sanitation-report.index', array_merge(request()->query(), ['sort_by' => 'mixers_count', 'sort_order' => (($sortBy ?? '') == 'mixers_count' && ($sortOrder ?? '') == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if(($sortBy ?? '') == 'mixers_count' && ($sortOrder ?? '') == 'asc') <i class="bi bi-sort-up"></i> @elseif(($sortBy ?? '') == 'mixers_count' && ($sortOrder ?? '') == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th class="text-nowrap">الأبواب
+                                    <a href="{{ route('monthly-sanitation-report.index', array_merge(request()->query(), ['sort_by' => 'doors_count', 'sort_order' => (($sortBy ?? '') == 'doors_count' && ($sortOrder ?? '') == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if(($sortBy ?? '') == 'doors_count' && ($sortOrder ?? '') == 'asc') <i class="bi bi-sort-up"></i> @elseif(($sortBy ?? '') == 'doors_count' && ($sortOrder ?? '') == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th class="text-nowrap">المغاسل {{-- تم التعديل من الأحواض --}}
+                                    <a href="{{ route('monthly-sanitation-report.index', array_merge(request()->query(), ['sort_by' => 'sinks_count', 'sort_order' => (($sortBy ?? '') == 'sinks_count' && ($sortOrder ?? '') == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if(($sortBy ?? '') == 'sinks_count' && ($sortOrder ?? '') == 'asc') <i class="bi bi-sort-up"></i> @elseif(($sortBy ?? '') == 'sinks_count' && ($sortOrder ?? '') == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th class="text-nowrap">الحمامات {{-- تم التعديل من المراحيض --}}
+                                    <a href="{{ route('monthly-sanitation-report.index', array_merge(request()->query(), ['sort_by' => 'toilets_count', 'sort_order' => (($sortBy ?? '') == 'toilets_count' && ($sortOrder ?? '') == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if(($sortBy ?? '') == 'toilets_count' && ($sortOrder ?? '') == 'asc') <i class="bi bi-sort-up"></i> @elseif(($sortBy ?? '') == 'toilets_count' && ($sortOrder ?? '') == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th class="text-nowrap">ملاحظات
+                                    <a href="{{ route('monthly-sanitation-report.index', array_merge(request()->query(), ['sort_by' => 'notes', 'sort_order' => (($sortBy ?? '') == 'notes' && ($sortOrder ?? '') == 'asc' ? 'desc' : 'asc')])) }}">
+                                        @if(($sortBy ?? '') == 'notes' && ($sortOrder ?? '') == 'asc') <i class="bi bi-sort-up"></i> @elseif(($sortBy ?? '') == 'notes' && ($sortOrder ?? '') == 'desc') <i class="bi bi-sort-down"></i> @else <i class="bi bi-arrow-down-up"></i> @endif
+                                    </a>
+                                </th>
+                                <th>الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($monthlySummaries as $summary)
+                            @foreach($tasks as $task)
                                 <tr>
-                                    <td>{{ Carbon\Carbon::parse($summary->month)->format('Y / m') }}</td>
-                                    <td>{{ $summary->facility_name }}</td>
-                                    <td>{{ $summary->task_type }}</td>
-                                    <td>{{ $summary->unit->name ?? 'N/A' }}</td>
-                                    <td>{{ $summary->total_seats }}</td>
-                                    <td>{{ $summary->total_mirrors }}</td>
-                                    <td>{{ $summary->total_mixers }}</td>
-                                    <td>{{ $summary->total_doors }}</td>
-                                    <td>{{ $summary->total_sinks }}</td>
-                                    <td>{{ $summary->total_toilets }}</td>
-                                    <td>{{ $summary->total_tasks }}</td>
-                                    <td class="text-nowrap"> {{-- خلية الإجراءات --}}
-                                        <a href="{{ route('monthly-sanitation-report.edit', $summary->id) }}" class="btn btn-sm btn-info">
-                                            <i class="fas fa-edit"></i> تعديل
+                                    <td>{{ Carbon\Carbon::parse($task->date)->translatedFormat('d F Y') }}</td>
+                                    <td>{{ $task->facility_name }}</td>
+                                    <td>{{ $task->task_type }}</td>
+                                    <td>{{ $task->unit->name ?? 'N/A' }}</td>
+                                    <td>{{ $task->seats_count }}</td>
+                                    <td>{{ $task->mirrors_count }}</td>
+                                    <td>{{ $task->mixers_count }}</td>
+                                    <td>{{ $task->doors_count }}</td>
+                                    <td>{{ $task->sinks_count }}</td> {{-- المغاسل --}}
+                                    <td>{{ $task->toilets_count }}</td> {{-- الحمامات --}}
+                                    <td>{{ $task->notes }}</td>
+                                    <td class="text-nowrap">
+                                        {{-- تم تحديث الروابط هنا لتشير إلى SanitationFacilityTaskController --}}
+                                        <a href="{{ route('sanitation-facility-tasks.edit', $task->id) }}" class="btn btn-sm btn-info" aria-label="تعديل المهمة رقم {{ $task->id }}">
+                                            <i class="fas fa-edit" aria-hidden="true"></i> تعديل
                                         </a>
-                                        <form action="{{ route('monthly-sanitation-report.destroy', $summary->id) }}" method="POST" style="display:inline-block;">
+                                        <form action="{{ route('sanitation-facility-tasks.destroy', $task->id) }}" method="POST" style="display:inline-block;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذا التقرير؟')">
-                                                <i class="fas fa-trash"></i> حذف
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذه المهمة؟')" aria-label="حذف المهمة رقم {{ $task->id }}">
+                                                <i class="fas fa-trash" aria-hidden="true"></i> حذف
                                             </button>
                                         </form>
                                     </td>
@@ -402,10 +531,59 @@
                 </div>
 
                 <div class="d-flex justify-content-center mt-4">
-                    {{ $monthlySummaries->links('pagination::bootstrap-5') }}
+                    {{ $tasks->links('pagination::bootstrap-5') }}
                 </div>
             @endif
         </div>
     </div>
 @endsection
 
+@section('scripts')
+<script>
+    function printReport() {
+        // Get current filter parameters from the form
+        const form = document.getElementById('filter-form');
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+        for (const [key, value] of formData.entries()) {
+            if (value) { // Only add non-empty values
+                params.append(key, value);
+            }
+        }
+        // Add sorting parameters if present
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('sort_by')) {
+            params.append('sort_by', urlParams.get('sort_by'));
+        }
+        if (urlParams.has('sort_order')) {
+            params.append('sort_order', urlParams.get('sort_order'));
+        }
+
+        const printUrl = "{{ route('monthly-sanitation-report.print') }}?" + params.toString();
+        window.open(printUrl, '_blank');
+    }
+
+    function exportToCsv() {
+        // Get current filter parameters from the form
+        const form = document.getElementById('filter-form');
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+        for (const [key, value] of formData.entries()) {
+            if (value) { // Only add non-empty values
+                params.append(key, value);
+            }
+        }
+        // Add sorting parameters if present
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('sort_by')) {
+            params.append('sort_by', urlParams.get('sort_by'));
+        }
+        if (urlParams.has('sort_order')) {
+            params.append('sort_order', urlParams.get('sort_order'));
+        }
+
+        const exportUrl = "{{ route('monthly-sanitation-report.export') }}?" + params.toString();
+        window.location.href = exportUrl;
+    }
+</script>
+@endsection

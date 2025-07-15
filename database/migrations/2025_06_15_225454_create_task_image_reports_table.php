@@ -14,40 +14,40 @@ class CreateTaskImageReportsTable extends Migration
         Schema::create('task_image_reports', function (Blueprint $table) {
             $table->id();
 
-            $table->string('report_title')->nullable(); // تم السماح بالقيم الفارغة
+            // عنوان التقرير (اختياري)
+            $table->string('report_title')->nullable();
 
-            // ✅ تم تغيير نوع العمود 'task_id' من unsignedBigInteger إلى string بطول 255
-            // هذا يسمح بتخزين قيم نصية مثل 'جلي مرمر وجه الجامع'
-            $table->string('task_id', 255)->nullable()->index(); // تم التعديل هنا، وأيضاً جعله nullable
+            // رقم أو اسم المهمة (نصي لأن المهمة قد تكون وصفية)
+            $table->string('task_id', 255)->nullable()->index();
 
-            // ✅ تم تغيير نوع العمود 'unit_type' من enum إلى string بطول 255
-            // هذا يسمح بتخزين قيم نصية مثل 'النظافة العامة' و 'المنشآت الصحية'
-            $table->string('unit_type', 255)->index(); 
+            // نوع الوحدة (مثل: النظافة العامة، المنشآت الصحية)
+            $table->string('unit_type', 255)->index();
 
-            // الحقول التي تخزن الصور بصيغة JSON
+            // الصور قبل وبعد (JSON)
             $table->json('before_images')->nullable();
             $table->json('after_images')->nullable();
-            
-            // تاريخ المهمة
+
+            // عدد الصور (جديد)
+            $table->integer('before_images_count')->default(0);
+            $table->integer('after_images_count')->default(0);
+
+            // تاريخ التنفيذ
             $table->date('date')->index();
 
-            // الموقع (مكان المهمة)
+            // موقع تنفيذ المهمة
             $table->string('location')->index();
 
-            // نوع المهمة: إدامة أو صيانة
+            // نوع المهمة (مثلاً: جلي، صيانة...)
             $table->string('task_type')->index();
 
-            // حالة المهمة (مثلاً: مكتملة، معلقة...)
+            // حالة المهمة (مكتملة، قيد التنفيذ...)
             $table->string('status')->nullable();
 
             // ملاحظات إضافية
             $table->text('notes')->nullable();
 
+            // التواريخ التلقائية (created_at, updated_at)
             $table->timestamps();
-
-            // يمكنك إضافة مفتاح أجنبي إذا كانت هناك جداول GeneralCleaningTask و SanitationFacilityTask
-            // ولكن هنا لأنه قد يكون نوعين مختلفين لنفس المفتاح، نحتفظ به كـ unsignedBigInteger فقط.
-            // إذا تريد إضافة قيود مفتاح أجنبي يمكنك تعديلها حسب جداولك.
         });
     }
 

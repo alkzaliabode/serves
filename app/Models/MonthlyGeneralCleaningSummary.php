@@ -35,6 +35,7 @@ class MonthlyGeneralCleaningSummary extends Model
         'total_large_containers',
         'total_small_containers',
         'total_tasks', // ✅ إضافة total_tasks إلى fillable
+        'total_external_partitions', // ✅ تم إضافة هذا الحقل الجديد
     ];
 
     // علاقة مع الوحدة

@@ -12,8 +12,8 @@ use App\Notifications\TaskUpdatedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log; // لاستخدام Log للتحقق
-use Illuminate\Validation\ValidationException; // لاستخدام استثناء التحقق
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class SanitationFacilityTaskController extends Controller
 {
@@ -22,7 +22,8 @@ class SanitationFacilityTaskController extends Controller
      */
     public function index(Request $request)
     {
-        $query = SanitationFacilityTask::with(['creator', 'editor', 'relatedGoal', 'unit', 'employeeTasks.employee']);
+        // ✅ حمل علاقة imageReport لجلب الصور المرتبطة
+        $query = SanitationFacilityTask::with(['creator', 'editor', 'relatedGoal', 'unit', 'employeeTasks.employee', 'imageReport']);
 
         // فلاتر البحث العام
         if ($request->has('search') && $request->input('search') != '') {
@@ -114,6 +115,7 @@ class SanitationFacilityTaskController extends Controller
             return redirect()->back()->withErrors($e->errors())->withInput();
         }
 
+        // ✅ قم بتحميل الصور أولاً للحصول على المسارات
         $beforeImagePaths = [];
         if ($request->hasFile('before_images')) {
             foreach ($request->file('before_images') as $image) {
@@ -132,11 +134,20 @@ class SanitationFacilityTaskController extends Controller
 
         $resourcesUsed = $request->input('resources_used') ?: [];
 
+        // ✅ لا تقم بتمرير 'before_images' و 'after_images' مباشرة إلى create
+        // قم بإنشاء المهمة أولاً
         $task = SanitationFacilityTask::create(array_merge($validatedData, [
-            'before_images' => $beforeImagePaths,
-            'after_images' => $afterImagePaths,
             'resources_used' => $resourcesUsed,
         ]));
+
+        // ✅ الآن، قم بتعيين مسارات الصور للنموذج لتتم معالجتها بواسطة booted()
+        // هذا هو الجزء الذي يربط Request -> Model -> TaskImageReport
+        $task->before_images = $beforeImagePaths;
+        $task->after_images = $afterImagePaths;
+        // قم بحفظ النموذج مرة أخرى لتشغيل هوك `updated`، أو يمكنك استدعاء handleTaskImageReport مباشرة هنا
+        // لكن الأفضل هو الاعتماد على هوكات النموذج لتجنب تكرار الكود
+        $task->save(); // تشغيل هوك `updated` بعد حفظ العلاقات
+
 
         if ($request->has('employeeTasks')) {
             foreach ($request->input('employeeTasks') as $employeeTaskData) {
@@ -175,7 +186,8 @@ class SanitationFacilityTaskController extends Controller
         $goals = UnitGoal::all();
         $employees = Employee::orderBy('name')->get();
 
-        $sanitationFacilityTask->load('employeeTasks');
+        // ✅ تأكد من تحميل علاقة imageReport هنا أيضًا
+        $sanitationFacilityTask->load(['employeeTasks', 'imageReport']);
 
         return view('sanitation_facility_tasks.edit', compact('sanitationFacilityTask', 'units', 'goals', 'employees'));
     }
@@ -194,48 +206,55 @@ class SanitationFacilityTaskController extends Controller
             return redirect()->back()->withErrors($e->errors())->withInput();
         }
 
+        $oldBeforeImagePaths = optional($sanitationFacilityTask->imageReport)->before_images ?? [];
+        $oldAfterImagePaths = optional($sanitationFacilityTask->imageReport)->after_images ?? [];
+
+        $newBeforeImagePaths = $oldBeforeImagePaths;
+        $newAfterImagePaths = $oldAfterImagePaths;
+
         // معالجة صور ما قبل التنفيذ
-        $beforeImagePaths = $sanitationFacilityTask->before_images ?: [];
         if ($request->hasFile('before_images')) {
-            foreach ($beforeImagePaths as $oldPath) {
+            // حذف الصور القديمة المرتبطة بالتقرير
+            foreach ($oldBeforeImagePaths as $oldPath) {
                 Storage::disk('public')->delete($oldPath);
             }
-            $beforeImagePaths = []; // إعادة تعيين المسارات
+            $newBeforeImagePaths = []; // إعادة تعيين المسارات للجديدة
             foreach ($request->file('before_images') as $image) {
                 $path = $image->store('sanitation_facility_tasks/before', 'public');
-                $beforeImagePaths[] = $path;
+                $newBeforeImagePaths[] = $path;
             }
-        } else if ($request->boolean('remove_before_images')) { // استخدم boolean() للتحقق من قيمة صحيحة/خاطئة
-            foreach ($beforeImagePaths as $oldPath) {
+        } else if ($request->boolean('remove_before_images')) {
+            foreach ($oldBeforeImagePaths as $oldPath) {
                 Storage::disk('public')->delete($oldPath);
             }
-            $beforeImagePaths = [];
+            $newBeforeImagePaths = [];
         }
 
         // معالجة صور ما بعد التنفيذ
-        $afterImagePaths = $sanitationFacilityTask->after_images ?: [];
         if ($request->hasFile('after_images')) {
-            foreach ($afterImagePaths as $oldPath) {
+            // حذف الصور القديمة المرتبطة بالتقرير
+            foreach ($oldAfterImagePaths as $oldPath) {
                 Storage::disk('public')->delete($oldPath);
             }
-            $afterImagePaths = [];
+            $newAfterImagePaths = []; // إعادة تعيين المسارات للجديدة
             foreach ($request->file('after_images') as $image) {
                 $path = $image->store('sanitation_facility_tasks/after', 'public');
-                $afterImagePaths[] = $path;
+                $newAfterImagePaths[] = $path;
             }
         } else if ($request->boolean('remove_after_images')) {
-            foreach ($afterImagePaths as $oldPath) {
+            foreach ($oldAfterImagePaths as $oldPath) {
                 Storage::disk('public')->delete($oldPath);
             }
-            $afterImagePaths = [];
+            $newAfterImagePaths = [];
         }
 
         $resourcesUsed = $request->input('resources_used') ?: [];
 
+        // ✅ تحديث المهمة مع تعيين مسارات الصور الجديدة (للتمرير إلى النموذج فقط)
         $sanitationFacilityTask->update(array_merge($validatedData, [
-            'before_images' => $beforeImagePaths,
-            'after_images' => $afterImagePaths,
             'resources_used' => $resourcesUsed,
+            'before_images' => $newBeforeImagePaths, // ✅ ستُستخدم هذه الحقول بواسطة booted()
+            'after_images' => $newAfterImagePaths,   // ✅ ستُستخدم هذه الحقول بواسطة booted()
         ]));
 
         // تحديث الموظفين والتقييمات: حذف الكل وإعادة الإضافة
@@ -254,7 +273,6 @@ class SanitationFacilityTaskController extends Controller
                     $newAssignedEmployeeIds[] = $employeeTaskData['employee_id'];
 
                     // إرسال إشعار للموظف المعين
-                    // إذا كان الموظف جديدًا على المهمة أو تم تحديث المهمة بشكل عام
                     if (!in_array($employeeTaskData['employee_id'], $oldAssignedEmployeeIds)) {
                         $assignedUser = User::where('employee_id', $employeeTaskData['employee_id'])->first();
                         if ($assignedUser) {
@@ -282,14 +300,10 @@ class SanitationFacilityTaskController extends Controller
      */
     public function destroy(SanitationFacilityTask $sanitationFacilityTask)
     {
-        // حذف الصور المرتبطة بالمهمة قبل حذف المهمة نفسها
-        foreach ($sanitationFacilityTask->before_images ?: [] as $path) {
-            Storage::disk('public')->delete($path);
-        }
-        foreach ($sanitationFacilityTask->after_images ?: [] as $path) {
-            Storage::disk('public')->delete($path);
-        }
-
+        // ✅ دالة cleanupTaskImages في النموذج ستهتم بحذف الصور
+        // لذا لا داعي لحذفها يدويًا هنا.
+        // فقط تأكد أن علاقة imageReport محملة إذا كنت بحاجة لـ $sanitationFacilityTask->imageReport
+        // لكن النموذج سيتولى ذلك من خلال hook::deleted
         $sanitationFacilityTask->delete();
 
         return redirect()->route('sanitation-facility-tasks.index')->with('success', 'تم حذف مهمة المنشآت الصحية بنجاح!');
@@ -319,8 +333,8 @@ class SanitationFacilityTaskController extends Controller
             'before_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB لكل صورة
             'after_images' => 'nullable|array',
             'after_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB لكل صورة
-            'remove_before_images' => 'nullable|boolean', // حقل جديد للإشارة إلى حذف الصور
-            'remove_after_images' => 'nullable|boolean',   // حقل جديد للإشارة إلى حذف الصور
+            'remove_before_images' => 'nullable|boolean',
+            'remove_after_images' => 'nullable|boolean',
             'seats_count' => 'nullable|integer|min:0',
             'sinks_count' => 'nullable|integer|min:0',
             'mixers_count' => 'nullable|integer|min:0',
