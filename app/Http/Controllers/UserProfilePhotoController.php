@@ -28,17 +28,21 @@ class UserProfilePhotoController extends Controller
 
         $user = Auth::user();
 
-        // حذف الصورة القديمة إذا كانت موجودة
-        if ($user->profile_photo_path) {
-            Storage::disk('public')->delete($user->profile_photo_path);
-        }
+        try {
+            // حذف الصورة القديمة إذا كانت موجودة
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
 
-        // تخزين الصورة الجديدة في مجلد 'profile-photos' داخل مجلد 'public'
-        $path = $request->file('profile_photo')->store('profile-photos', 'public');
-        
-        // تحديث مسار الصورة في قاعدة البيانات
-        $user->profile_photo_path = $path;
-        $user->save();
+            // تخزين الصورة الجديدة في مجلد 'profile-photos' داخل مجلد 'public'
+            $path = $request->file('profile_photo')->store('profile-photos', 'public');
+            
+            // تحديث مسار الصورة في قاعدة البيانات
+            $user->profile_photo_path = $path;
+            $user->save();
+        } catch (\Exception $e) {
+            return back()->with('error', 'حدث خطأ أثناء تحميل الصورة: ' . $e->getMessage());
+        }
 
         return back()->with('success', 'تم تحديث الصورة الشخصية بنجاح!');
     }

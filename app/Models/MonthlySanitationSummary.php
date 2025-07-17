@@ -5,32 +5,42 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SanitationTask extends Model
+class MonthlySanitationSummary extends Model
 {
     // تعيين اسم الجدول يدوياً
-    protected $table = 'sanitation_tasks';
+    protected $table = 'monthly_sanitation_summary';
 
     // الأعمدة القابلة للتعبئة الجماعية
     protected $fillable = [
-        'date', // تاريخ المهمة الفردية
-        'facility_name',
-        'task_type',
-        'unit_id',
-        'seats_count',    // عدد المقاعد لهذه المهمة
-        'mirrors_count',  // عدد المرايا لهذه المهمة
-        'mixers_count',   // عدد الخلاطات لهذه المهمة
-        'doors_count',    // عدد الأبواب لهذه المهمة
-        'sinks_count',    // عدد الأحواض لهذه المهمة
-        'toilets_count',  // عدد المراحيض لهذه المهمة
-        'notes',          // ملاحظات خاصة بهذه المهمة
+        'id',              // مركب من الشهر + المنشأة + المهمة + الوحدة
+        'month',           // الشهر بصيغة Y-m (مثل 2025-06)
+        'facility_name',   // اسم المنشأة
+        'task_type',       // نوع المهمة
+        'unit_id',         // معرف الوحدة
+        'total_seats',     // إجمالي عدد المقاعد
+        'total_mirrors',   // إجمالي عدد المرايا
+        'total_mixers',    // إجمالي عدد الخلاطات
+        'total_doors',     // إجمالي عدد الأبواب
+        'total_sinks',     // إجمالي عدد الأحواض
+        'total_toilets',   // إجمالي عدد المراحيض
+        'total_tasks',     // إجمالي عدد المهام
     ];
 
-    // تحديد المفتاح الأساسي كـ integer (افتراضي)
-    // إذا كنت تستخدم UUIDs، يجب تعيين protected $keyType = 'string'; public $incrementing = false;
+    // تحديد نوع المفتاح الأساسي كـ string لأننا نستخدم معرف مركب
+    protected $keyType = 'string';
+    
+    // تعطيل الزيادة التلقائية لأن المفتاح الأساسي هو سلسلة نصية
+    public $incrementing = false;
 
     // تحويل أنواع البيانات
     protected $casts = [
-        'date' => 'date', // تحويل حقل التاريخ إلى كائن Carbon
+        'total_seats' => 'integer',
+        'total_mirrors' => 'integer',
+        'total_mixers' => 'integer',
+        'total_doors' => 'integer',
+        'total_sinks' => 'integer',
+        'total_toilets' => 'integer',
+        'total_tasks' => 'integer',
     ];
 
     /**

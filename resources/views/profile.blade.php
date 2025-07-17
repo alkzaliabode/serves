@@ -269,14 +269,25 @@
                     <h3 class="card-title">{{ __('صورة الملف الشخصي') }}</h3>
                 </div>
                 <div class="card-body">
-                    {{--
-                        ملاحظة: هذا النموذج هو لغرض العرض التوضيحي.
-                        في تطبيق Laravel Jetstream، يتم التعامل مع تحميل الصور الشخصية عادةً
-                        من خلال مكون Livewire/Inertia المسمى `UpdateProfileInformationForm`.
-                        إذا كنت تستخدم Jetstream، فقد تحتاج إلى تعديل هذا المكون مباشرةً
-                        أو التأكد من أنه يدعم تحميل الصور تلقائيًا.
-                        هنا، قمنا بإنشاء نموذج HTML منفصل لتبسيط المثال.
-                    --}}
+                    {{-- عرض رسائل النجاح والخطأ --}}
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
                     <form id="profile-photo-form" action="{{ route('user-profile-photo.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
@@ -284,7 +295,11 @@
                         <div class="profile-photo-container">
                             <label for="profile_photo_input" class="profile-photo-wrapper">
                                 <img id="profile_photo_preview"
-                                     src="{{ Auth::user()->profile_photo_url ?? 'https://placehold.co/150x150/cccccc/ffffff?text=U' }}"
+                                     @if(Auth::user()->profile_photo_path)
+                                        src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}"
+                                     @else
+                                        src="https://placehold.co/150x150/cccccc/ffffff?text=U"
+                                     @endif
                                      alt="{{ Auth::user()->name ?? 'User' }}"
                                      class="profile-photo">
                                 <div class="profile-photo-overlay">
@@ -349,17 +364,48 @@
             const profilePhotoForm = document.getElementById('profile-photo-form');
             const removePhotoButton = document.getElementById('remove-photo-button');
 
+            // إضافة معالجة الأخطاء والرسائل
+            @if (session('success'))
+                // إظهار رسالة النجاح
+                alert('{{ session('success') }}');
+            @endif
+
+            @if (session('error'))
+                // إظهار رسالة الخطأ
+                alert('{{ session('error') }}');
+            @endif
+
             // Handle image preview
             profilePhotoInput.addEventListener('change', function(event) {
                 const file = event.target.files[0];
                 if (file) {
+                    // التحقق من حجم الملف (أقل من 2 ميجابايت)
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('حجم الصورة يجب ألا يتجاوز 2 ميجابايت.');
+                        this.value = ''; // إعادة تعيين الملف المحدد
+                        return;
+                    }
+                    
+                    // التحقق من نوع الملف
+                    if (!file.type.match('image.*')) {
+                        alert('الملف المرفوع يجب أن يكون صورة.');
+                        this.value = ''; // إعادة تعيين الملف المحدد
+                        return;
+                    }
+
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         profilePhotoPreview.src = e.target.result;
                     };
                     reader.readAsDataURL(file);
+                    
+                    // إظهار رسالة انتظار قبل الإرسال
+                    alert('جاري تحميل الصورة، يرجى الانتظار...');
+                    
                     // Automatically submit the form when a new file is selected
-                    profilePhotoForm.submit();
+                    setTimeout(() => {
+                        profilePhotoForm.submit();
+                    }, 500);
                 }
             });
 
@@ -369,7 +415,7 @@
                     if (confirm('هل أنت متأكد أنك تريد إزالة صورة ملفك الشخصي؟')) {
                         const form = document.createElement('form');
                         form.method = 'POST';
-                        form.action = '{{ route('user-profile-photo.destroy') }}'; // Define this route in web.php
+                        form.action = '{{ route('user-profile-photo.destroy') }}';
                         form.style.display = 'none';
 
                         const csrfToken = document.createElement('input');

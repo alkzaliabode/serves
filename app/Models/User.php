@@ -62,9 +62,9 @@ class User extends Authenticatable // تأكد من أنك لا تستخدم Mus
      */
     public function getProfilePhotoUrlAttribute(): ?string
     {
-        // إذا كان هناك مسار للصورة، قم بإنشاء URL باستخدام Storage
+        // إذا كان هناك مسار للصورة، قم بإنشاء URL باستخدام asset helper
         if ($this->profile_photo_path) {
-            return Storage::disk('public')->url($this->profile_photo_path);
+            return asset('storage/' . $this->profile_photo_path);
         }
 
         // إذا لم تكن هناك صورة، يمكنك إرجاع صورة افتراضية
