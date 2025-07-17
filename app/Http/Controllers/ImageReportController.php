@@ -25,7 +25,8 @@ class ImageReportController extends Controller
         // 💡 جديد: معالجة مسارات الصور لعرضها كصور مصغرة في جدول القائمة
         foreach ($photo_reports as $report) {
             // التأكد من أن before_images و after_images هي مصفوفات
-            // إذا كان النموذج يستخدم $casts لـ 'array'، فلن تحتاج إلى json_decode هنا
+            // إذا كان النموذج يستخدم $casts لـ 'array' للحقول 'before_images' و 'after_images'
+            // فلن تحتاج إلى json_decode هنا، Laravel سيتعامل معها تلقائياً.
             // ولكن لضمان التوافقية القصوى، سنقوم بإجراء فحص دفاعي
             $beforeImages = $report->before_images;
             if (!is_array($beforeImages)) {
@@ -78,8 +79,8 @@ class ImageReportController extends Controller
             'task_type' => 'nullable|string|max:255',
             'status' => ['required', 'string', Rule::in(['مكتمل', 'قيد التنفيذ', 'ملغى'])],
             'notes' => 'nullable|string',
-            'before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:15360', // ✅ تم التعديل إلى 15MB
+            'after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:15360',  // ✅ تم التعديل إلى 15MB
         ]);
 
         $beforeImagePaths = [];
@@ -108,10 +109,8 @@ class ImageReportController extends Controller
             'task_type' => $validatedData['task_type'],
             'status' => $validatedData['status'],
             'notes' => $validatedData['notes'],
-            'before_images' => $beforeImagePaths,
-            'after_images' => $afterImagePaths,
-            // 'before_images_count' و 'after_images_count' ليسا أعمدة في قاعدة البيانات
-            // لذلك لا يجب تمريرهما هنا.
+            'before_images' => $beforeImagePaths, // Laravel سيقوم تلقائياً بـ json_encode إذا كان العمود JSON
+            'after_images' => $afterImagePaths,   // Laravel سيقوم تلقائياً بـ json_encode إذا كان العمود JSON
         ]);
 
         return redirect()->route('photo_reports.index')->with('success', 'تم إنشاء التقرير المصور بنجاح.');
@@ -182,10 +181,10 @@ class ImageReportController extends Controller
             'task_type' => 'nullable|string|max:255',
             'status' => ['required', 'string', Rule::in(['مكتمل', 'قيد التنفيذ', 'ملغى'])],
             'notes' => 'nullable|string',
-            'new_before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // للصور الجديدة
-            'new_after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',   // للصور الجديدة
+            'new_before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:15360', // ✅ تم التعديل إلى 15MB
+            'new_after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:15360',  // ✅ تم التعديل إلى 15MB
             'deleted_before_images' => 'nullable|json', // الصور التي تم حذفها
-            'deleted_after_images' => 'nullable|json',   // الصور التي تم حذفها
+            'deleted_after_images' => 'nullable|json',  // الصور التي تم حذفها
         ]);
 
         // التعامل مع الصور الموجودة وحذف الصور المحددة للحذف
@@ -240,8 +239,6 @@ class ImageReportController extends Controller
             'notes' => $validatedData['notes'],
             'before_images' => $updatedBeforeImages,
             'after_images' => $updatedAfterImages,
-            // 'before_images_count' و 'after_images_count' ليسا أعمدة في قاعدة البيانات
-            // لذلك لا يجب تمريرهما هنا.
         ]);
 
         return redirect()->route('photo_reports.index')->with('success', 'تم تحديث التقرير المصور بنجاح.');
@@ -299,7 +296,7 @@ class ImageReportController extends Controller
         $taskTypeFilter = $request->input('task_type');
 
         $reportsQuery = TaskImageReport::whereYear('date', $year)
-                                         ->whereMonth('date', $month);
+                                     ->whereMonth('date', $month);
 
         if ($unitTypeFilter && $unitTypeFilter !== 'all') {
             $reportsQuery->where('unit_type', $unitTypeFilter);
@@ -375,10 +372,28 @@ class ImageReportController extends Controller
     }
 
     /**
+     * 💡 دالة جديدة: تعرض نموذج إنشاء التقرير الشهري المصور.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showMonthlyReportForm()
+    {
+        $units = Unit::all(); // جلب جميع الوحدات
+        // يمكنك جلب أنواع المهام من قاعدة البيانات أو تعريفها يدوياً
+        // مثال: إذا كانت task_type مخزنة في جدول TaskImageReport كقيم فريدة
+        $taskTypes = TaskImageReport::distinct()->pluck('task_type')->filter()->values()->toArray();
+
+        // أو يمكنك تعريفها يدوياً إذا كانت قائمة ثابتة
+        // $taskTypes = ['صيانة', 'تركيب', 'فحص', 'تجديد', 'تنظيف'];
+
+        return view('photo_reports.monthly_report_form', compact('units', 'taskTypes'));
+    }
+
+    /**
      * 💡 دالة جديدة: طباعة تقرير مصور واحد في صفحة واحدة.
      *
      * @param  \App\Models\TaskImageReport  $photo_report
-     * @return \Illuminate\View\View
+     * @return \Illuminate\Http\Response (سابقاً كانت View، تم التعديل لتوليد PDF مباشر)
      */
     public function printSingleReport(TaskImageReport $photo_report)
     {
@@ -419,7 +434,11 @@ class ImageReportController extends Controller
             ];
         }
 
-        // تمرير البيانات إلى الواجهة print_only
-        return view('photo_reports.print_only', compact('photo_report', 'unitName', 'processedBeforeImages', 'processedAfterImages'));
+        // توليد PDF باستخدام dompdf
+        $pdf = Pdf::loadView('photo_reports.print_only', compact('photo_report', 'unitName', 'processedBeforeImages', 'processedAfterImages'));
+        $pdf->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
+        $pdf->setPaper('A4', 'portrait');
+
+        return $pdf->stream('Single_Image_Report_' . $photo_report->id . '.pdf');
     }
 }

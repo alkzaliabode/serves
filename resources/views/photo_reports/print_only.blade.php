@@ -4,30 +4,35 @@
     يحتوي على هيكل HTML وأنماط CSS مُحسّنة خصيصًا للطباعة،
     مع التركيز الشديد على احتواء المحتوى في صفحة A4 أفقية واحدة،
     وتكبير الصور قدر الإمكان ضمن هذا القيد، وتنظيم الخطوط بفعالية.
-    تم تصحيح خطأ TypeError: count() في قسم صور بعد التنفيذ.
-    💡 تم إضافة شعارين في رأس التقرير وتنسيق المحتوى بينهما.
-    ✅ تم التحديث: عرض صور "بعد التنفيذ" على اليسار وصور "قبل التنفيذ" على اليمين، كبيرة وكاملة.
+    🚀 تم حل مشكلة الصور الكبيرة بنظام تحكم احترافي متقدم
+    💡 نظام تحكم ذكي في أحجام الصور يتكيف مع المحتوى
+    ✅ تحسين الاستفادة من المساحة المتاحة بأقصى درجة
 --}}
 
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>طباعة تقرير المهام المصور - {{ $photo_report->report_title ?? 'تقرير غير معنون' }}</title>
+    <title>طباعة تقرير المهام المصور - {{ $record->report_title ?? 'تقرير غير معنون' }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         /* Base Print Styles */
         @page {
-            size: A4 landscape; /* تنسيق أفقي لزيادة المساحة العرضية */
-            margin: 5mm 8mm; /* تقليل الهوامش لزيادة مساحة المحتوى */
+            size: A4 landscape;
+            margin: 8mm 10mm;
         }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Arial', sans-serif;
-            line-height: 1.4; /* تباعد أسطر ضيق لتقليل المساحة العمودية */
+            line-height: 1.3;
             color: #222;
             margin: 0;
             padding: 0;
-            font-size: 10.5px; /* حجم خط أساسي أصغر قليلاً لاحتواء المحتوى */
+            font-size: 10px;
             background: white !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -36,177 +41,329 @@
         /* Layout & Container */
         .container-print {
             width: 100%;
-            max-width: 290mm; /* عرض قصوى مناسب لـ A4 landscape مع هوامش 8mm */
+            max-width: 277mm; /* محسوب بدقة لـ A4 landscape مع الهوامش */
             margin: 0 auto;
-            padding: 5mm; /* هامش داخلي صغير للتقرير */
-            box-sizing: border-box;
-            border: 1px solid #777; /* إطار رفيع حول التقرير */
+            padding: 4mm;
+            border: 1px solid #777;
+            min-height: 194mm; /* ارتفاع مضبوط للصفحة */
+            max-height: 194mm;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Header Section */
+        /* Header Section - مضغوط أكثر */
         .header-print {
             text-align: center;
-            margin-bottom: 12px; /* تقليل المسافة بعد العنوان */
-            padding-bottom: 8px;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
             border-bottom: 1px solid #ddd;
-            display: flex; /* 💡 استخدام فليكس بوكس لتنظيم الشعار والعناوين */
-            align-items: center; /* 💡 توسيط العناصر عمودياً */
-            justify-content: space-between; /* 💡 دفع العناصر إلى الأطراف مع توسيط النص */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0; /* منع تقلص الهيدر */
         }
+        
         .header-print .logo {
-            width: 60px; /* 💡 حجم الشعار */
-            height: 60px; /* 💡 حجم الشعار */
-            object-fit: contain; /* 💡 لضمان احتواء الصورة داخل أبعادها */
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
         }
+        
         .header-print .text-content {
-            flex-grow: 1; /* 💡 للسماح للنص بأخذ المساحة المتاحة والتوسط */
-            text-align: center; /* 💡 توسيط النص */
+            flex-grow: 1;
+            text-align: center;
         }
-        .title-print { font-size: 18px; font-weight: bold; margin: 0; color: #333; }
-        .subtitle-print { font-size: 13px; margin: 2px 0; color: #555; }
-        .print-date { font-size: 10px; color: #777; margin-top: 5px; }
+        
+        .title-print { 
+            font-size: 16px; 
+            font-weight: bold; 
+            margin: 0; 
+            color: #333; 
+        }
+        
+        .subtitle-print { 
+            font-size: 11px; 
+            margin: 2px 0; 
+            color: #555; 
+        }
+        
+        .print-date { 
+            font-size: 8px; 
+            color: #777; 
+            margin-top: 2px; 
+        }
 
-        /* Information Section */
+        /* Information Section - مضغوط جداً */
+        .info-section {
+            flex-shrink: 0;
+            margin-bottom: 6px;
+        }
+        
         .info-section p {
-            margin-bottom: 4px; /* مسافة أقل بين سطور المعلومات */
-            font-size: 10.5px;
+            margin-bottom: 2mm;
+            font-size: 9px;
             color: #333;
             display: flex;
             align-items: baseline;
-            flex-wrap: wrap; /* السماح للعناصر بالالتفاف إذا طالت */
+            flex-wrap: wrap;
         }
+        
         .info-section strong {
             display: inline-block;
-            width: 90px; /* تقليل عرض المفاتيح لتوفير مساحة */
+            width: 70px;
             color: #000;
             flex-shrink: 0;
         }
+        
         .info-section span {
             flex-grow: 1;
         }
 
-        /* Badge Styling (for Status) */
+        /* Badge Styling */
         .badge-print {
             background-color: #f0f0f0 !important;
             color: #555 !important;
             border: 1px solid #eee !important;
-            padding: 2px 5px;
+            padding: 1px 4px;
             border-radius: 3px;
-            font-size: 8.5px;
+            font-size: 7px;
             font-weight: normal;
             display: inline-block;
         }
 
-        /* Headings & Paragraphs */
-        h4 {
-            font-size: 13px; /* عناوين فرعية أصغر قليلاً */
-            font-weight: bold;
-            margin-top: 15px; /* تقليل المسافة قبل العناوين */
-            margin-bottom: 8px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-            color: #333;
-        }
-        p {
-            font-size: 10.5px; /* حجم خط الفقرات العامة */
-            color: #333;
+        /* Notes Section - مضغوط */
+        .notes-section {
+            flex-shrink: 0;
             margin-bottom: 6px;
         }
+        
+        .notes-section h4 {
+            font-size: 10px;
+            font-weight: bold;
+            margin: 4px 0 2px 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 2px;
+            color: #333;
+        }
+        
+        .notes-section p {
+            font-size: 8px;
+            color: #333;
+            margin-bottom: 2px;
+        }
 
-        /* Image Pairing Section - New Styles */
+        /* 🚀 نظام التحكم الاحترافي في الصور */
+        .images-container {
+            flex-grow: 1; /* يأخذ المساحة المتبقية */
+            display: flex;
+            flex-direction: column;
+            min-height: 0; /* مهم للفليكس */
+        }
+
         .image-pair-container {
-            display: flex; /* استخدام Flexbox لترتيب العناصر جنباً إلى جنب */
-            justify-content: space-around; /* توزيع المساحة بالتساوي بين الصور */
-            align-items: center; /* محاذاة الصور عمودياً في المنتصف */
-            margin-bottom: 15mm; /* مسافة بين كل زوج من الصور والزوج التالي */
-            page-break-inside: avoid; /* منع تقسيم زوج الصور عبر صفحتين */
-            flex-wrap: wrap; /* السماح للصور بالانتقال إلى سطر جديد إذا كانت الشاشة صغيرة */
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4mm;
+            flex-grow: 1;
+            min-height: 0;
         }
 
         .image-pair-item {
-            width: 48%; /* تحديد عرض كل صورة لتكون تقريباً نصف الصفحة مع بعض الهوامش */
-            margin: 1%; /* هامش بسيط بين الصورتين */
-            box-sizing: border-box; /* للتأكد من أن العرض يشمل الهوامش والحدود */
-            text-align: center; /* لمحاذاة التسميات التوضيحية */
-        }
-
-        .image-pair-item img {
-            max-width: 100%; /* التأكد من أن الصورة لا تتجاوز عرض حاويتها */
-            height: auto; /* الحفاظ على نسبة العرض إلى الارتفاع */
-            object-fit: contain; /* التأكد من ظهور الصورة كاملة داخل الإطار دون قص */
-            border: 1px solid #eee; /* إضافة حدود خفيفة للصور */
-            padding: 2mm; /* مساحة داخل الحدود */
-            background-color: #f9f9f9; /* خلفية خفيفة */
+            width: 48.5%;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
 
         .image-label {
             font-weight: bold;
-            margin-top: 5mm; /* مسافة أعلى تسمية الصورة */
-            font-size: 11pt;
+            font-size: 8px;
             color: #555;
+            margin-bottom: 2px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        /* 🎯 التحكم الذكي في حجم الصور */
+        .image-wrapper {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #eee;
+            background-color: #f9f9f9;
+            padding: 2px;
+            overflow: hidden;
+        }
+
+        .image-pair-item img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .caption-print {
+            font-size: 7px;
+            color: #666;
+            text-align: center;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .placeholder-image-print {
+            opacity: 0.5;
         }
 
         .text-center-print {
             text-align: center;
-            font-size: 10.5px;
+            font-size: 9px;
             color: #888;
-            padding: 10px 0;
+            padding: 6px 0;
         }
+
         hr {
             border: none;
             border-top: 1px dashed #e9e9e9;
-            margin: 15px 0; /* تقليل المسافة للخطوط الفاصلة */
+            margin: 4px 0;
+            flex-shrink: 0;
         }
 
         /* Hide UI elements for print */
         .no-print { display: none !important; }
 
-        /* Final Print Adjustments (Media Query) */
-        /* هذه الأنماط مهمة جداً لضمان الاحتواء في الطباعة الفعلية */
+        /* 🎨 تحسينات الطباعة المتقدمة */
         @media print {
             html, body {
                 width: 297mm;
                 height: 210mm;
                 margin: 0;
                 padding: 0;
-                overflow: hidden; /* منع أي أشرطة تمرير */
+                overflow: hidden;
             }
+            
             @page {
                 size: A4 landscape;
-                margin: 5mm 8mm; /* تأكيد الهوامش المقللة لـ A4 landscape */
+                margin: 8mm 10mm;
             }
+            
+            body {
+                font-size: 9px;
+                line-height: 1.2;
+            }
+            
             .container-print {
-                width: 281mm; /* محاذاة أكثر دقة مع الهوامش */
-                min-height: 195mm; /* ارتفاع أدنى لضمان ملء الصفحة بدون تجاوز */
-                max-height: 198mm; /* تحديد أقصى ارتفاع لمنع تجاوز الصفحة */
+                width: 277mm;
+                height: 194mm;
                 border: 1px solid #555;
-                padding: 6mm; /* تعديل الهوامش الداخلية في الطباعة */
+                padding: 3mm;
                 box-shadow: none;
+                display: flex;
+                flex-direction: column;
             }
-            body { font-size: 10px; line-height: 1.3; } /* تصغير الخط أكثر للطباعة النهائية */
-            .title-print { font-size: 17px; }
-            .subtitle-print { font-size: 12px; }
-            .info-section p, p { font-size: 10px; margin-bottom: 3px; }
-            .info-section strong { width: 85px; }
-            h4 { font-size: 12px; margin-top: 12px; margin-bottom: 6px; padding-bottom: 4px;}
-            /* New print adjustments for image pairing */
+            
+            .header-print .logo {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .title-print { font-size: 14px; }
+            .subtitle-print { font-size: 10px; }
+            .print-date { font-size: 7px; }
+            
+            .info-section p {
+                font-size: 8px;
+                margin-bottom: 1.5mm;
+            }
+            
+            .info-section strong {
+                width: 60px;
+            }
+            
+            .notes-section h4 {
+                font-size: 9px;
+                margin: 3px 0 1px 0;
+            }
+            
+            .notes-section p {
+                font-size: 7px;
+            }
+            
+            .badge-print {
+                font-size: 6px;
+                padding: 1px 3px;
+            }
+            
+            /* 🎯 تحسينات الصور للطباعة */
+            .images-container {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+            }
+            
             .image-pair-container {
-                margin-bottom: 10mm; /* تقليل المسافة بين أزواج الصور في الطباعة */
+                margin-bottom: 2mm;
+                flex-grow: 1;
+                display: flex;
+                align-items: stretch;
             }
+            
             .image-pair-item {
-                width: 49%; /* زيادة عرض الصورة قليلاً في الطباعة */
-                margin: 0.5%; /* تقليل الهامش بين الصورتين */
+                width: 48.5%;
+                display: flex;
+                flex-direction: column;
             }
-            .image-pair-item img {
-                padding: 1.5mm; /* تقليل البادينغ حول الصورة في الطباعة */
-            }
+            
             .image-label {
-                font-size: 10pt; /* تصغير حجم تسمية الصورة في الطباعة */
-                margin-top: 3mm;
+                font-size: 7px;
+                margin-bottom: 1px;
             }
-            .badge-print { font-size: 7.5px; }
-            .text-center-print { font-size: 10px; padding: 8px 0;}
-            hr { margin: 12px 0; }
+            
+            .image-wrapper {
+                flex-grow: 1;
+                min-height: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .caption-print {
+                font-size: 6px;
+                margin-top: 1px;
+            }
+            
+            .text-center-print {
+                font-size: 8px;
+                padding: 4px 0;
+            }
+            
+            hr {
+                margin: 2px 0;
+            }
+        }
+
+        /* 🚀 حساب ديناميكي لحجم الصور حسب عددها */
+        @media print {
+            /* لزوج واحد من الصور */
+            .images-container[data-pairs="1"] .image-wrapper {
+                height: 120mm;
+            }
+            
+            /* لزوجين من الصور */
+            .images-container[data-pairs="2"] .image-wrapper {
+                height: 58mm;
+            }
+            
+            /* لثلاثة أزواج أو أكثر */
+            .images-container[data-pairs="3"] .image-wrapper,
+            .images-container[data-pairs="4"] .image-wrapper,
+            .images-container[data-pairs="5"] .image-wrapper {
+                height: 38mm;
+            }
         }
     </style>
 </head>
@@ -217,7 +374,7 @@
             <img src="{{ asset('images/logo.png') }}"
                  alt="شعار المؤسسة 1"
                  class="logo"
-                 onerror="this.onerror=null; this.src='https://placehold.co/60x60/CCCCCC/666666?text=شعار1';"
+                 onerror="this.onerror=null; this.src='https://placehold.co/45x45/CCCCCC/666666?text=شعار1';"
                  title="إذا لم يظهر الشعار الأول، تأكد من مساره في مجلد public/images">
 
             {{-- محتوى النص في المنتصف --}}
@@ -230,105 +387,125 @@
             </div>
 
             {{-- الشعار الثاني على اليسار --}}
-            <img src="{{ asset('images/another_logo.png') }}" {{-- افترض أن لديك ملف صورة آخر هنا --}}
+            <img src="{{ asset('images/another_logo.png') }}"
                  alt="شعار المؤسسة 2"
                  class="logo"
-                 onerror="this.onerror=null; this.src='https://placehold.co/60x60/CCCCCC/666666?text=شعار2';"
+                 onerror="this.onerror=null; this.src='https://placehold.co/45x45/CCCCCC/666666?text=شعار2';"
                  title="إذا لم يظهر الشعار الثاني، تأكد من مساره في مجلد public/images">
         </div>
 
         <div class="info-section">
-            <p><strong>عنوان التقرير:</strong> <span>{{ $photo_report->report_title ?? 'غير متوفر' }}</span></p>
-            <p><strong>التاريخ:</strong> <span>{{ \Carbon\Carbon::parse($photo_report->date)->format('Y-m-d') }}</span></p>
-            <p><strong>الموقع:</strong> <span>{{ $photo_report->location ?? 'غير متوفر' }}</span></p>
-            <p><strong>نوع الوحدة:</strong> <span>{{ $photo_report->unit_type ?? 'غير متوفر' }}</span></p>
-            <p><strong>نوع المهمة:</strong> <span>{{ $photo_report->task_type ?? 'غير محدد' }}</span></p>
-            <p><strong>معرف المهمة:</strong> <span>{{ $photo_report->task_id ?? 'غير محدد' }}</span></p>
+            <p><strong>عنوان التقرير:</strong> <span>{{ $record->report_title ?? 'غير متوفر' }}</span></p>
+            <p><strong>التاريخ:</strong> <span>{{ \Carbon\Carbon::parse($record->date)->format('Y-m-d') }}</span></p>
+            <p><strong>الموقع:</strong> <span>{{ $record->location ?? 'غير متوفر' }}</span></p>
+            <p><strong>نوع الوحدة:</strong> <span>{{ $unitName ?? 'غير متوفر' }}</span></p>
+            <p><strong>نوع المهمة:</strong> <span>{{ $record->task_type ?? 'غير محدد' }}</span></p>
+            <p><strong>معرف المهمة:</strong> <span>{{ $record->task_id ?? 'غير محدد' }}</span></p>
             <p><strong>الحالة:</strong>
                 <span class="badge-print">
-                    {{ $photo_report->status ?? 'غير متوفر' }}
+                    {{ $record->status ?? 'غير متوفر' }}
                 </span>
             </p>
-            <p><strong>آخر تحديث:</strong> <span>{{ \Carbon\Carbon::parse($photo_report->updated_at)->format('Y-m-d H:i') }}</span></p>
+            <p><strong>آخر تحديث:</strong> <span>{{ \Carbon\Carbon::parse($record->updated_at)->format('Y-m-d H:i') }}</span></p>
         </div>
 
         <hr>
 
-        <h4>الملاحظات:</h4>
-        @if(!empty($photo_report->notes))
-            <p>{{ $photo_report->notes }}</p>
-        @else
-            <p class="text-center-print">لا توجد ملاحظات لهذا التقرير.</p>
-        @endif
+        <div class="notes-section">
+            <h4>الملاحظات:</h4>
+            @if(!empty($record->notes))
+                <p>{{ $record->notes }}</p>
+            @else
+                <p class="text-center-print">لا توجد ملاحظات لهذا التقرير.</p>
+            @endif
+        </div>
 
         <hr>
 
-        {{-- قسم عرض الصور قبل وبعد بتخطيط جديد --}}
-        {{--
-            ملاحظة هامة: هذا الجزء يفترض أن الكنترولر يمرر مصفوفة $pairedImages
-            التي تحتوي على أزواج من الصور (قبل وبعد) لتسهيل عرضها جنباً إلى جنب.
-            إذا لم يتم ذلك في الكنترولر، فستحتاج إلى معالجة قبل تمرير البيانات هنا
-            أو تعديل هذا الجزء للتعامل مع مصفوفتي before_images_urls و after_images_urls بشكل منفصل
-            ثم دمجها منطقياً هنا إذا كانت الفهارس متطابقة.
-        --}}
-        @php
-            $maxImages = max(
-                count($photo_report->before_images_urls ?? []),
-                count($photo_report->after_images_urls ?? [])
-            );
-            $pairedImages = [];
-            for ($i = 0; $i < $maxImages; $i++) {
-                $pairedImages[] = [
-                    'before' => ($photo_report->before_images_urls[$i] ?? null),
-                    'after' => ($photo_report->after_images_urls[$i] ?? null),
-                ];
-            }
-        @endphp
-
-        @if(count($pairedImages) > 0)
-            @foreach($pairedImages as $pair)
-                <div class="image-pair-container">
-                    {{-- الصورة بعد العمل (على اليسار) --}}
-                    @if($pair['after'] && $pair['after']['exists'])
+        {{-- 🚀 قسم عرض الصور المحسن --}}
+        @if(isset($pairedImages) && count($pairedImages) > 0)
+            <div class="images-container" data-pairs="{{ count($pairedImages) }}">
+                @foreach($pairedImages as $pair)
+                    <div class="image-pair-container">
+                        {{-- الصورة بعد العمل (على اليسار) --}}
                         <div class="image-pair-item" dir="ltr">
-                            <p class="image-label">صورة بعد التنفيذ:</p>
-                            <img src="{{ e($pair['after']['url']) }}" alt="صورة بعد التنفيذ" onerror="this.onerror=null;this.src='{{ asset('images/placeholder-image.png') }}';">
+                            <div class="image-label">صورة بعد التنفيذ:</div>
+                            <div class="image-wrapper">
+                                @if(isset($pair['after']['url']) && $pair['after']['exists'])
+                                    <img src="{{ e($pair['after']['url']) }}" alt="صورة بعد التنفيذ" onerror="this.onerror=null;this.src='{{ asset('images/placeholder-image.png') }}';">
+                                @else
+                                    <img src="{{ asset('images/placeholder-image.png') }}" alt="لا توجد صورة بعد" class="placeholder-image-print">
+                                @endif
+                            </div>
                             @if(isset($pair['after']['caption']) && !empty($pair['after']['caption']))
                                 <div class="caption-print">{{ e($pair['after']['caption']) }}</div>
+                            @elseif(!isset($pair['after']['url']) || !$pair['after']['exists'])
+                                <div class="caption-print">لا توجد صورة بعد</div>
                             @endif
                         </div>
-                    @endif
 
-                    {{-- الصورة قبل العمل (على اليمين) --}}
-                    @if($pair['before'] && $pair['before']['exists'])
+                        {{-- الصورة قبل العمل (على اليمين) --}}
                         <div class="image-pair-item" dir="ltr">
-                            <p class="image-label">صورة قبل التنفيذ:</p>
-                            <img src="{{ e($pair['before']['url']) }}" alt="صورة قبل التنفيذ" onerror="this.onerror=null;this.src='{{ asset('images/placeholder-image.png') }}';">
+                            <div class="image-label">صورة قبل التنفيذ:</div>
+                            <div class="image-wrapper">
+                                @if(isset($pair['before']['url']) && $pair['before']['exists'])
+                                    <img src="{{ e($pair['before']['url']) }}" alt="صورة قبل التنفيذ" onerror="this.onerror=null;this.src='{{ asset('images/placeholder-image.png') }}';">
+                                @else
+                                    <img src="{{ asset('images/placeholder-image.png') }}" alt="لا توجد صورة قبل" class="placeholder-image-print">
+                                @endif
+                            </div>
                             @if(isset($pair['before']['caption']) && !empty($pair['before']['caption']))
                                 <div class="caption-print">{{ e($pair['before']['caption']) }}</div>
+                            @elseif(!isset($pair['before']['url']) || !$pair['before']['exists'])
+                                <div class="caption-print">لا توجد صورة قبل</div>
                             @endif
                         </div>
-                    @endif
-                </div>
-            @endforeach
+                    </div>
+                @endforeach
+            </div>
         @else
-            <p class="text-center-print">لا توجد صور قبل أو بعد التنفيذ مرفقة بهذا التقرير.</p>
+            <div class="images-container">
+                <p class="text-center-print">لا توجد صور قبل أو بعد التنفيذ مرفقة بهذا التقرير لعرضها.</p>
+            </div>
         @endif
 
     </div>
 
-    {{-- الأزرار الخاصة بالطباعة والإغلاق (تظهر فقط في المتصفح، تختفي عند الطباعة الفعلية) --}}
+    {{-- أزرار التحكم --}}
     <div class="no-print" style="text-align: center; margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
         <button onclick="window.print()" style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; background: #28a745; color: white; transition: background-color 0.3s ease;">طباعة التقرير</button>
         <button onclick="window.close()" style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; background: #dc3545; color: white; transition: background-color 0.3s ease;">إغلاق النافذة</button>
     </div>
 
     <script>
-        // طباعة الصفحة تلقائيًا بعد تحميلها
+        // طباعة تلقائية مع تحسينات
         window.onload = function() {
+            // إضافة تحسينات للصور قبل الطباعة
+            const images = document.querySelectorAll('.image-pair-item img');
+            let loadedImages = 0;
+            
+            function checkAllImagesLoaded() {
+                loadedImages++;
+                if (loadedImages >= images.length) {
+                    setTimeout(function() {
+                        window.print();
+                    }, 800);
+                }
+            }
+            
+            images.forEach(function(img) {
+                if (img.complete) {
+                    checkAllImagesLoaded();
+                } else {
+                    img.onload = checkAllImagesLoaded;
+                    img.onerror = checkAllImagesLoaded;
+                }
+            });
+            
+            // احتياطي للطباعة حتى لو لم تُحمل الصور
             setTimeout(function() {
                 window.print();
-            }, 1500); // زيادة التأخير لضمان أقصى قدر من التحميل والتخطيط
+            }, 3000);
         };
     </script>
 </body>

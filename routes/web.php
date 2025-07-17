@@ -26,7 +26,7 @@ use App\Http\Controllers\UserProfilePhotoController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MonthlySummaryController;
 use App\Http\Controllers\GlobalMonthlyReportController;
-use App\Http\Controllers\PrintImageReportController;
+use App\Http\Controllers\PrintImageReportController; // تأكد من استيراد هذا الكونترولر
 
 /*
 |--------------------------------------------------------------------------
@@ -122,13 +122,27 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // مسارات التقارير المصورة (Image Reports)
+    // 💡 ملاحظة: Route::resource ينشئ مسارات index, create, store, show, edit, update, destroy
+    // لذلك، لا تكرر تعريفات هذه المسارات يدوياً.
     Route::resource('photo_reports', ImageReportController::class);
+
+    // المسار الخاص بعرض نموذج التقرير الشهري (GET)
     Route::get('/photo_reports/monthly-report', [ImageReportController::class, 'showMonthlyReportForm'])->name('photo_reports.monthly_report_form');
+
+    // المسار الخاص بإنشاء التقرير الشهري (POST)
     Route::post('/photo_reports/generate-monthly-report', [ImageReportController::class, 'generateMonthlyReport'])->name('photo_reports.generate_monthly_report');
-    // 💡 مسار لصفحة الطباعة المستقلة (print_only.blade.php)
+
+    // مسار لصفحة الطباعة المستقلة (print_only.blade.php)
+    // نستخدم 'photo_report' كاسم للمتغير في المسار ليتوافق مع ربط النموذج التلقائي (Route Model Binding)
     Route::get('photo_reports/{photo_report}/print-standalone', [ImageReportController::class, 'printSingleReport'])->name('photo_reports.print_standalone');
-    // 💡 مسار لصفحة الطباعة داخل لوحة التحكم (print.blade.php)
+
+    // مسار لصفحة الطباعة داخل لوحة التحكم (print.blade.php)
+    // يستخدم 'record' كاسم للمتغير، لذا يجب أن يكون PrintImageReportController قادرًا على التعامل معه
     Route::get('photo_reports/{record}/print-internal', [PrintImageReportController::class, 'printSingleReport'])->name('photo_reports.print_internal');
+
+    // ✅ تم إضافة هذا المسار لحل مشكلة 'Route [photo_reports.print] not defined.'
+    // تأكد أن PrintImageReportController::printSingleReport يمكنه التعامل مع 'record'
+    Route::get('photo_reports/{record}/print', [PrintImageReportController::class, 'printSingleReport'])->name('photo_reports.print');
 
 
     // مسارات إدارة إعدادات الخلفية

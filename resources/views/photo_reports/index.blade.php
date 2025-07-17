@@ -187,7 +187,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($taskImageReports as $report)
+                        {{-- ✅ تم التعديل: تغيير اسم المتغير من $taskImageReports إلى $photo_reports --}}
+                        @forelse ($photo_reports as $report)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $report->report_title }}</td>
@@ -197,7 +198,7 @@
                                 <td>{{ $report->task_type ?? 'N/A' }}</td>
                                 <td>{{ $report->task_id ?? 'N/A' }}</td>
                                 <td>
-                                    @if($report->before_images_for_table)
+                                    @if(!empty($report->before_images_for_table))
                                         <div class="d-flex flex-wrap align-items-center">
                                             @foreach($report->before_images_for_table as $image_url)
                                                 {{-- تأكد من تشغيل الأمر 'php artisan storage:link' في سطر الأوامر بمشروعك --}}
@@ -212,7 +213,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($report->after_images_for_table)
+                                    @if(!empty($report->after_images_for_table))
                                         <div class="d-flex flex-wrap align-items-center">
                                             @foreach($report->after_images_for_table as $image_url)
                                                 {{-- تأكد من تشغيل الأمر 'php artisan storage:link' في سطر الأوامر بمشروعك --}}
@@ -227,7 +228,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="badge {{ $report->status == 'مكتملة' ? 'bg-success' : ($report->status == 'قيد التنفيذ' ? 'bg-info' : 'bg-warning') }}">
+                                    <span class="badge {{ $report->status == 'مكتمل' ? 'bg-success' : ($report->status == 'قيد التنفيذ' ? 'bg-info' : ($report->status == 'ملغى' ? 'bg-danger' : 'bg-warning')) }}">
                                         {{ $report->status }}
                                     </span>
                                 </td>

@@ -1,10 +1,10 @@
-@extends('layouts.admin_layout') {{-- تم التعديل ليرث تخطيط admin_layout الجديد --}}
+@extends('layouts.admin_layout')
 
-@section('title', 'إنشاء مهمة منشأة صحية') {{-- تحديد عنوان الصفحة في المتصفح --}}
+@section('title', 'إنشاء مهمة منشأة صحية')
 
-@section('page_title', 'إنشاء مهمة منشأة صحية جديدة') {{-- عنوان الصفحة داخل AdminLTE Header --}}
+@section('page_title', 'إنشاء مهمة منشأة صحية جديدة')
 
-@section('breadcrumb') {{-- Breadcrumb لـ AdminLTE --}}
+@section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('home') }}">الرئيسية</a></li>
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">لوحة التحكم</a></li>
     <li class="breadcrumb-item"><a href="{{ route('sanitation-facility-tasks.index') }}">مهام المنشآت الصحية</a></li>
@@ -256,9 +256,9 @@
     </style>
 @endsection
 
-@section('content') {{-- بداية قسم المحتوى الذي سيتم عرضه داخل AdminLTE layout --}}
+@section('content')
     <div class="container-fluid">
-        <div class="card"> {{-- استخدام بطاقة AdminLTE --}}
+        <div class="card">
             <div class="card-header">
                 <h3 class="card-title">إنشاء مهمة منشأة صحية جديدة</h3>
             </div>
@@ -288,13 +288,13 @@
                 <form action="{{ route('sanitation-facility-tasks.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
-                    <div class="card card-info card-outline"> {{-- استخدام بطاقة AdminLTE كقسم للنموذج --}}
+                    <div class="card card-info card-outline">
                         <div class="card-header">
                             <h2 class="card-title">المعلومات الأساسية</h2>
                         </div>
                         <div class="card-body">
-                            <div class="row mb-4"> {{-- Increased margin-bottom for better spacing --}}
-                                <div class="col-md-4 mb-3"> {{-- Added mb-3 for consistent spacing on small screens --}}
+                            <div class="row mb-4">
+                                <div class="col-md-4 mb-3">
                                     <label for="date" class="form-label">التاريخ</label>
                                     <input type="date" class="form-control" id="date" name="date" value="{{ old('date', date('Y-m-d')) }}" required>
                                 </div>
@@ -371,15 +371,15 @@
                                 <textarea class="form-control" id="details" name="details" rows="5" placeholder="أضف تفاصيل إضافية هنا..." required>{{ old('details') }}</textarea>
                             </div>
 
-                            <fieldset id="equipment-details-fieldset" class="mb-4" style="display: {{ old('task_type') ? 'block' : 'none' }};">
-                                <legend>تفاصيل المعدات</legend>
+                            <fieldset id="equipment-details-fieldset" class="mb-4" style="display: none;"> {{-- تغيير العرض الأولي إلى none --}}
+                                <legend>تفاصيل المعدات <span id="equipment-suffix"></span></legend>
                                 <div class="row mb-3">
-                                    <div class="col-md-4 mb-3"><label for="seats_count" class="form-label"><span class="prefix">عدد</span> المقاعد <span class="suffix">المدامة</span></label><input type="number" class="form-control" id="seats_count" name="seats_count" min="0" value="{{ old('seats_count', 0) }}"></div>
-                                    <div class="col-md-4 mb-3"><label for="mirrors_count" class="form-label"><span class="prefix">عدد</span> المرايا <span class="suffix">المدامة</span></label><input type="number" class="form-control" id="mirrors_count" name="mirrors_count" min="0" value="{{ old('mirrors_count', 0) }}"></div>
-                                    <div class="col-md-4 mb-3"><label for="mixers_count" class="form-label"><span class="prefix">عدد</span> الخلاطات <span class="suffix">المدامة</span></label><input type="number" class="form-control" id="mixers_count" name="mixers_count" min="0" value="{{ old('mixers_count', 0) }}"></div>
-                                    <div class="col-md-4 mb-3"><label for="doors_count" class="form-label"><span class="prefix">عدد</span> الأبواب <span class="suffix">المدامة</span></label><input type="number" class="form-control" id="doors_count" name="doors_count" min="0" value="{{ old('doors_count', 0) }}"></div>
-                                    <div class="col-md-4 mb-3"><label for="sinks_count" class="form-label"><span class="prefix">عدد</span> المغاسل <span class="suffix">المدامة</span></label><input type="number" class="form-control" id="sinks_count" name="sinks_count" min="0" value="{{ old('sinks_count', 0) }}"></div>
-                                    <div class="col-md-4 mb-3"><label for="toilets_count" class="form-label"><span class="prefix">عدد</span> الحمامات <span class="suffix">المدامة</span></label><input type="number" class="form-control" id="toilets_count" name="toilets_count" min="0" value="{{ old('toilets_count', 0) }}"></div>
+                                    <div class="col-md-4 mb-3"><label for="seats_count" class="form-label">عدد المقاعد <span class="suffix"></span></label><input type="number" class="form-control" id="seats_count" name="seats_count" min="0" value="{{ old('seats_count', 0) }}"></div>
+                                    <div class="col-md-4 mb-3"><label for="mirrors_count" class="form-label">عدد المرايا <span class="suffix"></span></label><input type="number" class="form-control" id="mirrors_count" name="mirrors_count" min="0" value="{{ old('mirrors_count', 0) }}"></div>
+                                    <div class="col-md-4 mb-3"><label for="mixers_count" class="form-label">عدد الخلاطات <span class="suffix"></span></label><input type="number" class="form-control" id="mixers_count" name="mixers_count" min="0" value="{{ old('mixers_count', 0) }}"></div>
+                                    <div class="col-md-4 mb-3"><label for="doors_count" class="form-label">عدد الأبواب <span class="suffix"></span></label><input type="number" class="form-control" id="doors_count" name="doors_count" min="0" value="{{ old('doors_count', 0) }}"></div>
+                                    <div class="col-md-4 mb-3"><label for="sinks_count" class="form-label">عدد المغاسل <span class="suffix"></span></label><input type="number" class="form-control" id="sinks_count" name="sinks_count" min="0" value="{{ old('sinks_count', 0) }}"></div>
+                                    <div class="col-md-4 mb-3"><label for="toilets_count" class="form-label">عدد الحمامات <span class="suffix"></span></label><input type="number" class="form-control" id="toilets_count" name="toilets_count" min="0" value="{{ old('toilets_count', 0) }}"></div>
                                 </div>
                             </fieldset>
                         </div>
@@ -410,6 +410,23 @@
                                             <div class="col-md-1 d-flex align-items-end mb-3 mb-md-0"><button type="button" class="btn btn-danger remove-resource"><i class="fas fa-trash"></i></button></div>
                                         </div>
                                     @endforeach
+                                @else
+                                    {{-- Initial empty resource item for create page --}}
+                                    <div class="row mb-3 resource-item">
+                                        <div class="col-md-5 mb-3 mb-md-0"><label class="form-label">اسم المورد</label><input type="text" class="form-control" name="resources_used[0][name]" required></div>
+                                        <div class="col-md-3 mb-3 mb-md-0"><label class="form-label">الكمية</label><input type="number" class="form-control" name="resources_used[0][quantity]" min="0" required></div>
+                                        <div class="col-md-3 mb-3 mb-md-0"><label class="form-label">وحدة القياس</label>
+                                            <select class="form-select" name="resources_used[0][unit]" required>
+                                                <option value="قطعة">قطعة</option>
+                                                <option value="كرتون">كرتون</option>
+                                                <option value="رول">رول</option>
+                                                <option value="لتر">لتر</option>
+                                                <option value="عبوة">عبوة</option>
+                                                <option value="أخرى">أخرى</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end mb-3 mb-md-0"><button type="button" class="btn btn-danger remove-resource"><i class="fas fa-trash"></i></button></div>
+                                    </div>
                                 @endif
                             </div>
                             <button type="button" class="btn btn-secondary mt-3" id="add-resource-button">
@@ -432,7 +449,7 @@
                                                 <select class="form-select" name="employeeTasks[{{ $index }}][employee_id]" required>
                                                     <option value="">اختر الموظف</option>
                                                     @foreach($employees as $employee)
-                                                        <option value="{{ $employee->id }}" {{ ($employeeTask['employee_id'] ?? '') == $employee->id ? 'selected' : '' }}>{{ $employee->name }}</option>
+                                                        <option value="{{ $employee->id }}" {{ (isset($employeeTask['employee_id']) && $employeeTask['employee_id'] == $employee->id) ? 'selected' : '' }}>{{ $employee->name }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -450,27 +467,36 @@
                                             <div class="col-md-1 d-flex align-items-end mb-3 mb-md-0"><button type="button" class="btn btn-danger remove-employee-task"><i class="fas fa-trash"></i></button></div>
                                         </div>
                                     @endforeach
+                                @else
+                                    {{-- Initial empty employee task item for create page --}}
+                                    <div class="row mb-3 employee-task-item">
+                                        <div class="col-md-6 mb-3 mb-md-0">
+                                            <label class="form-label">الموظف</label>
+                                            <select class="form-select" name="employeeTasks[0][employee_id]" required>
+                                                <option value="">اختر الموظف</option>
+                                                @foreach($employees as $employee)
+                                                    <option value="{{ $employee->id }}">{{ $employee->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3 mb-md-0">
+                                            <label class="form-label">تقييم الأداء</label>
+                                            <select class="form-select" name="employeeTasks[0][employee_rating]" required>
+                                                <option value="">اختر التقييم</option>
+                                                <option value="1">ضعيف</option>
+                                                <option value="2">مقبول</option>
+                                                <option value="3">جيد</option>
+                                                <option value="4">جيد جدا</option>
+                                                <option value="5">ممتاز</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end mb-3 mb-md-0"><button type="button" class="btn btn-danger remove-employee-task"><i class="fas fa-trash"></i></button></div>
+                                    </div>
                                 @endif
                             </div>
                             <button type="button" class="btn btn-secondary mt-3" id="add-employee-task-button">
                                 <i class="fas fa-user-plus"></i> إضافة منفذ جديد
                             </button>
-
-                            {{-- تم حذف حقل تقييم المشرف العام --}}
-                            {{--
-                            <div class="mb-4 mt-4">
-                                <label for="supervisor_rating" class="form-label">تقييم المشرف العام للمهمة</label>
-                                <select class="form-select" id="supervisor_rating" name="supervisor_rating" required>
-                                    <option value="">اختر التقييم</option>
-                                    <option value="ممتاز" {{ old('supervisor_rating') == 'ممتاز' ? 'selected' : '' }}>ممتاز</option>
-                                    <option value="جيد جدا" {{ old('supervisor_rating') == 'جيد جدا' ? 'selected' : '' }}>جيد جدا</option>
-                                    <option value="جيد" {{ old('supervisor_rating') == 'جيد' ? 'selected' : '' }}>جيد</option>
-                                    <option value="مقبول" {{ old('supervisor_rating') == 'مقبول' ? 'selected' : '' }}>مقبول</option>
-                                    <option value="ضعيف" {{ old('supervisor_rating') == 'ضعيف' ? 'selected' : '' }}>ضعيف</option>
-                                </select>
-                                <div class="form-text">تقييم المشرف لأداء المهمة بشكل عام.</div>
-                            </div>
-                            --}}
 
                             <div class="mb-4">
                                 <label for="notes" class="form-label">ملاحظات إضافية</label>
@@ -481,23 +507,13 @@
                             <div class="mb-4">
                                 <label for="before_images" class="form-label">صور قبل التنفيذ</label>
                                 <input type="file" class="form-control" id="before_images" name="before_images[]" multiple accept="image/*">
-                                <div class="form-text">يمكنك رفع عدة صور توضح حالة الموقع قبل بدء المهمة.</div>
-                            </div>
-                            <div class="mb-4">
-                                <label for="after_images" class="form-label">صور بعد التنفيذ</label>
-                                <input type="file" class="form-control" id="after_images" name="after_images[]" multiple accept="image/*">
-                                <div class="form-text">يمكنك رفع عدة صور توضح حالة الموقع بعد الانتهاء من المهمة.</div>
+                                <div class="form-text">يمكنك رفع عدة صور توضح حالة الموقع قبل التنفيذ.</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between mt-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> حفظ المهمة
-                        </button>
-                        <a href="{{ route('sanitation-facility-tasks.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-ban"></i> إلغاء
-                        </a>
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ المهمة</button>
                     </div>
                 </form>
             </div>
@@ -506,128 +522,135 @@
 @endsection
 
 @section('scripts')
+    @parent {{-- تأكد من تضمين أي سكربتات أساسية من التخطيط الأب --}}
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Logic to show/hide equipment details based on task type
-            const taskTypeSelect = document.getElementById('task_type');
-            const equipmentDetailsFieldset = document.getElementById('equipment-details-fieldset');
-
+        $(document).ready(function() {
+            // Function to manage 'Equipment Details' fieldset visibility and labels based on 'Task Type'
             function toggleEquipmentDetails() {
-                if (taskTypeSelect.value === 'صيانة') {
-                    equipmentDetailsFieldset.style.display = 'block';
-                    // Make fields required for 'صيانة'
-                    equipmentDetailsFieldset.querySelectorAll('input[type="number"]').forEach(input => {
-                        input.setAttribute('required', 'required');
-                    });
+                const taskType = $('#task_type').val();
+                const equipmentDetailsFieldset = $('#equipment-details-fieldset');
+                const equipmentSuffix = $('#equipment-suffix'); // Span for the suffix in legend
+                const labelSuffixes = equipmentDetailsFieldset.find('.suffix'); // Spans for suffixes in labels
+
+                if (taskType === 'إدامة') {
+                    equipmentDetailsFieldset.slideDown(); // Show with animation
+                    equipmentSuffix.text(' (الإدامة)'); // Update legend suffix
+                    labelSuffixes.text('المدامة'); // Update labels suffix
+                    // Set inputs inside fieldset as required if visible
+                    equipmentDetailsFieldset.find('input[type="number"]').attr('required', true);
+                } else if (taskType === 'صيانة') {
+                    equipmentDetailsFieldset.slideDown(); // Show with animation
+                    equipmentSuffix.text(' (الصيانة)'); // Update legend suffix
+                    labelSuffixes.text('المصانة'); // Update labels suffix
+                    // Set inputs inside fieldset as required if visible
+                    equipmentDetailsFieldset.find('input[type="number"]').attr('required', true);
                 } else {
-                    equipmentDetailsFieldset.style.display = 'none';
-                    // Remove required attribute if not 'صيانة'
-                    equipmentDetailsFieldset.querySelectorAll('input[type="number"]').forEach(input => {
-                        input.removeAttribute('required');
-                        input.value = 0; // Reset values when hidden
-                    });
+                    equipmentDetailsFieldset.slideUp(); // Hide with animation
+                    equipmentSuffix.text(''); // Clear legend suffix
+                    labelSuffixes.text(''); // Clear labels suffix
+                    // Remove required attribute if hidden to prevent validation issues
+                    equipmentDetailsFieldset.find('input[type="number"]').removeAttr('required');
+                    // Reset values to 0 when hidden (or clear them)
+                    equipmentDetailsFieldset.find('input[type="number"]').val(0);
                 }
             }
 
-            taskTypeSelect.addEventListener('change', toggleEquipmentDetails);
-            toggleEquipmentDetails(); // Call on load to set initial state
+            // Initial call to set visibility and labels on page load, *especially for Create page*.
+            // This is crucial for when old('task_type') might be set after a validation error.
+            toggleEquipmentDetails();
 
-            // Repeater for Resources Used
-            const resourcesRepeater = document.getElementById('resources-repeater');
-            const addResourceButton = document.getElementById('add-resource-button');
-            let resourceIndex = resourcesRepeater.children.length; // Start index from existing items
+            // Bind change event to 'task_type' select
+            $('#task_type').change(function() {
+                toggleEquipmentDetails();
+            });
 
-            function addResourceItem(name = '', quantity = '', unit = '') {
-                const newResourceItem = document.createElement('div');
-                newResourceItem.classList.add('row', 'mb-3', 'resource-item');
-                newResourceItem.innerHTML = `
-                    <div class="col-md-5 mb-3 mb-md-0"><label class="form-label">اسم المورد</label><input type="text" class="form-control" name="resources_used[${resourceIndex}][name]" value="${name}" required></div>
-                    <div class="col-md-3 mb-3 mb-md-0"><label class="form-label">الكمية</label><input type="number" class="form-control" name="resources_used[${resourceIndex}][quantity]" min="0" value="${quantity}" required></div>
-                    <div class="col-md-3 mb-3 mb-md-0"><label class="form-label">وحدة القياس</label>
-                        <select class="form-select" name="resources_used[${resourceIndex}][unit]" required>
-                            <option value="قطعة" ${unit === 'قطعة' ? 'selected' : ''}>قطعة</option>
-                            <option value="كرتون" ${unit === 'كرتون' ? 'selected' : ''}>كرتون</option>
-                            <option value="رول" ${unit === 'رول' ? 'selected' : ''}>رول</option>
-                            <option value="لتر" ${unit === 'لتر' ? 'selected' : ''}>لتر</option>
-                            <option value="عبوة" ${unit === 'عبوة' ? 'selected' : ''}>عبوة</option>
-                            <option value="أخرى" ${unit === 'أخرى' ? 'selected' : ''}>أخرى</option>
-                        </select>
+            // --- Resources Repeater Logic ---
+            let resourceIndex = {{ old('resources_used') ? count(old('resources_used')) : 1 }};
+            // Adjust resourceIndex if there were no old values but one initial item
+            if (resourceIndex === 0 && $('#resources-repeater .resource-item').length === 1) {
+                resourceIndex = 1;
+            }
+
+            $('#add-resource-button').click(function() {
+                const newResourceHtml = `
+                    <div class="row mb-3 resource-item">
+                        <div class="col-md-5 mb-3 mb-md-0"><label class="form-label">اسم المورد</label><input type="text" class="form-control" name="resources_used[${resourceIndex}][name]" required></div>
+                        <div class="col-md-3 mb-3 mb-md-0"><label class="form-label">الكمية</label><input type="number" class="form-control" name="resources_used[${resourceIndex}][quantity]" min="0" required></div>
+                        <div class="col-md-3 mb-3 mb-md-0"><label class="form-label">وحدة القياس</label>
+                            <select class="form-select" name="resources_used[${resourceIndex}][unit]" required>
+                                <option value="قطعة">قطعة</option>
+                                <option value="كرتون">كرتون</option>
+                                <option value="رول">رول</option>
+                                <option value="لتر">لتر</option>
+                                <option value="عبوة">عبوة</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end mb-3 mb-md-0"><button type="button" class="btn btn-danger remove-resource"><i class="fas fa-trash"></i></button></div>
                     </div>
-                    <div class="col-md-1 d-flex align-items-end mb-3 mb-md-0"><button type="button" class="btn btn-danger remove-resource"><i class="fas fa-trash"></i></button></div>
                 `;
-                resourcesRepeater.appendChild(newResourceItem);
+                $('#resources-repeater').append(newResourceHtml);
                 resourceIndex++;
-            }
-
-            addResourceButton.addEventListener('click', function() {
-                addResourceItem();
             });
 
-            resourcesRepeater.addEventListener('click', function(e) {
-                if (e.target.classList.contains('remove-resource') || e.target.closest('.remove-resource')) {
-                    e.target.closest('.resource-item').remove();
+            // Handle remove button for resources (using event delegation)
+            $('#resources-repeater').on('click', '.remove-resource', function() {
+                if ($('#resources-repeater .resource-item').length > 1) { // Prevent removing the last item
+                    $(this).closest('.resource-item').remove();
+                } else {
+                    alert('يجب أن يكون هناك مورد واحد على الأقل.');
                 }
             });
 
-            // Repeater for Employees and Ratings
-            const employeesRepeater = document.getElementById('employees-repeater');
-            const addEmployeeTaskButton = document.getElementById('add-employee-task-button');
-            let employeeTaskIndex = employeesRepeater.children.length; // Start index from existing items
+            // --- Employees Repeater Logic ---
+            let employeeIndex = {{ old('employeeTasks') ? count(old('employeeTasks')) : 1 }};
+            // Adjust employeeIndex if there were no old values but one initial item
+            if (employeeIndex === 0 && $('#employees-repeater .employee-task-item').length === 1) {
+                employeeIndex = 1;
+            }
+            
+            $('#add-employee-task-button').click(function() {
+                const employeesOptions = @json($employees->mapWithKeys(fn($employee) => [$employee->id => $employee->name])->toArray());
+                let optionsHtml = '<option value="">اختر الموظف</option>';
+                for (const id in employeesOptions) {
+                    optionsHtml += `<option value="${id}">${employeesOptions[id]}</option>`;
+                }
 
-            function addEmployeeTaskItem(employeeId = '', rating = '') {
-                const newEmployeeTaskItem = document.createElement('div');
-                newEmployeeTaskItem.classList.add('row', 'mb-3', 'employee-task-item');
-                newEmployeeTaskItem.innerHTML = `
-                    <div class="col-md-6 mb-3 mb-md-0">
-                        <label class="form-label">الموظف</label>
-                        <select class="form-select" name="employeeTasks[${employeeTaskIndex}][employee_id]" required>
-                            <option value="">اختر الموظف</option>
-                            @foreach($employees as $employee)
-                                <option value="{{ $employee->id }}" ${employeeId == {{ $employee->id }} ? 'selected' : ''}>{{ $employee->name }}</option>
-                            @endforeach
-                        </select>
+                const newEmployeeTaskHtml = `
+                    <div class="row mb-3 employee-task-item">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="form-label">الموظف</label>
+                            <select class="form-select" name="employeeTasks[${employeeIndex}][employee_id]" required>
+                                ${optionsHtml}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label class="form-label">تقييم الأداء</label>
+                            <select class="form-select" name="employeeTasks[${employeeIndex}][employee_rating]" required>
+                                <option value="">اختر التقييم</option>
+                                <option value="1">ضعيف</option>
+                                <option value="2">مقبول</option>
+                                <option value="3">جيد</option>
+                                <option value="4">جيد جدا</option>
+                                <option value="5">ممتاز</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end mb-3 mb-md-0"><button type="button" class="btn btn-danger remove-employee-task"><i class="fas fa-trash"></i></button></div>
                     </div>
-                    <div class="col-md-4 mb-3 mb-md-0">
-                        <label class="form-label">تقييم الأداء</label>
-                        <select class="form-select" name="employeeTasks[${employeeTaskIndex}][employee_rating]" required>
-                            <option value="">اختر التقييم</option>
-                            <option value="1" ${rating == '1' ? 'selected' : ''}>ضعيف</option>
-                            <option value="2" ${rating == '2' ? 'selected' : ''}>مقبول</option>
-                            <option value="3" ${rating == '3' ? 'selected' : ''}>جيد</option>
-                            <option value="4" ${rating == '4' ? 'selected' : ''}>جيد جدا</option>
-                            <option value="5" ${rating == '5' ? 'selected' : ''}>ممتاز</option>
-                        </select>
-                    </div>
-                    <div class="col-md-1 d-flex align-items-end mb-3 mb-md-0"><button type="button" class="btn btn-danger remove-employee-task"><i class="fas fa-trash"></i></button></div>
                 `;
-                employeesRepeater.appendChild(newEmployeeTaskItem);
-                employeeTaskIndex++;
-            }
-
-            addEmployeeTaskButton.addEventListener('click', function() {
-                addEmployeeTaskItem();
+                $('#employees-repeater').append(newEmployeeTaskHtml);
+                employeeIndex++;
             });
 
-            employeesRepeater.addEventListener('click', function(e) {
-                if (e.target.classList.contains('remove-employee-task') || e.target.closest('.remove-employee-task')) {
-                    e.target.closest('.employee-task-item').remove();
+            // Handle remove button for employee tasks (using event delegation)
+            $('#employees-repeater').on('click', '.remove-employee-task', function() {
+                if ($('#employees-repeater .employee-task-item').length > 1) { // Prevent removing the last item
+                    $(this).closest('.employee-task-item').remove();
+                } else {
+                    alert('يجب أن يكون هناك منفذ واحد على الأقل.');
                 }
             });
-
-            // Handle old input for repeaters
-            @if (old('resources_used'))
-                // No need to re-add, they are already rendered by Blade
-            @else
-                // Add one empty resource item if no old input exists
-                // addResourceItem(); // Commented out to avoid adding an empty row by default
-            @endif
-
-            @if (old('employeeTasks'))
-                // No need to re-add, they are already rendered by Blade
-            @else
-                // Add one empty employee task item if no old input exists
-                addEmployeeTaskItem(); // Keep one empty employee task row by default
-            @endif
         });
     </script>
 @endsection
