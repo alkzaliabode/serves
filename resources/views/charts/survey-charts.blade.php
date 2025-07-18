@@ -11,14 +11,13 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <div class="card card-outline card-info shadow-lg border-primary rounded-lg">
+        <div class="card card-outline card-info shadow-lg border-primary rounded-lg animate__animated animate__fadeInUp">
             <div class="card-header border-0 bg-gradient-dark">
                 <h3 class="card-title font-weight-bold text-white">
                     <i class="fas fa-chart-line mr-2"></i> لوحة معلومات إحصائيات رضا الزائرين
                 </h3>
                 <div class="card-tools">
-                    {{-- تم إضافة زر الطباعة هنا --}}
-                    <button id="printReportBtn" class="btn btn-success btn-sm shadow-sm">
+                    <button id="printReportBtn" class="btn btn-success btn-sm shadow-sm animate__animated animate__pulse animate__infinite">
                         <i class="fas fa-file-pdf mr-2"></i> طباعة التقرير / PDF
                     </button>
                 </div>
@@ -42,10 +41,18 @@
                     </div>
                 @endif
 
+                {{-- رسالة خطأ مخصصة لجلب البيانات --}}
+                <div id="chartErrorAlert" class="alert alert-danger alert-dismissible fade show animate__animated animate__growIn" role="alert" style="display: none;">
+                    حدث خطأ أثناء تحميل البيانات. يرجى التحقق من اتصال الشبكة وإعادة المحاولة.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
                 {{-- فلاتر التاريخ --}}
                 <div class="row mb-4">
                     <div class="col-md-12">
-                        <div class="card bg-gradient-dark shadow-sm border-secondary rounded">
+                        <div class="card bg-gradient-dark shadow-sm border-secondary rounded animate__animated animate__fadeIn">
                             <div class="card-header border-0">
                                 <h5 class="card-title text-white"><i class="fas fa-filter mr-2"></i> تصفية البيانات حسب التاريخ</h5>
                             </div>
@@ -69,9 +76,9 @@
                 </div>
 
                 <div class="row">
-                    {{-- المخطط 1: توزيع الرضا العام (دائري) --}}
-                    <div class="col-md-6 mb-4">
-                        <div class="card card-outline card-primary shadow-lg border-primary rounded-lg chart-card">
+                    {{-- المخطط 1: توزيع الرضا العام (Doughnut Chart) --}}
+                    <div class="col-md-6 mb-4 animate__animated animate__fadeInLeft">
+                        <div class="card card-outline card-primary shadow-lg border-primary rounded-lg chart-card h-100">
                             <div class="card-header border-0 bg-gradient-primary-dark">
                                 <h3 class="card-title font-weight-bold text-white">
                                     <i class="fas fa-chart-pie mr-2"></i> توزيع الرضا العام
@@ -79,15 +86,16 @@
                             </div>
                             <div class="card-body">
                                 <div class="chart-container">
-                                    <canvas id="satisfactionPieChart"></canvas>
+                                    <canvas id="satisfactionDoughnutChart"></canvas>
+                                    <div id="satisfactionCenterText" class="chart-center-text"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- المخطط 2: نظافة القاعات (حلقي - Doughnut Chart) --}}
-                    <div class="col-md-6 mb-4">
-                        <div class="card card-outline card-success shadow-lg border-success rounded-lg chart-card">
+                    {{-- المخطط 2: نظافة القاعات (Bar Chart - Vertical) --}}
+                    <div class="col-md-6 mb-4 animate__animated animate__fadeInRight">
+                        <div class="card card-outline card-success shadow-lg border-success rounded-lg chart-card h-100">
                             <div class="card-header border-0 bg-gradient-success-dark">
                                 <h3 class="card-title font-weight-bold text-white">
                                     <i class="fas fa-house-user mr-2"></i> نظافة القاعات
@@ -95,8 +103,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="chart-container">
-                                    <canvas id="hallCleanlinessChart"></canvas>
-                                    <div id="hallCleanlinessCenterText" class="chart-center-text"></div>
+                                    <canvas id="hallCleanlinessBarChart"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -104,9 +111,9 @@
                 </div>
 
                 <div class="row mt-2">
-                    {{-- المخطط 3: نظافة ترامز الماء (شريطي أفقي - Horizontal Bar Chart) --}}
-                    <div class="col-md-6 mb-4">
-                        <div class="card card-outline card-warning shadow-lg border-warning rounded-lg chart-card">
+                    {{-- المخطط 3: نظافة ترامز الماء (Horizontal Bar Chart) --}}
+                    <div class="col-md-6 mb-4 animate__animated animate__fadeInLeft">
+                        <div class="card card-outline card-warning shadow-lg border-warning rounded-lg chart-card h-100">
                             <div class="card-header border-0 bg-gradient-warning-dark">
                                 <h3 class="card-title font-weight-bold text-white">
                                     <i class="fas fa-faucet mr-2"></i> نظافة ترامز الماء
@@ -114,33 +121,49 @@
                             </div>
                             <div class="card-body">
                                 <div class="chart-container">
-                                    <canvas id="waterTramsCleanlinessChart"></canvas>
+                                    <canvas id="waterTramsCleanlinessHorizontalBarChart"></canvas>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- المخطط 4: نظافة المرافق العامة (عمودي - Vertical Bar Chart) --}}
-                    <div class="col-md-6 mb-4">
-                        <div class="card card-outline card-danger shadow-lg border-danger rounded-lg chart-card">
+                    {{-- المخطط 4: نظافة دورات المياه (Radar Chart) --}}
+                    <div class="col-md-6 mb-4 animate__animated animate__fadeInRight">
+                        <div class="card card-outline card-danger shadow-lg border-danger rounded-lg chart-card h-100">
                             <div class="card-header border-0 bg-gradient-danger-dark">
                                 <h3 class="card-title font-weight-bold text-white">
-                                    <i class="fas fa-restroom mr-2"></i> نظافة المرافق العامة
+                                    <i class="fas fa-toilet mr-2"></i> نظافة دورات المياه
                                 </h3>
                             </div>
                             <div class="card-body">
                                 <div class="chart-container">
-                                    <canvas id="facilitiesCleanlinessChart"></canvas>
+                                    <canvas id="restroomCleanlinessRadarChart"></canvas>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- تم إزالة قسم مخطط السرعة والدقة بالكامل هنا بناءً على طلبك --}}
+                <div class="row mt-2">
+                    {{-- المخطط 5: نظافة الساحات والممرات (Polar Area Chart) --}}
+                    <div class="col-md-12 mb-4 animate__animated animate__fadeInUp">
+                        <div class="card card-outline card-info shadow-lg border-info rounded-lg chart-card">
+                            <div class="card-header border-0 bg-gradient-info-dark">
+                                <h3 class="card-title font-weight-bold text-white">
+                                    <i class="fas fa-walking mr-2"></i> نظافة الساحات والممرات
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="courtyardsCleanlinessPolarAreaChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {{-- جدول الإحصائيات التفصيلية --}}
-                <div class="row mt-4">
+                <div class="row mt-4 animate__animated animate__fadeInUp">
                     <div class="col-md-12">
                         <div class="card card-outline card-secondary shadow-lg border-secondary rounded-lg">
                             <div class="card-header border-0 bg-gradient-secondary-dark">
@@ -176,7 +199,6 @@
         </div>
     </div>
 
-   
     {{-- نموذج الطباعة المخفي --}}
     <div id="printableReport" style="display: none; direction: rtl;">
         <div class="print-container" lang="ar" dir="rtl">
@@ -211,7 +233,6 @@
                 </div>
             </div>
 
-
             <div class="print-body">
                 <div class="charts-section">
                     <h3>المخططات البيانية</h3>
@@ -229,11 +250,14 @@
                             <canvas id="printWaterChart"></canvas>
                         </div>
                         <div class="chart-item">
-                            <h4>نظافة المرافق العامة</h4>
-                            <canvas id="printFacilitiesChart"></canvas>
+                            <h4>نظافة دورات المياه</h4>
+                            <canvas id="printRestroomChart"></canvas>
+                        </div>
+                        <div class="chart-item">
+                            <h4>نظافة الساحات والممرات</h4>
+                            <canvas id="printCourtyardsChart"></canvas>
                         </div>
                     </div>
-                    {{-- تم إزالة قسم مخطط السرعة والدقة من الطباعة هنا بناءً على طلبك --}}
                 </div>
 
                 <div class="statistics-section">
@@ -282,7 +306,7 @@
                         <span>تم إنشاء التقرير في: <span id="generationDate"></span></span>
                     </div>
                     <div class="page-number">
-                        <span>صفحة 1 من 1</span> {{-- يمكن جعلها ديناميكية لاحقًا لتقارير متعددة الصفحات --}}
+                        <span>صفحة 1 من 1</span>
                     </div>
                 </div>
             </div>
@@ -292,54 +316,106 @@
 
 @section('styles')
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
+        :root {
+            --primary-color: #007bff;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --secondary-color: #6c757d;
+            --dark-bg-primary: #34495e;
+            --dark-bg-secondary: #2c3e50;
+            --text-color: #ecf0f1;
+            --light-text-color: #bdc3c7;
+            --border-color-dark: #5d6d7e;
+            --chart-bg-dark: rgba(255, 255, 255, 0.03);
+            --chart-border-dark: rgba(255, 255, 255, 0.3);
+            
+            /* نظام الألوان الجديد للمؤشرات */
+            --excellent-color: #28a745; /* أخضر - ممتاز */
+            --very-good-color: #8bc34a; /* أخضر فاتح - جيد جداً */
+            --good-color: #ffc107; /* أصفر - جيد */
+            --acceptable-color: #fd7e14; /* برتقالي - مقبول */
+            --poor-color: #dc3545; /* أحمر - ضعيف */
+            
+            /* تدرجات الألوان */
+            --gradient-primary: linear-gradient(to right, var(--primary-color), #0056b3);
+            --gradient-success: linear-gradient(to right, var(--excellent-color), #1e7e34);
+            --gradient-warning: linear-gradient(to right, var(--good-color), #d39e00);
+            --gradient-danger: linear-gradient(to right, var(--poor-color), #b21f2d);
+            --gradient-info: linear-gradient(to right, var(--info-color), #117a8b);
+            --gradient-secondary: linear-gradient(to right, var(--secondary-color), #545b62);
+            --gradient-dark: linear-gradient(to right, #343a40, #23272b);
+        }
+
         body {
             font-family: 'Cairo', 'Noto Sans Arabic', sans-serif !important;
-            background-color: #2c3e50;
-            color: #ecf0f1;
+            background-color: var(--dark-bg-secondary);
+            color: var(--text-color);
+            direction: rtl;
+            text-align: right;
+            overflow-x: hidden;
         }
-        .bg-dark-custom {
-            background-color: #34495e;
-        }
+        
+        .bg-dark-custom { background-color: var(--dark-bg-primary); }
+
         .card {
             border-radius: 15px;
             overflow: hidden;
             transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            border: none;
         }
+        
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
+        
         .card-header {
             border-bottom: none !important;
             padding: 1rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
         }
+        
         .card-title {
-            font-size: 1.35rem;
+            font-size: 1.45rem;
             margin-bottom: 0;
-            color: #ecf0f1;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
         }
-        .card-tools .btn {
-            font-size: 0.85rem; /* حجم خط أصغر لزر الطباعة */
-            padding: 0.45rem 0.9rem;
-        }
-        .card-outline.card-info { border-top: 3px solid #17a2b8; }
-        .card-outline.card-primary { border-top: 3px solid #007bff; }
-        .card-outline.card-success { border-top: 3px solid #28a745; }
-        .card-outline.card-warning { border-top: 3px solid #ffc107; }
-        .card-outline.card-danger { border-top: 3px solid #dc3545; }
-        .card-outline.card-secondary { border-top: 3px solid #6c757d; } /* إضافة لون للجدول */
+        
+        .card-title i { margin-left: 10px; margin-right: 0; }
 
-        .bg-gradient-primary-dark { background: linear-gradient(to right, #007bff, #0056b3); }
-        .bg-gradient-success-dark { background: linear-gradient(to right, #28a745, #1e7e34); }
-        .bg-gradient-warning-dark { background: linear-gradient(to right, #ffc107, #d39e00); }
-        .bg-gradient-danger-dark { background: linear-gradient(to right, #dc3545, #b21f2d); }
-        .bg-gradient-info-dark { background: linear-gradient(to right, #17a2b8, #117a8b); }
-        .bg-gradient-secondary-dark { background: linear-gradient(to right, #6c757d, #545b62); } /* إضافة لون للجدول */
-        .bg-gradient-dark { background: linear-gradient(to right, #343a40, #23272b); }
+        .card-tools .btn {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        /* Card outline colors */
+        .card-outline.card-info { border-top: 4px solid var(--info-color); }
+        .card-outline.card-primary { border-top: 4px solid var(--primary-color); }
+        .card-outline.card-success { border-top: 4px solid var(--excellent-color); }
+        .card-outline.card-warning { border-top: 4px solid var(--good-color); }
+        .card-outline.card-danger { border-top: 4px solid var(--poor-color); }
+        .card-outline.card-secondary { border-top: 4px solid var(--secondary-color); }
+
+        /* Gradient backgrounds for headers */
+        .bg-gradient-primary-dark { background: var(--gradient-primary); }
+        .bg-gradient-success-dark { background: var(--gradient-success); }
+        .bg-gradient-warning-dark { background: var(--gradient-warning); }
+        .bg-gradient-danger-dark { background: var(--gradient-danger); }
+        .bg-gradient-info-dark { background: var(--gradient-info); }
+        .bg-gradient-secondary-dark { background: var(--gradient-secondary); }
+        .bg-gradient-dark { background: var(--gradient-dark); }
 
         .chart-container {
             position: relative;
@@ -350,37 +426,19 @@
             align-items: center;
             padding: 10px;
         }
+        
         canvas {
-            background-color: rgba(255, 255, 255, 0.03);
+            background-color: var(--chart-bg-dark);
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             padding: 15px;
             width: 100% !important;
             height: 100% !important;
+            transition: all 0.5s ease-in-out;
         }
-        .card-body .form-control {
-            background-color: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            color: #ecf0f1;
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-        }
-        .card-body .form-control::placeholder {
-            color: #bdc3c7;
-        }
-        .card-body .form-control:focus {
-            background-color: rgba(255, 255, 255, 0.18);
-            border-color: #6edff6;
-            box-shadow: 0 0 0 0.25rem rgba(110, 223, 246, 0.35);
-        }
-        .form-control-dark {
-            background-color: #2c3e50;
-            border-color: #5d6d7e;
-            color: #ecf0f1;
-        }
-        .form-control-dark:focus {
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+        
+        canvas:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
         }
 
         .chart-center-text {
@@ -388,80 +446,80 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: bold;
             color: #e0e0e0;
             text-align: center;
             pointer-events: none;
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.9);
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
             line-height: 1.2;
         }
+        
         .custom-btn-gradient {
-            background: linear-gradient(to right, #007bff, #0056b3);
+            background: var(--gradient-primary);
             border: none;
-            border-radius: 8px;
-            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            padding: 0.8rem 1.5rem;
             font-weight: bold;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
         }
+        
         .custom-btn-gradient:hover {
             background: linear-gradient(to right, #0056b3, #007bff);
-            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
-            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.5);
+            transform: translateY(-3px);
         }
+        
         .alert {
             border-radius: 10px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
+        
         .alert-success { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
         .alert-danger { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
 
-        .animated--grow-in {
-            animation: growIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
-        }
-
-        @keyframes growIn {
-            0% {
-                transform: scale(0.9);
-                opacity: 0;
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
+        /* Table styles for dark theme */
         .table-dark {
-            background-color: #2c3e50;
-            color: #ecf0f1;
+            background-color: var(--dark-bg-secondary);
+            color: var(--text-color);
+            border-radius: 10px;
+            overflow: hidden;
         }
-        .table-dark th {
-            background-color: #34495e;
-            border-color: #5d6d7e;
+        
+        .table-dark thead th {
+            background-color: var(--dark-bg-primary);
+            border-color: var(--border-color-dark);
+            color: var(--text-color);
+            font-weight: 600;
+            padding: 12px 15px;
         }
-        .table-dark td {
-            border-color: #5d6d7e;
+        
+        .table-dark tbody td {
+            border-color: var(--border-color-dark);
+            padding: 10px 15px;
         }
+        
         .table-hover tbody tr:hover {
-            background-color: rgba(255, 255, 255, 0.05);
+            background-color: rgba(255, 255, 255, 0.08);
+            transform: scale(1.005);
+            transition: all 0.2s ease-in-out;
         }
 
-        /* Adjust chart legend and tooltip for dark theme */
+        /* Chart.js Tooltip and Legend adjustments for dark theme */
         .chartjs-tooltip {
-            background-color: rgba(0, 0, 0, 0.9) !important;
-            border: 1px solid rgba(255, 255, 255, 0.3) !important;
-            border-radius: 8px !important;
+            background-color: rgba(0, 0, 0, 0.95) !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            border-radius: 12px !important;
             font-family: 'Cairo', 'Noto Sans Arabic', sans-serif !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
         }
-        .chartjs-tooltip-header-title {
-            color: #f1c40f !important;
-        }
-        .chartjs-tooltip-body {
-            color: #ecf0f1 !important;
-        }
-        .chartjs-tooltip-item-label {
-            color: #ecf0f1 !important;
-        }
+        
+        .chartjs-tooltip-header-title { color: var(--warning-color) !important; }
+        .chartjs-tooltip-body, .chartjs-tooltip-item-label { color: var(--text-color) !important; }
 
         /* Print Styles */
         #printableReport {
@@ -471,54 +529,70 @@
             padding: 0;
             color: #333;
             background-color: white;
-        }
-        .print-container {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 1200px; /* يمكن تعديل هذا حسب عرض PDF */
+            z-index: 9999;
+        }
+        
+        .print-container {
+            width: 210mm;
+            min-height: 297mm;
             margin: 0 auto;
             background: white;
             color: #333;
             font-family: 'Cairo', 'Noto Sans Arabic', sans-serif;
-            padding: 20px; /* لتقليل الهوامش الزائدة */
+            padding: 20mm;
+            box-sizing: border-box;
         }
 
         .print-header {
             text-align: center;
             margin-bottom: 30px;
-            border-bottom: 3px solid #007bff;
+            border-bottom: 3px solid var(--primary-color);
             padding-bottom: 20px;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             padding: 20px;
             border-radius: 10px;
         }
+        
         .header-content {
             display: flex;
             align-items: center;
-            justify-content: center; /* توسيط المحتوى */
+            justify-content: space-between;
             gap: 20px;
         }
+        
+        .logo-section { flex: 0 0 auto; }
+        
         .logo-section .logo {
-            height: 80px;
+            height: 70px;
             width: auto;
-            max-width: 150px;
+            max-width: 120px;
         }
+        
         .title-section {
             text-align: center;
+            flex-grow: 1;
         }
+        
         .title-section h1 {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 700;
-            color: #007bff;
+            color: var(--primary-color);
             margin: 0 0 5px 0;
         }
+        
         .title-section h2 {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 600;
-            color: #6c757d;
+            color: var(--secondary-color);
             margin: 0 0 10px 0;
         }
+        
         .date-range {
-            background: #007bff;
+            background: var(--primary-color);
             color: white;
             padding: 8px 18px;
             border-radius: 18px;
@@ -527,19 +601,17 @@
             font-size: 0.95rem;
         }
 
-        .print-body {
-            padding: 20px 0;
-        }
+        .print-body { padding: 20px 0; }
 
         .charts-section h3,
         .statistics-section h3,
         .summary-section h3 {
-            color: #007bff;
-            font-size: 1.6rem;
+            color: var(--primary-color);
+            font-size: 1.7rem;
             font-weight: 700;
             margin-bottom: 20px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #007bff;
+            border-bottom: 2px solid var(--primary-color);
         }
 
         .charts-grid {
@@ -547,6 +619,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 25px;
             margin-bottom: 25px;
+            page-break-inside: avoid;
         }
 
         .chart-item {
@@ -559,41 +632,20 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            page-break-inside: avoid;
         }
+        
         .chart-item h4 {
             color: #495057;
-            font-size: 1.15rem;
+            font-size: 1.2rem;
             font-weight: 600;
             margin-bottom: 12px;
             text-align: center;
         }
+        
         .chart-item canvas {
             width: 100% !important;
-            height: 280px !important; /* ارتفاع ثابت للمخططات في الطباعة */
-            background-color: transparent !important; /* إزالة الخلفية الشفافة */
-            box-shadow: none !important; /* إزالة الظل */
-            border: none !important; /* إزالة الحدود */
-            padding: 0 !important; /* إزالة المسافة الداخلية */
-        }
-
-        .full-width-chart {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 25px;
-        }
-        .full-width-chart h4 {
-            color: #495057;
-            font-size: 1.15rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-        .full-width-chart canvas {
-            width: 100% !important;
-            height: 350px !important; /* ارتفاع ثابت للمخططات في الطباعة */
+            height: 250px !important;
             background-color: transparent !important;
             box-shadow: none !important;
             border: none !important;
@@ -605,63 +657,59 @@
             border-collapse: collapse;
             margin-top: 15px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            page-break-inside: avoid;
         }
+        
         .statistics-table th,
         .statistics-table td {
-            padding: 10px;
+            padding: 12px;
             text-align: center;
             border: 1px solid #dee2e6;
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
+        
         .statistics-table th {
-            background: #007bff;
+            background: var(--primary-color);
             color: white;
             font-weight: 600;
         }
-        .statistics-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        .statistics-table tr:hover {
-            background-color: #e9ecef;
-        }
+        
+        .statistics-table tr:nth-child(even) { background-color: #f8f9fa; }
+        .statistics-table tr:hover { background-color: #e9ecef; }
 
-        .summary-section {
-            margin-top: 25px;
-        }
+        .summary-section { margin-top: 25px; }
+        
         .summary-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-top: 15px;
+            page-break-inside: avoid;
         }
+        
         .summary-item {
             background: #f8f9fa;
             padding: 18px;
             border-radius: 8px;
-            border-left: 4px solid #007bff;
+            border-left: 4px solid var(--primary-color);
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
+        
         .summary-item strong {
-            color: #007bff;
-            font-size: 1rem;
+            color: var(--primary-color);
+            font-size: 1.05rem;
             display: block;
             margin-bottom: 5px;
         }
+        
         .summary-item span {
             color: #495057;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 600;
         }
 
-        /* New styles for highest/lowest indicator colors */
-        .highest-indicator-color {
-            color: #808000; /* Olive */
-            font-weight: bold;
-        }
-        .lowest-indicator-color {
-            color: #dc3545; /* Red */
-            font-weight: bold;
-        }
+        .highest-indicator-color { color: var(--excellent-color); font-weight: bold; }
+        .lowest-indicator-color { color: var(--poor-color); font-weight: bold; }
 
         .print-footer {
             margin-top: 30px;
@@ -669,46 +717,80 @@
             border-top: 2px solid #dee2e6;
             background: #f8f9fa;
             border-radius: 10px;
-        }
-        .footer-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .generation-info,
-        .page-number {
+        
+        .generation-info, .page-number {
             color: #6c757d;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
 
-        /* Hide elements when printing the entire page (if not using specific PDF generation) */
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .card-header { flex-direction: column; align-items: flex-start; }
+            .card-title { margin-bottom: 15px; }
+            .card-tools { width: 100%; text-align: center; }
+            .card-tools .btn { width: 100%; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .summary-content { grid-template-columns: 1fr; }
+            .header-content { flex-direction: column; }
+            .logo-section { margin-bottom: 10px; }
+            .title-section { margin-bottom: 10px; }
+            .print-container { padding: 10mm; }
+        }
+
+        /* Print-specific media queries */
         @media print {
-            body > *:not(#printableReport) {
-                display: none;
-            }
+            body > *:not(#printableReport) { display: none; }
             #printableReport {
-                display: block !important; /* عرض قسم الطباعة فقط */
-                position: relative; /* لضمان عدم حدوث مشاكل في التخطيط */
-                width: auto; /* السماح بتوسيع العرض ليلائم حجم الورقة */
+                display: block !important;
+                position: relative;
+                width: auto;
                 margin: 0;
                 padding: 0;
             }
+            
             .print-container {
                 max-width: none;
                 width: 100%;
                 padding: 0;
+                box-shadow: none;
             }
-            /* إعادة تعيين ارتفاع الكانفاس للطباعة */
-            .chart-item canvas, .full-width-chart canvas {
-                height: 280px !important;
+            
+            .chart-item canvas {
+                height: 300px !important;
                 width: 100% !important;
                 max-width: 100% !important;
             }
-            .charts-grid {
-                page-break-inside: avoid; /* منع تقسيم الشبكة بين الصفحات */
+            
+            .charts-grid, .statistics-table, .summary-content {
+                page-break-inside: avoid;
             }
-            .statistics-section {
-                page-break-before: always; /* بدء قسم الإحصائيات في صفحة جديدة إذا كان المحتوى طويلاً */
+            
+            .statistics-section { page-break-before: auto; }
+            
+            .statistics-table th,
+            .statistics-table td {
+                padding: 8px 5px;
+                font-size: 12px;
+            }
+            
+            .print-footer { 
+                position: fixed; 
+                bottom: 0; 
+                left: 0; 
+                right: 0; 
+                width: 100%; 
+                border-top: 1px solid #eee; 
+                background: white; 
+                padding: 10px 20px; 
+            }
+            
+            @page {
+                size: A4;
+                margin: 15mm;
             }
         }
     </style>
@@ -725,11 +807,11 @@
         Chart.register(ChartDataLabels);
 
         // Define chart instances globally for access and destruction
-        let satisfactionPieChart = null;
-        let hallCleanlinessChart = null;
-        let waterTramsCleanlinessChart = null;
-        let facilitiesCleanlinessChart = null;
-        // speedAccuracyChart تم إزالته
+        let satisfactionDoughnutChart = null;
+        let hallCleanlinessBarChart = null;
+        let waterTramsCleanlinessHorizontalBarChart = null;
+        let restroomCleanlinessRadarChart = null;
+        let courtyardsCleanlinessPolarAreaChart = null;
 
         // Store fetched data globally for printing
         let currentChartData = {};
@@ -741,8 +823,9 @@
             const toDateInput = document.getElementById('to_date');
             const applyFiltersButton = document.getElementById('applyFilters');
             const printReportBtn = document.getElementById('printReportBtn');
+            const chartErrorAlert = document.getElementById('chartErrorAlert');
 
-            // Set default dates if not already set (e.g., from previous request)
+            // Set default dates if not already set
             if (!fromDateInput.value) {
                 const today = new Date();
                 const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -752,17 +835,34 @@
                 toDateInput.value = new Date().toISOString().split('T')[0];
             }
 
-            // Function to generate distinct HSL colors for charts
-            const generateDynamicColors = (numColors, saturationOffset = 0, lightnessOffset = 0) => {
-                const colors = [];
-                const baseHues = [0, 60, 120, 180, 240, 300, 30, 90, 150, 210, 270, 330, 10, 70, 130, 190, 250, 310];
-                for (let i = 0; i < numColors; i++) {
-                    const hue = baseHues[i % baseHues.length];
-                    const saturation = Math.min(100, 70 + saturationOffset + (i * 2 % 10));
-                    const lightness = Math.min(100, 60 + lightnessOffset + (i * 3 % 10));
-                    colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
-                }
-                return colors;
+            // Define a consistent color palette with green for highest rating
+            const chartColors = {
+                excellent: 'var(--excellent-color)',
+                veryGood: 'var(--very-good-color)',
+                good: 'var(--good-color)',
+                acceptable: 'var(--acceptable-color)',
+                poor: 'var(--poor-color)',
+                backgrounds: [
+                    'rgba(40, 167, 69, 0.7)',  // Excellent (Green)
+                    'rgba(139, 195, 74, 0.7)', // Very Good
+                    'rgba(255, 193, 7, 0.7)',  // Good (Yellow)
+                    'rgba(253, 126, 20, 0.7)', // Acceptable (Orange)
+                    'rgba(220, 53, 69, 0.7)'   // Poor (Red)
+                ],
+                borders: [
+                    'var(--excellent-color)',
+                    'var(--very-good-color)',
+                    'var(--good-color)',
+                    'var(--acceptable-color)',
+                    'var(--poor-color)'
+                ],
+                fillBackgrounds: [
+                    'rgba(40, 167, 69, 0.4)',
+                    'rgba(139, 195, 74, 0.4)',
+                    'rgba(255, 193, 7, 0.4)',
+                    'rgba(253, 126, 20, 0.4)',
+                    'rgba(220, 53, 69, 0.4)'
+                ]
             };
 
             // Common chart options for Arabic fonts and dark theme
@@ -775,110 +875,189 @@
                 },
                 plugins: {
                     legend: {
+                        position: 'bottom',
                         labels: {
                             color: '#ecf0f1',
-                            font: { size: 13, family: 'Cairo, Noto Sans Arabic, sans-serif', weight: '600' }
+                            font: { 
+                                size: 14, 
+                                family: 'Cairo, Noto Sans Arabic, sans-serif', 
+                                weight: '600' 
+                            },
+                            padding: 20
                         }
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                        titleFont: { family: 'Cairo, Noto Sans Arabic, sans-serif', size: 15, weight: 'bold' },
-                        bodyFont: { family: 'Cairo, Noto Sans Arabic, sans-serif', size: 13 },
-                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        titleFont: { 
+                            family: 'Cairo, Noto Sans Arabic, sans-serif', 
+                            size: 14, 
+                            weight: 'bold' 
+                        },
+                        bodyFont: { 
+                            family: 'Cairo, Noto Sans Arabic, sans-serif', 
+                            size: 13 
+                        },
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
                         borderWidth: 1,
                         cornerRadius: 10,
                         padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed !== null) {
+                                    label += context.parsed;
+                                    if (context.chart.data.labels[context.dataIndex]) {
+                                        label += ' (' + context.chart.data.labels[context.dataIndex] + ')';
+                                    }
+                                }
+                                return label;
+                            }
+                        }
                     },
                     datalabels: {
                         color: '#fff',
                         font: {
-                            size: 13,
+                            size: 14,
                             weight: 'bold',
                             family: 'Cairo, Noto Sans Arabic, sans-serif'
                         },
-                        textShadowBlur: 6,
-                        textShadowColor: 'rgba(0,0,0,0.9)'
+                        textShadowBlur: 8,
+                        textShadowColor: 'rgba(0,0,0,0.8)',
+                        formatter: function(value, context) {
+                            const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return percentage > 5 ? percentage + '%' : '';
+                        }
                     }
                 },
                 scales: {
                     x: {
-                        ticks: { color: '#ecf0f1', font: { family: 'Cairo, Noto Sans Arabic', size: 11, weight: '500' } },
-                        grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        ticks: { 
+                            color: '#ecf0f1', 
+                            font: { 
+                                family: 'Cairo, Noto Sans Arabic', 
+                                size: 11, 
+                                weight: '500' 
+                            } 
+                        },
+                        grid: { 
+                            color: 'rgba(255, 255, 255, 0.08)' 
+                        }
                     },
                     y: {
                         beginAtZero: true,
-                        ticks: { color: '#ecf0f1', font: { family: 'Cairo, Noto Sans Arabic', size: 11, weight: '500' } },
-                        grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        ticks: { 
+                            color: '#ecf0f1', 
+                            font: { 
+                                family: 'Cairo, Noto Sans Arabic', 
+                                size: 11, 
+                                weight: '500' 
+                            } 
+                        },
+                        grid: { 
+                            color: 'rgba(255, 255, 255, 0.08)' 
+                        }
                     }
                 }
             };
 
             // Options for charts when rendered for printing (lighter theme)
             const printChartOptions = (originalOptions) => {
-                const options = JSON.parse(JSON.stringify(originalOptions)); // Deep copy
-                options.plugins.legend.labels.color = '#495057'; // Darker text for print
-                options.plugins.datalabels.color = '#333'; // Darker text for print
-                options.plugins.datalabels.textShadowColor = 'rgba(255,255,255,0.7)'; // Lighter shadow for print
+                const options = JSON.parse(JSON.stringify(originalOptions));
+                options.plugins.legend.labels.color = '#000';
+                options.plugins.datalabels.color = '#000';
+                options.plugins.datalabels.font = { weight: 'bold', size: 12 };
+                
                 if (options.scales) {
                     if (options.scales.x) {
-                        options.scales.x.ticks.color = '#495057';
-                        options.scales.x.grid.color = 'rgba(0, 0, 0, 0.08)';
-                        options.scales.x.title = {
-                            display: true,
-                            text: options.scales.x.title ? options.scales.x.title.text : '',
-                            color: '#495057',
-                            font: { family: 'Cairo', size: 12, weight: 'bold' }
-                        };
+                        options.scales.x.ticks.font = { size: 12, weight: 'bold' };
                     }
                     if (options.scales.y) {
-                        options.scales.y.ticks.color = '#495057';
-                        options.scales.y.grid.color = 'rgba(0, 0, 0, 0.08)';
-                        options.scales.y.title = {
-                            display: true,
-                            text: options.scales.y.title ? options.scales.y.title.text : '',
-                            color: '#495057',
-                            font: { family: 'Cairo', size: 12, weight: 'bold' }
-                        };
+                        options.scales.y.ticks.font = { size: 12, weight: 'bold' };
                     }
                 }
+                
+                if (options.elements) {
+                    options.elements.point = {
+                        radius: 6,
+                        hoverRadius: 8
+                    };
+                }
+                
                 return options;
             };
 
             // Helper function to render or update a chart
             const renderChart = (ctx, type, data, options, chartInstance) => {
                 if (chartInstance) {
-                    chartInstance.destroy(); // Destroy existing chart instance
+                    chartInstance.destroy();
                 }
-                return new Chart(ctx, { type, data, options }); // Create new chart instance
+                return new Chart(ctx, { type, data, options });
             };
 
             // Function to populate the detailed statistics table
             function populateStatisticsTable(data) {
                 const tableBody = document.querySelector('#statisticsTable tbody');
-                tableBody.innerHTML = ''; // Clear existing rows
+                tableBody.innerHTML = '';
 
                 if (!data || data.length === 0) {
                     tableBody.innerHTML = `<tr><td colspan="8" class="text-center">لا توجد بيانات لعرضها.</td></tr>`;
                     return;
                 }
 
-                data.forEach(item => {
-                    const row = tableBody.insertRow();
-                    row.innerHTML = `
-                        <td>${item.indicator}</td>
-                        <td>${item.excellent}</td>
-                        <td>${item.very_good}</td>
-                        <td>${item.good}</td>
-                        <td>${item.acceptable}</td>
-                        <td>${item.poor}</td>
-                        <td>${item.total}</td>
-                        <td>${item.avg_satisfaction.toFixed(2)}%</td>
-                    `;
+                // Mapping indicator keys to Arabic names
+                const indicatorNames = {
+                    overall_satisfaction: 'الرضا العام',
+                    toilet_cleanliness: 'نظافة دورات المياه',
+                    hygiene_supplies: 'توفر مستلزمات النظافة',
+                    yard_cleanliness: 'نظافة الساحات والممرات',
+                    cleaning_teams: 'ملاحظة فرق التنظيف',
+                    hall_cleanliness: 'نظافة القاعات',
+                    bedding_condition: 'حالة الفرش والبطانيات',
+                    ventilation: 'التهوية',
+                    lighting: 'الإضاءة',
+                    water_trams_distribution: 'توزيع ترامز الماء',
+                    water_trams_cleanliness: 'نظافة ترامز الماء',
+                    water_availability: 'توفر الماء'
+                };
+
+                // Define the order of indicators for the table (matching the order in PHP controller)
+                const orderedIndicators = [
+                    'overall_satisfaction',
+                    'toilet_cleanliness',
+                    'hygiene_supplies',
+                    'yard_cleanliness',
+                    'cleaning_teams',
+                    'hall_cleanliness',
+                    'bedding_condition',
+                    'ventilation',
+                    'lighting',
+                    'water_trams_distribution',
+                    'water_trams_cleanliness',
+                    'water_availability'
+                ];
+
+                orderedIndicators.forEach(key => {
+                    const item = data.find(item => item.indicator === indicatorNames[key]); // Find by translated name
+                    if (item) {
+                        const row = tableBody.insertRow();
+                        row.innerHTML = `
+                            <td>${item.indicator}</td>
+                            <td>${item.excellent}</td>
+                            <td>${item.very_good}</td>
+                            <td>${item.good}</td>
+                            <td>${item.acceptable}</td>
+                            <td>${item.poor}</td>
+                            <td>${item.total}</td>
+                            <td>${item.avg_satisfaction}%</td>
+                        `;
+                    }
                 });
             }
 
             // Function to populate the summary section
-            // Modified to accept a target container ID for flexibility (main dashboard vs. print)
             function populateSummarySection(data, containerId = '') {
                 let targetContainer = document;
                 if (containerId) {
@@ -889,7 +1068,6 @@
                     }
                 }
 
-                // Use querySelector within the targetContainer to find the spans
                 const totalSurveysSpan = targetContainer.querySelector('#totalSurveys' + (containerId ? 'Print' : ''));
                 const overallSatisfactionSpan = targetContainer.querySelector('#overallSatisfaction' + (containerId ? 'Print' : ''));
                 const highestIndicatorSpan = targetContainer.querySelector('#highestIndicator' + (containerId ? 'Print' : ''));
@@ -898,10 +1076,9 @@
                 if (totalSurveysSpan) totalSurveysSpan.textContent = data.total_surveys || '-';
                 if (overallSatisfactionSpan) overallSatisfactionSpan.textContent = (data.overall_satisfaction || 0).toFixed(2);
 
-                // Apply colors to highest and lowest indicators for print version
                 if (highestIndicatorSpan) {
                     highestIndicatorSpan.textContent = data.highest_indicator || '-';
-                    if (containerId) { // Only apply color for the print version
+                    if (containerId) {
                         highestIndicatorSpan.classList.add('highest-indicator-color');
                     } else {
                         highestIndicatorSpan.classList.remove('highest-indicator-color');
@@ -909,7 +1086,7 @@
                 }
                 if (lowestIndicatorSpan) {
                     lowestIndicatorSpan.textContent = data.lowest_indicator || '-';
-                    if (containerId) { // Only apply color for the print version
+                    if (containerId) {
                         lowestIndicatorSpan.classList.add('lowest-indicator-color');
                     } else {
                         lowestIndicatorSpan.classList.remove('lowest-indicator-color');
@@ -917,117 +1094,47 @@
                 }
             }
 
-
             // Main function to fetch and render all dashboard data
             async function fetchAndRenderAllData() {
                 const fromDate = fromDateInput.value;
                 const toDate = toDateInput.value;
-                const queryParams = `from_date=${fromDate}&to_date=${toDate}`;
+                const queryParams = new URLSearchParams({
+                    from_date: fromDate,
+                    to_date: toDate
+                }).toString();
 
                 try {
-                    // Fetch all data concurrently using Promise.all
-                    const [
-                        pieDataResponse,
-                        hallDataResponse,
-                        waterDataResponse,
-                        facilitiesDataResponse,
-                        tableSummaryDataResponse
-                    ] = await Promise.all([
-                        fetch(`{{ route('charts.surveys.pie-data') }}?${queryParams}`),
-                        fetch(`{{ route('charts.surveys.hall-cleanliness-data') }}?${queryParams}`),
-                        fetch(`{{ route('charts.surveys.water-trams-cleanliness-data') }}?${queryParams}`),
-                        fetch(`{{ route('charts.surveys.facilities-cleanliness-data') }}?${queryParams}`),
-                        fetch(`{{ route('charts.surveys.table-summary-data') }}?${queryParams}`)
-                    ]);
+                    const response = await fetch(`/api/survey-data?${queryParams}`);
 
-                    // Parse JSON responses
-                    const pieData = await pieDataResponse.json();
-                    const hallData = await hallDataResponse.json();
-                    const waterData = await waterDataResponse.json();
-                    const facilitiesData = await facilitiesDataResponse.json();
-                    const tableSummaryData = await tableSummaryDataResponse.json();
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
 
-                    // Store fetched data globally for later use (e.g., printing)
-                    currentChartData.satisfaction = pieData;
-                    currentChartData.hallCleanliness = hallData;
-                    currentChartData.waterTrams = waterData;
-                    currentChartData.facilities = facilitiesData;
-                    currentTableData = tableSummaryData.detailed_statistics || [];
-                    currentSummaryData = tableSummaryData.summary || {};
+                    const allData = await response.json();
+                    console.log("Fetched all data:", allData);
 
+                    // Store fetched data globally
+                    currentChartData = allData.chartData;
+                    currentTableData = allData.tableData;
+                    currentSummaryData = allData.summaryData;
 
-                    // Render Satisfaction Pie Chart
-                    satisfactionPieChart = renderChart(
-                        document.getElementById('satisfactionPieChart').getContext('2d'),
+                    // Chart 1: General Satisfaction (Doughnut Chart)
+                    const satisfactionCtx = document.getElementById('satisfactionDoughnutChart').getContext('2d');
+                    satisfactionDoughnutChart = renderChart(
+                        satisfactionCtx,
                         'doughnut',
                         {
-                            labels: pieData.labels,
+                            labels: currentChartData.satisfaction.labels,
                             datasets: [{
-                                data: pieData.datasets[0].data,
-                                backgroundColor: generateDynamicColors(pieData.labels.length, 5),
-                                hoverOffset: 15,
-                                borderColor: 'rgba(255, 255, 255, 0.3)',
+                                data: currentChartData.satisfaction.datasets[0].data,
+                                backgroundColor: currentChartData.satisfaction.datasets[0].backgroundColor, // استخدم الألوان من المتحكم
+                                borderColor: '#11db2cff', // يمكن تعديل هذا اللون إذا لزم الأمر
                                 borderWidth: 2
                             }]
                         },
                         {
                             ...commonChartOptions,
                             cutout: '70%',
-                            plugins: {
-                                ...commonChartOptions.plugins,
-                                legend: { position: 'right', labels: commonChartOptions.plugins.legend.labels },
-                                tooltip: {
-                                    ...commonChartOptions.plugins.tooltip,
-                                    callbacks: {
-                                        label: function(context) {
-                                            let label = context.label || '';
-                                            if (label) { label += ': '; }
-                                            if (context.parsed !== null) {
-                                                label += context.parsed;
-                                                const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
-                                                const percentage = (context.parsed / total * 100).toFixed(1) + '%';
-                                                label += ' (' + percentage + ')';
-                                            }
-                                            return label;
-                                        }
-                                    }
-                                },
-                                datalabels: {
-                                    ...commonChartOptions.plugins.datalabels,
-                                    formatter: (value, context) => {
-                                        const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
-                                        const percentage = (value / total * 100).toFixed(1) + '%';
-                                        return percentage;
-                                    },
-                                    align: 'center',
-                                    anchor: 'center'
-                                }
-                            }
-                        },
-                        satisfactionPieChart
-                    );
-
-                    // Render Hall Cleanliness Doughnut Chart
-                    const hallCenterTextElement = document.getElementById('hallCleanlinessCenterText');
-                    const hallTotalCount = hallData.datasets[0].data.reduce((sum, val) => sum + val, 0);
-                    hallCenterTextElement.innerHTML = `<span style="font-size:1.5rem; display:block; margin-bottom: 5px;">إجمالي التقييمات</span>${hallTotalCount}`;
-
-                    hallCleanlinessChart = renderChart(
-                        document.getElementById('hallCleanlinessChart').getContext('2d'),
-                        'doughnut',
-                        {
-                            labels: hallData.labels,
-                            datasets: [{
-                                data: hallData.datasets[0].data,
-                                backgroundColor: generateDynamicColors(hallData.labels.length, -5, 5),
-                                hoverOffset: 18,
-                                borderColor: 'rgba(255, 255, 255, 0.4)',
-                                borderWidth: 3
-                            }]
-                        },
-                        {
-                            ...commonChartOptions,
-                            cutout: '65%',
                             plugins: {
                                 ...commonChartOptions.plugins,
                                 legend: { position: 'bottom', labels: commonChartOptions.plugins.legend.labels },
@@ -1038,10 +1145,9 @@
                                             let label = context.label || '';
                                             if (label) { label += ': '; }
                                             if (context.parsed !== null) {
-                                                label += context.parsed;
                                                 const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
                                                 const percentage = (context.parsed / total * 100).toFixed(1) + '%';
-                                                label += ' (' + percentage + ')';
+                                                label += context.parsed + ' (' + percentage + ')';
                                             }
                                             return label;
                                         }
@@ -1051,122 +1157,232 @@
                                     ...commonChartOptions.plugins.datalabels,
                                     formatter: (value, context) => {
                                         const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
-                                        const percentage = (value / total * 100).toFixed(1) + '%';
-                                        return percentage;
+                                        return (value / total * 100).toFixed(1) + '%';
+                                    },
+                                    align: 'center',
+                                    anchor: 'center'
+                                }
+                            }
+                        },
+                        satisfactionDoughnutChart
+                    );
+
+                    // Update center text for Doughnut Chart
+                    const satisfactionCenterTextElement = document.getElementById('satisfactionCenterText');
+                    if (satisfactionCenterTextElement) {
+                        const totalSurveys = currentChartData.satisfaction.datasets[0].data.reduce((sum, val) => sum + val, 0);
+                        const verySatisfiedIndex = currentChartData.satisfaction.labels.indexOf('راض جدًا');
+                        const verySatisfiedCount = (verySatisfiedIndex !== -1) ? currentChartData.satisfaction.datasets[0].data[verySatisfiedIndex] : 0;
+                        let percentage = 0;
+                        if (totalSurveys > 0) {
+                            percentage = (verySatisfiedCount / totalSurveys * 100).toFixed(1);
+                        }
+                        satisfactionCenterTextElement.innerHTML = `
+                            <div style="font-size: 1.5rem; font-weight: bold; color: ${chartColors.excellent};">
+                                ${percentage}%
+                            </div>
+                            <div style="font-size: 1rem; color: #14ee14ff; margin-top: 5px;">
+                                رضا ممتاز
+                            </div>
+                        `;
+                    }
+
+                    // Chart 2: Hall Cleanliness (Bar Chart - Vertical)
+                    const hallCleanlinessCtx = document.getElementById('hallCleanlinessBarChart').getContext('2d');
+                    hallCleanlinessBarChart = renderChart(
+                        hallCleanlinessCtx,
+                        'bar',
+                        {
+                            labels: currentChartData.hallCleanliness.labels, // استخدم التسميات من المتحكم
+                            datasets: [{
+                                label: 'عدد الاستجابات',
+                                data: currentChartData.hallCleanliness.datasets[0].data,
+                                backgroundColor: currentChartData.hallCleanliness.datasets[0].backgroundColor, // استخدم الألوان من المتحكم
+                                borderColor: currentChartData.hallCleanliness.datasets[0].borderColor,
+                                borderWidth: 1,
+                                borderRadius: 8,
+                            }]
+                        },
+                        {
+                            ...commonChartOptions,
+                            plugins: {
+                                ...commonChartOptions.plugins,
+                                legend: { display: false },
+                                datalabels: {
+                                    ...commonChartOptions.plugins.datalabels,
+                                    anchor: 'end', 
+                                    align: 'top', 
+                                    offset: 4, 
+                                    formatter: (value) => value,
+                                    color: '#ee0808ff', 
+                                    textShadowColor: 'rgba(0,0,0,0.7)', 
+                                    textShadowBlur: 4
+                                }
+                            },
+                            scales: {
+                                x: { ...commonChartOptions.scales.x },
+                                y: { ...commonChartOptions.scales.y }
+                            }
+                        },
+                        hallCleanlinessBarChart
+                    );
+
+                    // Chart 3: Water Trams Cleanliness (Horizontal Bar Chart)
+                    const waterTramsCleanlinessCtx = document.getElementById('waterTramsCleanlinessHorizontalBarChart').getContext('2d');
+                    waterTramsCleanlinessHorizontalBarChart = renderChart(
+                        waterTramsCleanlinessCtx,
+                        'bar',
+                        {
+                            labels: currentChartData.waterTramsCleanliness.labels, // استخدم التسميات من المتحكم
+                            datasets: [{
+                                label: 'عدد الاستجابات',
+                                data: currentChartData.waterTramsCleanliness.datasets[0].data,
+                                backgroundColor: currentChartData.waterTramsCleanliness.datasets[0].backgroundColor, // استخدم الألوان من المتحكم
+                                borderColor: currentChartData.waterTramsCleanliness.datasets[0].borderColor,
+                                borderWidth: 1,
+                                borderRadius: 8,
+                            }]
+                        },
+                        {
+                            ...commonChartOptions,
+                            indexAxis: 'y',
+                            plugins: {
+                                ...commonChartOptions.plugins,
+                                legend: { display: false },
+                                datalabels: {
+                                    ...commonChartOptions.plugins.datalabels,
+                                    anchor: 'end', 
+                                    align: 'end', 
+                                    offset: 4, 
+                                    formatter: (value) => value,
+                                    color: '#ecf0f1', 
+                                    textShadowColor: 'rgba(0,0,0,0.7)', 
+                                    textShadowBlur: 4
+                                }
+                            },
+                            scales: {
+                                x: { ...commonChartOptions.scales.x },
+                                y: { ...commonChartOptions.scales.y }
+                            }
+                        },
+                        waterTramsCleanlinessHorizontalBarChart
+                    );
+
+                    // Chart 4: Restroom Cleanliness (Radar Chart)
+                    const restroomCleanlinessCtx = document.getElementById('restroomCleanlinessRadarChart').getContext('2d');
+                    restroomCleanlinessRadarChart = renderChart(
+                        restroomCleanlinessCtx,
+                        'radar',
+                        {
+                            labels: currentChartData.restroomCleanlinessLabels, // استخدم التسميات من المتحكم
+                            datasets: [{
+                                label: 'مستوى النظافة',
+                                data: currentChartData.restroomCleanliness,
+                                backgroundColor: currentChartData.restroomCleanlinessColors.map(color => color.replace('0.7', '0.4')), // استخدم الألوان من المتحكم
+                                borderColor: currentChartData.restroomCleanlinessColors, // استخدم الألوان من المتحكم
+                                pointBackgroundColor: currentChartData.restroomCleanlinessColors, // استخدم الألوان من المتحكم
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: currentChartData.restroomCleanlinessColors, // استخدم الألوان من المتحكم
+                                borderWidth: 2
+                            }]
+                        },
+                        {
+                            ...commonChartOptions,
+                            plugins: {
+                                ...commonChartOptions.plugins,
+                                legend: { display: false },
+                                datalabels: {
+                                    ...commonChartOptions.plugins.datalabels,
+                                    formatter: (value) => value,
+                                    backgroundColor: 'rgba(0,0,0,0.6)',
+                                    borderRadius: 4,
+                                    padding: 6,
+                                    color: '#fff'
+                                }
+                            },
+                            scales: {
+                                r: {
+                                    angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                                    grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                                    pointLabels: { 
+                                        color: '#ecf0f1', 
+                                        font: { 
+                                            family: 'Cairo, Noto Sans Arabic', 
+                                            size: 12, 
+                                            weight: '500' 
+                                        } 
+                                    },
+                                    ticks: {
+                                        backdropColor: 'rgba(0,0,0,0.7)',
+                                        color: '#ecf0f1',
+                                        font: { 
+                                            family: 'Cairo, Noto Sans Arabic', 
+                                            size: 10 
+                                        },
+                                        beginAtZero: true
                                     }
                                 }
                             }
                         },
-                        hallCleanlinessChart
+                        restroomCleanlinessRadarChart
                     );
 
-                    // Render Water Trams Cleanliness Bar Chart
-                    waterTramsCleanlinessChart = renderChart(
-                        document.getElementById('waterTramsCleanlinessChart').getContext('2d'),
-                        'bar',
+                    // Chart 5: Courtyards and Corridors Cleanliness (Polar Area Chart)
+                    const courtyardsCleanlinessCtx = document.getElementById('courtyardsCleanlinessPolarAreaChart').getContext('2d');
+                    courtyardsCleanlinessPolarAreaChart = renderChart(
+                        courtyardsCleanlinessCtx,
+                        'polarArea',
                         {
-                            labels: waterData.labels,
-                            datasets: waterData.datasets.map((dataset, index) => ({
-                                ...dataset,
-                                backgroundColor: generateDynamicColors(waterData.labels.length, 0, -5),
-                                borderColor: 'rgba(255, 255, 255, 0.07)',
-                                borderWidth: 1,
-                                borderRadius: 8,
-                                hoverBackgroundColor: (context) => {
-                                    const colors = generateDynamicColors(waterData.labels.length, 0, -10);
-                                    return colors[context.dataIndex % colors.length];
-                                },
-                                barThickness: 20,
-                            }))
-                        },
-                        {
-                            ...commonChartOptions,
-                            indexAxis: 'y', // Horizontal bar chart
-                            plugins: {
-                                ...commonChartOptions.plugins,
-                                legend: { display: false }, // No legend for single dataset bars
-                                tooltip: { ...commonChartOptions.plugins.tooltip, displayColors: false },
-                                datalabels: {
-                                    ...commonChartOptions.plugins.datalabels,
-                                    anchor: 'end', align: 'end', offset: 4, formatter: (value) => value + '%',
-                                    color: '#ecf0f1', textShadowColor: 'rgba(0,0,0,0.7)', textShadowBlur: 4
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    ...commonChartOptions.scales.x,
-                                    title: { display: true, text: 'مستوى الرضا (%)', color: '#bdc3c7', font: { family: 'Cairo', size: 12, weight: 'bold' } },
-                                    max: 100, min: 0, ticks: { callback: function(value) { return value + '%'; } }
-                                },
-                                y: { ...commonChartOptions.scales.y, grid: { display: false } } // Hide Y-axis grid lines
-                            }
-                        },
-                        waterTramsCleanlinessChart
-                    );
-
-                    // Render Facilities Cleanliness Bar Chart
-                    facilitiesCleanlinessChart = renderChart(
-                        document.getElementById('facilitiesCleanlinessChart').getContext('2d'),
-                        'bar',
-                        {
-                            labels: facilitiesData.labels,
-                            datasets: facilitiesData.datasets.map((dataset, index) => ({
-                                ...dataset,
-                                backgroundColor: generateDynamicColors(facilitiesData.labels.length, 10, -5),
-                                borderColor: 'rgba(255, 255, 255, 0.52)',
-                                borderWidth: 1,
-                                borderRadius: 8,
-                                hoverBackgroundColor: (context) => {
-                                    const colors = generateDynamicColors(facilitiesData.labels.length, 10, -10);
-                                    return colors[context.dataIndex % colors.length];
-                                },
-                                barThickness: 20
-                            }))
+                            labels: currentChartData.courtyardsCleanlinessLabels, // استخدم التسميات من المتحكم
+                            datasets: [{
+                                label: 'عدد الاستجابات',
+                                data: currentChartData.courtyardsCleanliness,
+                                backgroundColor: currentChartData.courtyardsCleanlinessColors.map(color => color.replace('0.7', '0.5')), // استخدم الألوان من المتحكم
+                                borderColor: currentChartData.courtyardsCleanlinessColors, // استخدم الألوان من المتحكم
+                                borderWidth: 1
+                            }]
                         },
                         {
                             ...commonChartOptions,
                             plugins: {
                                 ...commonChartOptions.plugins,
-                                legend: { display: false }, // No legend for single dataset bars
-                                tooltip: { ...commonChartOptions.plugins.tooltip, displayColors: false },
+                                legend: { 
+                                    position: 'bottom', 
+                                    labels: commonChartOptions.plugins.legend.labels 
+                                },
                                 datalabels: {
                                     ...commonChartOptions.plugins.datalabels,
-                                    anchor: 'end', align: 'top', offset: 4, formatter: (value) => value + '%',
-                                    color: '#ecf0f1', textShadowColor: 'rgba(0,0,0,0.7)', textShadowBlur: 4
+                                    formatter: (value, context) => {
+                                        const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                        return (value / total * 100).toFixed(1) + '%';
+                                    }
                                 }
                             },
                             scales: {
-                                x: {
-                                    ...commonChartOptions.scales.x,
-                                    title: { display: true, text: 'مستوى الرضا (%)', color: '#bdc3c7', font: { family: 'Cairo', size: 12, weight: 'bold' } }
-                                },
-                                y: {
-                                    ...commonChartOptions.scales.y,
-                                    max: 100, min: 0, ticks: { callback: function(value) { return value + '%'; } },
-                                    grid: { display: true }
+                                r: {
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                    ticks: { 
+                                        backdropColor: 'transparent', 
+                                        color: '#ecf0f1' 
+                                    }
                                 }
                             }
                         },
-                        facilitiesCleanlinessChart
+                        courtyardsCleanlinessPolarAreaChart
                     );
 
                     // Populate the statistics table and summary section
                     populateStatisticsTable(currentTableData);
-                    populateSummarySection(currentSummaryData); // For the main dashboard
+                    populateSummarySection(currentSummaryData);
+
+                    // Hide error alert if data fetched successfully
+                    chartErrorAlert.style.display = 'none';
 
                 } catch (error) {
                     console.error('Error fetching dashboard data:', error);
-                    // Display an error message to the user
-                    const alertDiv = document.createElement('div');
-                    alertDiv.className = 'alert alert-danger alert-dismissible fade show animated--grow-in';
-                    alertDiv.setAttribute('role', 'alert');
-                    alertDiv.innerHTML = `
-                        حدث خطأ أثناء جلب البيانات. يرجى المحاولة مرة أخرى.
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    `;
-                    document.querySelector('.card-body.p-4').prepend(alertDiv);
+                    chartErrorAlert.textContent = 'حدث خطأ أثناء جلب البيانات. يرجى التأكد من تعريف المسار /api/survey-data في Laravel وإعادة المحاولة.';
+                    chartErrorAlert.style.display = 'block';
                 }
             }
 
@@ -1177,7 +1393,6 @@
             applyFiltersButton.addEventListener('click', fetchAndRenderAllData);
             fromDateInput.addEventListener('change', fetchAndRenderAllData);
             toDateInput.addEventListener('change', fetchAndRenderAllData);
-
 
             // Event listener for the Print Report / PDF button
             printReportBtn.addEventListener('click', async function () {
@@ -1198,9 +1413,10 @@
                 // Make the printable report visible BEFORE rendering charts for printing
                 printableReportDiv.style.display = 'block';
 
-                // Populate print table (using the print-specific table body)
+                // Populate print table
                 const printTableBody = printableReportDiv.querySelector('#printStatisticsTable tbody');
                 printTableBody.innerHTML = '';
+                // Since currentTableData is an array of objects, iterate directly
                 currentTableData.forEach(item => {
                     const row = printTableBody.insertRow();
                     row.innerHTML = `
@@ -1211,16 +1427,18 @@
                         <td>${item.acceptable}</td>
                         <td>${item.poor}</td>
                         <td>${item.total}</td>
-                        <td>${item.avg_satisfaction.toFixed(2)}%</td>
+                        <td>${item.avg_satisfaction}%</td>
                     `;
                 });
 
-                // Populate print summary (targeting the printableReportDiv specifically)
+                // Populate print summary
                 populateSummarySection(currentSummaryData, 'printableReport');
 
-
                 // Destroy existing print chart instances before re-rendering
-                const printCharts = ['printSatisfactionChart', 'printHallChart', 'printWaterChart', 'printFacilitiesChart']; // Removed 'printSpeedChart'
+                const printCharts = [
+                    'printSatisfactionChart', 'printHallChart', 'printWaterChart',
+                    'printRestroomChart', 'printCourtyardsChart'
+                ];
                 printCharts.forEach(id => {
                     const canvas = document.getElementById(id);
                     if (canvas && Chart.getChart(canvas)) {
@@ -1228,7 +1446,7 @@
                     }
                 });
 
-                // Render Satisfaction Pie Chart for printing
+                // Render Satisfaction Doughnut Chart for printing
                 const printSatisfactionChartCtx = document.getElementById('printSatisfactionChart').getContext('2d');
                 new Chart(printSatisfactionChartCtx, {
                     type: 'doughnut',
@@ -1236,7 +1454,7 @@
                         labels: currentChartData.satisfaction.labels,
                         datasets: [{
                             data: currentChartData.satisfaction.datasets[0].data,
-                            backgroundColor: generateDynamicColors(currentChartData.satisfaction.labels.length, 5),
+                            backgroundColor: currentChartData.satisfaction.datasets[0].backgroundColor, // استخدم الألوان من المتحكم
                             hoverOffset: 15,
                             borderColor: 'rgba(0, 0, 0, 0.2)',
                             borderWidth: 2
@@ -1247,50 +1465,92 @@
                         cutout: '70%',
                         plugins: {
                             ...printChartOptions(commonChartOptions).plugins,
-                            legend: { position: 'right', labels: { color: '#495057' } },
-                            datalabels: { ...printChartOptions(commonChartOptions).plugins.datalabels, color: '#333' }
+                            legend: { 
+                                position: 'bottom', 
+                                labels: { 
+                                    color: '#495057',
+                                    font: {
+                                        size: 12,
+                                        weight: 'bold'
+                                    }
+                                } 
+                            },
+                            datalabels: { 
+                                ...printChartOptions(commonChartOptions).plugins.datalabels, 
+                                color: '#333',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            }
                         }
                     }
                 });
 
-                // Render Hall Cleanliness Doughnut Chart for printing
+                // Render Hall Cleanliness Bar Chart for printing
                 const printHallCleanlinessChartCtx = document.getElementById('printHallChart').getContext('2d');
                 new Chart(printHallCleanlinessChartCtx, {
-                    type: 'doughnut',
+                    type: 'bar',
                     data: {
-                        labels: currentChartData.hallCleanliness.labels,
+                        labels: currentChartData.hallCleanliness.labels, // استخدم التسميات من المتحكم
                         datasets: [{
                             data: currentChartData.hallCleanliness.datasets[0].data,
-                            backgroundColor: generateDynamicColors(currentChartData.hallCleanliness.labels.length, -5, 5),
-                            hoverOffset: 18,
-                            borderColor: 'rgba(0, 0, 0, 0.2)',
-                            borderWidth: 3
+                            backgroundColor: currentChartData.hallCleanliness.datasets[0].backgroundColor, // استخدم الألوان من المتحكم
+                            borderColor: currentChartData.hallCleanliness.datasets[0].borderColor,
+                            borderWidth: 1,
+                            borderRadius: 8,
                         }]
                     },
                     options: {
                         ...printChartOptions(commonChartOptions),
-                        cutout: '65%',
                         plugins: {
                             ...printChartOptions(commonChartOptions).plugins,
-                            legend: { position: 'bottom', labels: { color: '#495057' } },
-                            datalabels: { ...printChartOptions(commonChartOptions).plugins.datalabels, color: '#333' }
+                            legend: { display: false },
+                            datalabels: { 
+                                ...printChartOptions(commonChartOptions).plugins.datalabels, 
+                                color: '#333',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { 
+                                ...printChartOptions(commonChartOptions).scales.x,
+                                ticks: {
+                                    font: {
+                                        size: 12,
+                                        weight: 'bold'
+                                    }
+                                }
+                            },
+                            y: { 
+                                ...printChartOptions(commonChartOptions).scales.y,
+                                ticks: {
+                                    font: {
+                                        size: 12,
+                                        weight: 'bold'
+                                    }
+                                }
+                            }
                         }
                     }
                 });
 
-                // Render Water Trams Cleanliness Bar Chart for printing
+                // Render Water Trams Cleanliness Horizontal Bar Chart for printing
                 const printWaterTramsCleanlinessChartCtx = document.getElementById('printWaterChart').getContext('2d');
                 new Chart(printWaterTramsCleanlinessChartCtx, {
                     type: 'bar',
                     data: {
-                        labels: currentChartData.waterTrams.labels,
-                        datasets: currentChartData.waterTrams.datasets.map((dataset, index) => ({
-                            ...dataset,
-                            backgroundColor: generateDynamicColors(currentChartData.waterTrams.labels.length, 0, -5),
-                            borderColor: 'rgba(0, 0, 0, 0.2)',
+                        labels: currentChartData.waterTramsCleanliness.labels, // استخدم التسميات من المتحكم
+                        datasets: [{
+                            data: currentChartData.waterTramsCleanliness.datasets[0].data,
+                            backgroundColor: currentChartData.waterTramsCleanliness.datasets[0].backgroundColor, // استخدم الألوان من المتحكم
+                            borderColor: currentChartData.waterTramsCleanliness.datasets[0].borderColor,
                             borderWidth: 1,
                             borderRadius: 8,
-                        }))
+                        }]
                     },
                     options: {
                         ...printChartOptions(commonChartOptions),
@@ -1298,49 +1558,142 @@
                         plugins: {
                             ...printChartOptions(commonChartOptions).plugins,
                             legend: { display: false },
-                            datalabels: { ...printChartOptions(commonChartOptions).plugins.datalabels, color: '#333' }
+                            datalabels: { 
+                                ...printChartOptions(commonChartOptions).plugins.datalabels, 
+                                color: '#333',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            }
                         },
                         scales: {
-                            x: {
+                            x: { 
                                 ...printChartOptions(commonChartOptions).scales.x,
-                                title: { display: true, text: 'مستوى الرضا (%)', color: '#495057' },
-                                max: 100, min: 0, ticks: { callback: function(value) { return value + '%'; } }
+                                ticks: {
+                                    font: {
+                                        size: 12,
+                                        weight: 'bold'
+                                    }
+                                }
                             },
-                            y: { ...printChartOptions(commonChartOptions).scales.y, grid: { display: false } }
+                            y: { 
+                                ...printChartOptions(commonChartOptions).scales.y,
+                                ticks: {
+                                    font: {
+                                        size: 12,
+                                        weight: 'bold'
+                                    }
+                                }
+                            }
                         }
                     }
                 });
 
-                // Render Facilities Cleanliness Bar Chart for printing
-                const printFacilitiesCleanlinessChartCtx = document.getElementById('printFacilitiesChart').getContext('2d');
-                new Chart(printFacilitiesCleanlinessChartCtx, {
-                    type: 'bar',
+                // Render Restroom Cleanliness Radar Chart for printing
+                const printRestroomCleanlinessChartCtx = document.getElementById('printRestroomChart').getContext('2d');
+                new Chart(printRestroomCleanlinessChartCtx, {
+                    type: 'radar',
                     data: {
-                        labels: currentChartData.facilities.labels,
-                        datasets: currentChartData.facilities.datasets.map((dataset, index) => ({
-                            ...dataset,
-                            backgroundColor: generateDynamicColors(currentChartData.facilities.labels.length, 10, -5),
-                            borderColor: 'rgba(0, 0, 0, 0.2)',
-                            borderWidth: 1,
-                            borderRadius: 8,
-                        }))
+                        labels: currentChartData.restroomCleanlinessLabels, // استخدم التسميات من المتحكم
+                        datasets: [{
+                            label: 'مستوى النظافة',
+                            data: currentChartData.restroomCleanliness,
+                            backgroundColor: currentChartData.restroomCleanlinessColors.map(color => color.replace('0.7', '0.4')), // استخدم الألوان من المتحكم
+                            borderColor: currentChartData.restroomCleanlinessColors, // استخدم الألوان من المتحكم
+                            pointBackgroundColor: currentChartData.restroomCleanlinessColors, // استخدم الألوان من المتحكم
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: currentChartData.restroomCleanlinessColors, // استخدم الألوان من المتحكم
+                            borderWidth: 2
+                        }]
                     },
                     options: {
                         ...printChartOptions(commonChartOptions),
                         plugins: {
                             ...printChartOptions(commonChartOptions).plugins,
                             legend: { display: false },
-                            datalabels: { ...printChartOptions(commonChartOptions).plugins.datalabels, color: '#333' }
+                            datalabels: { 
+                                ...printChartOptions(commonChartOptions).plugins.datalabels, 
+                                color: '#333',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            }
                         },
                         scales: {
-                            x: {
-                                ...printChartOptions(commonChartOptions).scales.x,
-                                title: { display: true, text: 'مستوى الرضا (%)', color: '#495057' }
+                            r: {
+                                angleLines: { color: 'rgba(0,0,0,0.1)' },
+                                grid: { color: 'rgba(0,0,0,0.1)' },
+                                pointLabels: { 
+                                    color: '#333', 
+                                    font: { 
+                                        size: 12, 
+                                        weight: 'bold' 
+                                    } 
+                                },
+                                ticks: { 
+                                    backdropColor: 'transparent', 
+                                    color: '#333', 
+                                    beginAtZero: true,
+                                    font: {
+                                        size: 10,
+                                        weight: 'bold'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Render Courtyards and Corridors Cleanliness Polar Area Chart for printing
+                const printCourtyardsCleanlinessChartCtx = document.getElementById('printCourtyardsChart').getContext('2d');
+                new Chart(printCourtyardsCleanlinessChartCtx, {
+                    type: 'polarArea',
+                    data: {
+                        labels: currentChartData.courtyardsCleanlinessLabels, // استخدم التسميات من المتحكم
+                        datasets: [{
+                            data: currentChartData.courtyardsCleanliness,
+                            backgroundColor: currentChartData.courtyardsCleanlinessColors.map(color => color.replace('0.7', '0.5')), // استخدم الألوان من المتحكم
+                            borderColor: currentChartData.courtyardsCleanlinessColors, // استخدم الألوان من المتحكم
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        ...printChartOptions(commonChartOptions),
+                        plugins: {
+                            ...printChartOptions(commonChartOptions).plugins,
+                            legend: { 
+                                position: 'bottom', 
+                                labels: { 
+                                    color: '#495057',
+                                    font: {
+                                        size: 12,
+                                        weight: 'bold'
+                                    }
+                                } 
                             },
-                            y: {
-                                ...printChartOptions(commonChartOptions).scales.y,
-                                max: 100, min: 0, ticks: { callback: function(value) { return value + '%'; } },
-                                grid: { display: true }
+                            datalabels: { 
+                                ...printChartOptions(commonChartOptions).plugins.datalabels, 
+                                color: '#333',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        scales: {
+                            r: {
+                                grid: { color: 'rgba(0,0,0,0.1)' },
+                                ticks: { 
+                                    backdropColor: 'transparent', 
+                                    color: '#333',
+                                    font: {
+                                        size: 10,
+                                        weight: 'bold'
+                                    }
+                                }
                             }
                         }
                     }
@@ -1356,11 +1709,11 @@
 
                     // Use html2canvas to capture the printable report div
                     html2canvas(printableReportDiv, {
-                        scale: 2, // Higher scale for better resolution in PDF
+                        scale: 2,
                         logging: true,
                         useCORS: true,
                         allowTaint: true,
-                        scrollY: -window.scrollY, // Correct scrolling for hidden elements
+                        scrollY: -window.scrollY,
                         windowWidth: document.documentElement.offsetWidth,
                         windowHeight: document.documentElement.offsetHeight
                     }).then(canvas => {
@@ -1368,7 +1721,7 @@
                         const imgWidth = docWidth - (2 * margin);
                         const imgHeight = (canvas.height * imgWidth) / canvas.width;
                         let heightLeft = imgHeight;
-                        let position = margin; // Starting position for the image on the PDF page
+                        let position = margin;
 
                         pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
                         heightLeft -= docHeight - position;
@@ -1388,7 +1741,6 @@
                         printableReportDiv.style.display = 'none';
                     }).catch(error => {
                         console.error('Error generating PDF:', error);
-                        // Use a custom message box instead of alert()
                         const errorMessage = 'حدث خطأ أثناء إنشاء ملف PDF. يرجى التأكد من تحميل جميع الموارد وإعادة المحاولة.';
                         const alertDiv = document.createElement('div');
                         alertDiv.className = 'alert alert-danger alert-dismissible fade show animated--grow-in';
@@ -1400,9 +1752,9 @@
                             </button>
                         `;
                         document.querySelector('.card-body.p-4').prepend(alertDiv);
-                        printableReportDiv.style.display = 'none'; // Ensure it's hidden on error
+                        printableReportDiv.style.display = 'none';
                     });
-                }, 100); // Small delay to allow charts to fully render
+                }, 500); // Increased delay to ensure charts are fully rendered
             });
         });
     </script>

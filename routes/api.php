@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Alkoumi\LaravelHijriDate\Hijri; // تأكد من أن هذه المكتبة مثبتة: composer require alkoumi/laravel-hijri-date
+use App\Http\Controllers\SurveyChartController; // تأكد من استيراد المتحكم هنا
 
 /*
 |--------------------------------------------------------------------------
@@ -40,7 +41,13 @@ Route::get('/convert-to-hijri', function (Request $request) {
     return response()->json(['hijri_date' => 'لم يتم توفير التاريخ', 'error' => 'No date provided'], 400);
 });
 
+// مسار API الموحد لجلب جميع بيانات المخططات والجدول والملخص
+// هذا المسار سيتم استدعاؤه من الواجهة الأمامية لجلب جميع بيانات لوحة التحكم
+Route::get('/survey-data', [SurveyChartController::class, 'getAllSurveyData']);
+
+
 // أمثلة لمسارات API أخرى (يمكنك إزالتها أو تعديلها حسب الحاجة)
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+

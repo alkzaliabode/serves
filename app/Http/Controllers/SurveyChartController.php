@@ -156,6 +156,45 @@ class SurveyChartController extends Controller
     }
 
     /**
+     * دالة مساعدة لتعيين الألوان بناءً على مستوى الرضا/النظافة.
+     * تستخدم نفس لوحة الألوان الموحدة في الواجهة الأمامية.
+     *
+     * @param string $translatedLabel التسمية المترجمة (مثلاً 'ممتازة', 'جيدة جدًا', 'سيئة')
+     * @return string اللون السداسي العشري المقابل
+     */
+    protected function getColorForLabel(string $translatedLabel): string
+    {
+        switch ($translatedLabel) {
+            case 'راض جدًا':
+            case 'ممتازة':
+            case 'نظيفة جدًا':
+            case 'نعم، بحالة ممتازة':
+            case 'نعم، التهوية ممتازة':
+                return '#28a745'; // excellent-color (أخضر)
+            case 'راض':
+            case 'جيدة جدًا':
+            case 'نظيفة':
+            case 'نعم، ولكن تحتاج إلى مزيد من العناية': // لحالة الفراش
+            case 'جيدة': // للضوء
+                return '#8bc34a'; // very-good-color (أخضر فاتح)
+            case 'مقبول':
+            case 'مقبولة':
+            case 'تحتاج إلى تحسين':
+            case 'متوفرة ولكن تحتاج إلى تحسين': // للتهوية
+            case 'ضعيفة وتحتاج إلى تحسين': // للضوء
+                return '#fd7e14'; // acceptable-color (برتقالي)
+            case 'غير راض':
+            case 'سيئة':
+            case 'غير نظيفة':
+            case 'ليست نظيفة بما يكفي': // لحالة الفراش
+            case 'التهوية ضعيفة وغير كافية': // للتهوية
+                return '#dc3545'; // poor-color (أحمر)
+            default:
+                return '#6c757d'; // لون رمادي افتراضي
+        }
+    }
+
+    /**
      * جلب بيانات مخطط توزيع الرضا العام (دائري).
      */
     public function getSatisfactionPieChartData(Request $request)
@@ -164,22 +203,35 @@ class SurveyChartController extends Controller
         $query = Survey::query();
         $query = $this->applyDateFilters($request, $query);
 
+        // جلب البيانات الخام وتجميعها
         $data = $query->selectRaw('overall_satisfaction, COUNT(*) as count')
             ->groupBy('overall_satisfaction')
-            ->get()
-            ->mapWithKeys(function ($item) {
-                return [$this->translateSurveyValue('overall_satisfaction', $item->overall_satisfaction) => $item->count];
-            });
+            ->get();
 
-        return response()->json([
+        // تهيئة مصفوفة لترتيب البيانات والألوان بشكل صحيح
+        $orderedLabels = ['very_satisfied', 'satisfied', 'acceptable', 'dissatisfied'];
+        $translatedLabels = [];
+        $counts = [];
+        $backgroundColors = [];
+
+        foreach ($orderedLabels as $label) {
+            $translated = $this->translateSurveyValue('overall_satisfaction', $label);
+            $count = $data->firstWhere('overall_satisfaction', $label)['count'] ?? 0;
+
+            $translatedLabels[] = $translated;
+            $counts[] = $count;
+            $backgroundColors[] = $this->getColorForLabel($translated);
+        }
+
+        return [
             'datasets' => [
                 [
-                    'data' => $data->values()->toArray(),
-                    'backgroundColor' => ['#4CAF50', '#2196F3', '#FFC107', '#F44336'], // ألوان افتراضية
+                    'data' => $counts,
+                    'backgroundColor' => $backgroundColors,
                 ],
             ],
-            'labels' => $data->keys()->toArray(),
-        ]);
+            'labels' => $translatedLabels,
+        ];
     }
 
     /**
@@ -196,25 +248,42 @@ class SurveyChartController extends Controller
             ->get()
             ->mapWithKeys(function ($item) {
                 return [$this->translateSurveyValue('hall_cleanliness', $item->hall_cleanliness) => $item->count];
-            })
-            ->sortKeysUsing(function ($keyA, $keyB) {
-                // ترتيب مخصص للقيم لضمان ترتيب منطقي
-                $order = ['نظيفة جدًا', 'نظيفة', 'تحتاج إلى تحسين', 'غير نظيفة'];
-                return array_search($keyA, $order) <=> array_search($keyB, $order);
             });
 
-        return response()->json([
-            'labels' => $data->keys()->toArray(),
+        // ترتيب مخصص للقيم لضمان ترتيب منطقي
+        $order = ['نظيفة جدًا', 'نظيفة', 'تحتاج إلى تحسين', 'غير نظيفة'];
+        $orderedLabels = [];
+        $orderedData = [];
+        $orderedColors = [];
+
+        foreach ($order as $label) {
+            if (in_array($label, $data->keys()->toArray())) {
+                $orderedLabels[] = $label;
+                $orderedData[] = $data->get($label, 0);
+                $orderedColors[] = $this->getColorForLabel($label);
+            }
+        }
+        // إضافة أي تسميات غير موجودة في الترتيب المخصص في النهاية (مع لون افتراضي)
+        foreach ($data->keys() as $label) {
+            if (!in_array($label, $orderedLabels)) {
+                $orderedLabels[] = $label;
+                $orderedData[] = $data->get($label, 0);
+                $orderedColors[] = $this->getColorForLabel($label); // أو لون افتراضي آخر
+            }
+        }
+
+        return [
+            'labels' => $orderedLabels,
             'datasets' => [
                 [
                     'label' => 'نظافة القاعات',
-                    'data' => $data->values()->toArray(),
-                    'backgroundColor' => ['#28a745', '#17a2b8', '#ffc107', '#dc3545'], // ألوان متنوعة
-                    'borderColor' => ['#28a745', '#17a2b8', '#ffc107', '#dc3545'],
+                    'data' => $orderedData,
+                    'backgroundColor' => $orderedColors, // ألوان متنوعة لكل شريط
+                    'borderColor' => $orderedColors,
                     'borderWidth' => 1,
                 ],
             ],
-        ]);
+        ];
     }
 
     /**
@@ -231,24 +300,40 @@ class SurveyChartController extends Controller
             ->get()
             ->mapWithKeys(function ($item) {
                 return [$this->translateSurveyValue('water_trams_cleanliness', $item->water_trams_cleanliness) => $item->count];
-            })
-            ->sortKeysUsing(function ($keyA, $keyB) {
-                $order = ['نظيفة جدًا', 'نظيفة', 'تحتاج إلى تحسين', 'غير نظيفة'];
-                return array_search($keyA, $order) <=> array_search($keyB, $order);
             });
 
-        return response()->json([
-            'labels' => $data->keys()->toArray(),
+        $order = ['نظيفة جدًا', 'نظيفة', 'تحتاج إلى تحسين', 'غير نظيفة'];
+        $orderedLabels = [];
+        $orderedData = [];
+        $orderedColors = [];
+
+        foreach ($order as $label) {
+            if (in_array($label, $data->keys()->toArray())) {
+                $orderedLabels[] = $label;
+                $orderedData[] = $data->get($label, 0);
+                $orderedColors[] = $this->getColorForLabel($label);
+            }
+        }
+        foreach ($data->keys() as $label) {
+            if (!in_array($label, $orderedLabels)) {
+                $orderedLabels[] = $label;
+                $orderedData[] = $data->get($label, 0);
+                $orderedColors[] = $this->getColorForLabel($label);
+            }
+        }
+
+        return [
+            'labels' => $orderedLabels,
             'datasets' => [
                 [
                     'label' => 'نظافة ترامز الماء',
-                    'data' => $data->values()->toArray(),
-                    'backgroundColor' => ['#6f42c1', '#20c997', '#fd7e14', '#e83e8c'],
-                    'borderColor' => ['#6f42c1', '#20c997', '#fd7e14', '#e83e8c'],
+                    'data' => $orderedData,
+                    'backgroundColor' => $orderedColors,
+                    'borderColor' => $orderedColors,
                     'borderWidth' => 1,
                 ],
             ],
-        ]);
+        ];
     }
 
     /**
@@ -260,17 +345,16 @@ class SurveyChartController extends Controller
         $query = Survey::query();
         $query = $this->applyDateFilters($request, $query);
 
-        // مهم: يجب استخدام clone() عند استخدام نفس كائن الـ query لأكثر من استعلام
-        // للحفاظ على الاستعلام الأصلي دون تطبيق التغييرات عليه في الاستعلامات اللاحقة.
-        // هنا تم استخدام clone() بشكل صحيح
-        $toiletData = $query->clone()->selectRaw('toilet_cleanliness, COUNT(*) as count')
+        // جلب بيانات نظافة دورات المياه
+        $toiletDataRaw = $query->clone()->selectRaw('toilet_cleanliness, COUNT(*) as count')
             ->groupBy('toilet_cleanliness')
             ->get()
             ->mapWithKeys(function ($item) {
                 return [$this->translateSurveyValue('toilet_cleanliness', $item->toilet_cleanliness) => $item->count];
             });
 
-        $yardData = $query->clone()->selectRaw('yard_cleanliness, COUNT(*) as count')
+        // جلب بيانات نظافة الساحات والممرات
+        $yardDataRaw = $query->clone()->selectRaw('yard_cleanliness, COUNT(*) as count')
             ->groupBy('yard_cleanliness')
             ->get()
             ->mapWithKeys(function ($item) {
@@ -278,55 +362,60 @@ class SurveyChartController extends Controller
             });
 
         // دمج جميع التصنيفات الفريدة من كلا المجموعتين
-        $allLabels = array_unique(array_merge($toiletData->keys()->toArray(), $yardData->keys()->toArray()));
+        $allLabels = array_unique(array_merge($toiletDataRaw->keys()->toArray(), $yardDataRaw->keys()->toArray()));
 
         // ترتيب التصنيفات لضمان الاتساق
         $order = ['ممتازة', 'جيدة جدًا', 'جيدة', 'مقبولة', 'سيئة', 'نظيفة', 'تحتاج إلى تحسين', 'غير نظيفة'];
         usort($allLabels, function ($a, $b) use ($order) {
-            return array_search($a, $order) <=> array_search($b, $order);
+            $posA = array_search($a, $order);
+            $posB = array_search($b, $order);
+            return ($posA === false ? count($order) : $posA) <=> ($posB === false ? count($order) : $posB);
         });
 
         // التأكد من أن جميع البيانات تحتوي على جميع الـ labels، مع قيم صفرية للمفقود
-        $toiletCounts = array_values(array_map(function($label) use ($toiletData) {
-            return $toiletData->get($label, 0);
-        }, $allLabels));
+        $toiletCounts = [];
+        $toiletColors = [];
+        foreach ($allLabels as $label) {
+            $toiletCounts[] = $toiletDataRaw->get($label, 0);
+            $toiletColors[] = $this->getColorForLabel($label); // لون لكل شريط
+        }
 
-        $yardCounts = array_values(array_map(function($label) use ($yardData) {
-            return $yardData->get($label, 0);
-        }, $allLabels));
+        $yardCounts = [];
+        $yardColors = [];
+        foreach ($allLabels as $label) {
+            $yardCounts[] = $yardDataRaw->get($label, 0);
+            $yardColors[] = $this->getColorForLabel($label); // لون لكل شريط
+        }
 
-        return response()->json([
+        return [
             'labels' => $allLabels,
             'datasets' => [
                 [
                     'label' => 'نظافة دورات المياه',
                     'data' => $toiletCounts,
-                    'backgroundColor' => 'rgba(255, 99, 132, 0.7)',
-                    'borderColor' => 'rgba(255, 99, 132, 1)',
+                    'backgroundColor' => $toiletColors, // مصفوفة ألوان لكل شريط
+                    'borderColor' => $toiletColors,
                     'borderWidth' => 1,
                     'borderRadius' => 5,
                 ],
                 [
                     'label' => 'نظافة الساحات والممرات',
                     'data' => $yardCounts,
-                    'backgroundColor' => 'rgba(54, 162, 235, 0.7)',
-                    'borderColor' => 'rgba(54, 162, 235, 1)',
+                    'backgroundColor' => $yardColors, // مصفوفة ألوان لكل شريط
+                    'borderColor' => $yardColors,
                     'borderWidth' => 1,
                     'borderRadius' => 5,
                 ],
             ],
-        ]);
+        ];
     }
-
-    // تم إزالة دالة getSpeedAccuracyData بالكامل بناءً على طلبك.
-
 
     /**
      * جلب بيانات الجدول التفصيلية والملخص لتقرير الاستبيانات.
      * يعتمد على قيم الاستبيان المخزنة في قاعدة البيانات.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return array
      */
     public function getTableSummaryData(Request $request)
     {
@@ -342,7 +431,7 @@ class SurveyChartController extends Controller
         $valueToScoreMap = [
             'excellent' => ['category' => 'excellent', 'score' => 5],
             'very_good' => ['category' => 'very_good', 'score' => 4],
-            'good' => ['category' => 'good', 'score' => 3],
+            'good' => ['category' => 'good', 'score' => 3], // هذه الفئة مستخدمة في بعض الحقول مثل toilet_cleanliness
             'acceptable' => ['category' => 'acceptable', 'score' => 2],
             'poor' => ['category' => 'poor', 'score' => 1],
             // لـ overall_satisfaction
@@ -354,6 +443,21 @@ class SurveyChartController extends Controller
             'clean' => ['category' => 'very_good', 'score' => 4],
             'needs_improvement' => ['category' => 'acceptable', 'score' => 2],
             'dirty' => ['category' => 'poor', 'score' => 1],
+            // قيم أخرى قد تحتاج إلى تعيين نقاط لتضمينها في المتوسط العام
+            'always' => ['category' => 'excellent', 'score' => 5], // hygiene_supplies, water_availability
+            'often' => ['category' => 'very_good', 'score' => 4],
+            'rarely' => ['category' => 'poor', 'score' => 1],
+            'never' => ['category' => 'poor', 'score' => 1],
+            'everywhere' => ['category' => 'excellent', 'score' => 5], // water_trams_distribution
+            'needs_more' => ['category' => 'acceptable', 'score' => 2],
+            'not_enough' => ['category' => 'poor', 'score' => 1],
+            'clearly' => ['category' => 'excellent', 'score' => 5], // cleaning_teams
+            'sometimes' => ['category' => 'good', 'score' => 3],
+            'not_noticed' => ['category' => 'poor', 'score' => 1],
+            'not_available' => ['category' => 'poor', 'score' => 1], // bedding_condition
+            'needs_care' => ['category' => 'acceptable', 'score' => 2],
+            'excellent' => ['category' => 'excellent', 'score' => 5], // ventilation, lighting (إذا كانت القيم هي نفسها)
+            'poor' => ['category' => 'poor', 'score' => 1], // ventilation
         ];
 
         // دالة مساعدة لمعالجة مؤشر واحد وحساب الإحصائيات الخاصة به
@@ -380,13 +484,15 @@ class SurveyChartController extends Controller
             }
 
             // حساب متوسط الرضا وتحويله إلى نسبة مئوية (إذا كان المقياس من 1-5)
-            $avgSatisfaction = ($responseCount > 0) ? ($totalScore / $responseCount) * 20 : 0;
+            // 5 نقاط = 100%، 1 نقطة = 0% (أو 20% إذا كانت 1 هي الأقل)
+            // (متوسط_النقاط - 1) / (5 - 1) * 100
+            $avgSatisfaction = ($responseCount > 0) ? (($totalScore / $responseCount - 1) / 4) * 100 : 0;
 
             $detailedStatistics[] = [
                 'indicator' => $indicatorLabel,
                 'excellent' => $counts['excellent'],
                 'very_good' => $counts['very_good'],
-                'good' => $counts['good'], // قد تكون هذه الفئة غير مستخدمة لبعض المؤشرات
+                'good' => $counts['good'], // هذه الفئة قد تكون غير مستخدمة لبعض المؤشرات
                 'acceptable' => $counts['acceptable'],
                 'poor' => $counts['poor'],
                 'total' => $responseCount,
@@ -396,11 +502,17 @@ class SurveyChartController extends Controller
 
         // 2. معالجة كل مؤشر من مؤشرات الاستبيان
         $processIndicator($surveys, 'overall_satisfaction', 'الرضا العام');
-        $processIndicator($surveys, 'hall_cleanliness', 'نظافة القاعات');
-        $processIndicator($surveys, 'water_trams_cleanliness', 'نظافة ترامز الماء');
         $processIndicator($surveys, 'toilet_cleanliness', 'نظافة دورات المياه');
+        $processIndicator($surveys, 'hygiene_supplies', 'توفر مستلزمات النظافة');
         $processIndicator($surveys, 'yard_cleanliness', 'نظافة الساحات والممرات');
-        // تم إزالة استدعاء $processIndicator لـ 'speed_accuracy' هنا بناءً على طلبك
+        $processIndicator($surveys, 'cleaning_teams', 'ملاحظة فرق التنظيف');
+        $processIndicator($surveys, 'hall_cleanliness', 'نظافة القاعات');
+        $processIndicator($surveys, 'bedding_condition', 'حالة الفرش والبطانيات');
+        $processIndicator($surveys, 'ventilation', 'التهوية');
+        $processIndicator($surveys, 'lighting', 'الإضاءة');
+        $processIndicator($surveys, 'water_trams_distribution', 'توزيع ترامز الماء');
+        $processIndicator($surveys, 'water_trams_cleanliness', 'نظافة ترامز الماء');
+        $processIndicator($surveys, 'water_availability', 'توفر الماء');
 
 
         // 3. حساب الإحصائيات الموجزة (Summary)
@@ -415,8 +527,13 @@ class SurveyChartController extends Controller
         if (!empty($detailedStatistics)) {
             foreach ($detailedStatistics as $stat) {
                 // لمتوسط الرضا الكلي، نستخدم المتوسط المرجح بناءً على عدد الاستجابات لكل مؤشر
-                $overallSatisfactionSum += ($stat['avg_satisfaction'] * $stat['total']);
-                $totalResponsesAcrossIndicators += $stat['total'];
+                // نستبعد المؤشرات التي ليس لها معنى في متوسط الرضا العام مثل 'ملاحظة فرق التنظيف'
+                // أو نعتبر فقط مؤشرات الرضا المباشرة
+                if (in_array($stat['indicator'], ['الرضا العام', 'نظافة دورات المياه', 'نظافة القاعات', 'نظافة ترامز الماء', 'نظافة الساحات والممرات', 'حالة الفرش والبطانيات', 'التهوية', 'الإضاءة', 'توفر مستلزمات النظافة', 'توفر الماء'])) {
+                    $overallSatisfactionSum += ($stat['avg_satisfaction'] * $stat['total']);
+                    $totalResponsesAcrossIndicators += $stat['total'];
+                }
+
 
                 if ($stat['avg_satisfaction'] > $highestAvg) {
                     $highestAvg = $stat['avg_satisfaction'];
@@ -441,9 +558,49 @@ class SurveyChartController extends Controller
         ];
 
         // 4. إرجاع البيانات كـ JSON
-        return response()->json([
+        return [
             'detailed_statistics' => $detailedStatistics,
             'summary' => $summary
+        ];
+    }
+
+    /**
+     * جلب جميع بيانات المخططات والجدول والملخص في طلب API واحد.
+     * هذه هي الدالة التي سيتم استدعاؤها من الواجهة الأمامية.
+     * الرابط: /api/survey-data
+     */
+    public function getAllSurveyData(Request $request)
+    {
+        // Gate::authorize('view_survey_stats'); // قم بإلغاء التعليق إذا كنت تستخدم Gates
+
+        // جلب بيانات كل مخطط
+        $satisfactionData = $this->getSatisfactionPieChartData($request);
+        $hallCleanlinessData = $this->getHallCleanlinessChartData($request);
+        $waterTramsCleanlinessData = $this->getWaterTramsCleanlinessChartData($request);
+        $facilitiesCleanlinessData = $this->getFacilitiesCleanlinessChartData($request); // يحتوي على دورات المياه والساحات
+
+        // تجميع بيانات المخططات تحت مفتاح chartData
+        $chartData = [
+            'satisfaction' => $satisfactionData,
+            'hallCleanliness' => $hallCleanlinessData,
+            'waterTramsCleanliness' => $waterTramsCleanlinessData,
+            'restroomCleanliness' => $facilitiesCleanlinessData['datasets'][0]['data'] ?? [], // بيانات دورات المياه
+            'courtyardsCleanliness' => $facilitiesCleanlinessData['datasets'][1]['data'] ?? [], // بيانات الساحات والممرات
+            // نحتاج أيضًا إلى إرسال labels منفصلة لدورات المياه والساحات إذا كانت الـ frontend تتوقعها
+            'restroomCleanlinessLabels' => $facilitiesCleanlinessData['labels'] ?? [],
+            'courtyardsCleanlinessLabels' => $facilitiesCleanlinessData['labels'] ?? [],
+            // إرسال الألوان لكل dataset لتطبيقها في الواجهة الأمامية
+            'restroomCleanlinessColors' => $facilitiesCleanlinessData['datasets'][0]['backgroundColor'] ?? [],
+            'courtyardsCleanlinessColors' => $facilitiesCleanlinessData['datasets'][1]['backgroundColor'] ?? [],
+        ];
+
+        // جلب بيانات الجدول والملخص
+        $tableAndSummary = $this->getTableSummaryData($request);
+
+        return response()->json([
+            'chartData' => $chartData,
+            'tableData' => $tableAndSummary['detailed_statistics'],
+            'summaryData' => $tableAndSummary['summary'],
         ]);
     }
 }
