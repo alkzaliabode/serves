@@ -127,7 +127,7 @@
                         </div>
                     </div>
 
-                    {{-- المخطط 4: نظافة دورات المياه (Radar Chart) --}}
+                    {{-- المخطط 4: نظافة دورات المياه (Doughnut Chart) --}}
                     <div class="col-md-6 mb-4 animate__animated animate__fadeInRight">
                         <div class="card card-outline card-danger shadow-lg border-danger rounded-lg chart-card h-100">
                             <div class="card-header border-0 bg-gradient-danger-dark">
@@ -137,7 +137,8 @@
                             </div>
                             <div class="card-body">
                                 <div class="chart-container">
-                                    <canvas id="restroomCleanlinessRadarChart"></canvas>
+                                    <canvas id="restroomCleanlinessDoughnutChart"></canvas>
+                                    <div id="restroomCenterText" class="chart-center-text"></div>
                                 </div>
                             </div>
                         </div>
@@ -430,7 +431,7 @@
         canvas {
             background-color: var(--chart-bg-dark);
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Added for subtle 3D effect */
             padding: 15px;
             width: 100% !important;
             height: 100% !important;
@@ -674,7 +675,7 @@
             font-weight: 600;
         }
         
-        .statistics-table tr:nth-child(even) { background-color: #f8f9fa; }
+  .statistics-table tr:nth-child(even) { background-color: #f8f9fa; }
         .statistics-table tr:hover { background-color: #e9ecef; }
 
         .summary-section { margin-top: 25px; }
@@ -810,7 +811,7 @@
         let satisfactionDoughnutChart = null;
         let hallCleanlinessBarChart = null;
         let waterTramsCleanlinessHorizontalBarChart = null;
-        let restroomCleanlinessRadarChart = null;
+        let restroomCleanlinessDoughnutChart = null; // Changed from Radar to Doughnut
         let courtyardsCleanlinessPolarAreaChart = null;
 
         // Store fetched data globally for printing
@@ -837,11 +838,11 @@
 
             // Define a consistent color palette with green for highest rating
             const chartColors = {
-                excellent: 'var(--excellent-color)',
-                veryGood: 'var(--very-good-color)',
-                good: 'var(--good-color)',
-                acceptable: 'var(--acceptable-color)',
-                poor: 'var(--poor-color)',
+                excellent: 'var(--excellent-color)', // #28a745 (Green)
+                veryGood: 'var(--very-good-color)',  // #8bc34a (Light Green)
+                good: 'var(--good-color)',           // #ffc107 (Yellow)
+                acceptable: 'var(--acceptable-color)', // #fd7e14 (Orange)
+                poor: 'var(--poor-color)',           // #dc3545 (Red)
                 backgrounds: [
                     'rgba(40, 167, 69, 0.7)',  // Excellent (Green)
                     'rgba(139, 195, 74, 0.7)', // Very Good
@@ -968,14 +969,18 @@
                 const options = JSON.parse(JSON.stringify(originalOptions));
                 options.plugins.legend.labels.color = '#000';
                 options.plugins.datalabels.color = '#000';
-                options.plugins.datalabels.font = { weight: 'bold', size: 12 };
+                options.plugins.datalabels.font = { weight: 'bold', size: 10 }; // Reduced font size for print
+                options.plugins.datalabels.offset = 2; // Adjusted offset for print
+                options.plugins.datalabels.clip = false; // Add this to prevent clipping
+                options.plugins.datalabels.textShadowBlur = 0; // Remove text shadow for print
+                options.plugins.datalabels.textShadowColor = 'transparent'; // Remove text shadow for print
                 
                 if (options.scales) {
                     if (options.scales.x) {
-                        options.scales.x.ticks.font = { size: 12, weight: 'bold' };
+                        options.scales.x.ticks.font = { size: 10, weight: 'bold' }; // Reduced font size for print
                     }
                     if (options.scales.y) {
-                        options.scales.y.ticks.font = { size: 12, weight: 'bold' };
+                        options.scales.y.ticks.font = { size: 10, weight: 'bold' }; // Reduced font size for print
                     }
                 }
                 
@@ -1142,7 +1147,7 @@
                                     ...commonChartOptions.plugins.tooltip,
                                     callbacks: {
                                         label: function(context) {
-                                            let label = context.label || '';
+                                            let label = context.dataset.label || '';
                                             if (label) { label += ': '; }
                                             if (context.parsed !== null) {
                                                 const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
@@ -1212,7 +1217,6 @@
                                     ...commonChartOptions.plugins.datalabels,
                                     anchor: 'end', 
                                     align: 'top', 
-                                    offset: 4, 
                                     formatter: (value) => value,
                                     color: '#ee0808ff', 
                                     textShadowColor: 'rgba(0,0,0,0.7)', 
@@ -1253,7 +1257,6 @@
                                     ...commonChartOptions.plugins.datalabels,
                                     anchor: 'end', 
                                     align: 'end', 
-                                    offset: 4, 
                                     formatter: (value) => value,
                                     color: '#ecf0f1', 
                                     textShadowColor: 'rgba(0,0,0,0.7)', 
@@ -1268,65 +1271,87 @@
                         waterTramsCleanlinessHorizontalBarChart
                     );
 
-                    // Chart 4: Restroom Cleanliness (Radar Chart)
-                    const restroomCleanlinessCtx = document.getElementById('restroomCleanlinessRadarChart').getContext('2d');
-                    restroomCleanlinessRadarChart = renderChart(
+                    // Chart 4: Restroom Cleanliness (Doughnut Chart)
+                    const restroomCleanlinessCtx = document.getElementById('restroomCleanlinessDoughnutChart').getContext('2d');
+
+                    // Create a mutable copy of the colors array for this chart
+                    let restroomDisplayColors = [...currentChartData.restroomCleanlinessColors];
+
+                    // Find the index of 'جيدة جداً' and apply yellow color
+                    const veryGoodRestroomIndex = currentChartData.restroomCleanlinessLabels.indexOf('جيدة جداً');
+                    if (veryGoodRestroomIndex !== -1) {
+                        restroomDisplayColors[veryGoodRestroomIndex] = chartColors.good; // Make 'جيدة جداً' yellow
+                    }
+
+                    // Find the index of 'جيد' and apply a distinct color (e.g., acceptable color)
+                    const goodRestroomIndex = currentChartData.restroomCleanlinessLabels.indexOf('جيد');
+                    if (goodRestroomIndex !== -1) {
+                        restroomDisplayColors[goodRestroomIndex] = chartColors.acceptable; // Make 'جيد' orange
+                    }
+
+                    restroomCleanlinessDoughnutChart = renderChart(
                         restroomCleanlinessCtx,
-                        'radar',
+                        'doughnut', // Changed to doughnut type
                         {
                             labels: currentChartData.restroomCleanlinessLabels, // استخدم التسميات من المتحكم
                             datasets: [{
                                 label: 'مستوى النظافة',
                                 data: currentChartData.restroomCleanliness,
-                                backgroundColor: currentChartData.restroomCleanlinessColors.map(color => color.replace('0.7', '0.4')), // استخدم الألوان من المتحكم
-                                borderColor: currentChartData.restroomCleanlinessColors, // استخدم الألوان من المتحكم
-                                pointBackgroundColor: currentChartData.restroomCleanlinessColors, // استخدم الألوان من المتحكم
-                                pointBorderColor: '#fff',
-                                pointHoverBackgroundColor: '#fff',
-                                pointHoverBorderColor: currentChartData.restroomCleanlinessColors, // استخدم الألوان من المتحكم
+                                backgroundColor: restroomDisplayColors, // استخدم الألوان المعدلة الآن
+                                borderColor: '#fff', // Border for doughnut segments
                                 borderWidth: 2
                             }]
                         },
                         {
                             ...commonChartOptions,
+                            cutout: '0%', // Changed to 0% for full pie chart (no inner hole)
                             plugins: {
                                 ...commonChartOptions.plugins,
-                                legend: { display: false },
+                                legend: { position: 'bottom', labels: commonChartOptions.plugins.legend.labels },
+                                tooltip: {
+                                    ...commonChartOptions.plugins.tooltip,
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.label || '';
+                                            if (label) { label += ': '; }
+                                            if (context.parsed !== null) {
+                                                const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                                const percentage = (context.parsed / total * 100).toFixed(1) + '%';
+                                                label += context.parsed + ' (' + percentage + ')';
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                },
                                 datalabels: {
                                     ...commonChartOptions.plugins.datalabels,
-                                    formatter: (value) => value,
-                                    backgroundColor: 'rgba(0,0,0,0.6)',
-                                    borderRadius: 4,
-                                    padding: 6,
-                                    color: '#fff'
+                                    formatter: (value, context) => {
+                                        const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                        return (value / total * 100).toFixed(1) + '%';
+                                    },
+                                    align: 'center',
+                                    anchor: 'center'
                                 }
                             },
-                            scales: {
-                                r: {
-                                    angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
-                                    grid: { color: 'rgba(255, 255, 255, 0.2)' },
-                                    pointLabels: { 
-                                        color: '#ecf0f1', 
-                                        font: { 
-                                            family: 'Cairo, Noto Sans Arabic', 
-                                            size: 12, 
-                                            weight: '500' 
-                                        } 
-                                    },
-                                    ticks: {
-                                        backdropColor: 'rgba(0,0,0,0.7)',
-                                        color: '#ecf0f1',
-                                        font: { 
-                                            family: 'Cairo, Noto Sans Arabic', 
-                                            size: 10 
-                                        },
-                                        beginAtZero: true
-                                    }
-                                }
-                            }
+                            scales: {} // Removed radar-specific scales
                         },
-                        restroomCleanlinessRadarChart
+                        restroomCleanlinessDoughnutChart
                     );
+
+                    // Update center text for Restroom Cleanliness Doughnut Chart
+                    const restroomCenterTextElement = document.getElementById('restroomCenterText');
+                    if (restroomCenterTextElement) {
+                        const restroomStats = currentTableData.find(item => item.indicator === 'نظافة دورات المياه');
+                        const restroomPercentage = restroomStats ? restroomStats.avg_satisfaction.toFixed(1) : '0.0';
+                        restroomCenterTextElement.innerHTML = `
+                            <div style="font-size: 1.5rem; font-weight: bold; color: ${chartColors.excellent};">
+                                ${restroomPercentage}%
+                            </div>
+                            <div style="font-size: 1rem; color: #14ee14ff; margin-top: 5px;">
+                                متوسط الرضا
+                            </div>
+                        `;
+                    }
 
                     // Chart 5: Courtyards and Corridors Cleanliness (Polar Area Chart)
                     const courtyardsCleanlinessCtx = document.getElementById('courtyardsCleanlinessPolarAreaChart').getContext('2d');
@@ -1478,6 +1503,12 @@
                             datalabels: { 
                                 ...printChartOptions(commonChartOptions).plugins.datalabels, 
                                 color: '#333',
+                                formatter: (value, context) => {
+                                    const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                    return (value / total * 100).toFixed(1) + '%';
+                                },
+                                align: 'center',
+                                anchor: 'center',
                                 font: {
                                     size: 12,
                                     weight: 'bold'
@@ -1590,60 +1621,66 @@
                     }
                 });
 
-                // Render Restroom Cleanliness Radar Chart for printing
+                // Render Restroom Cleanliness Doughnut Chart for printing
                 const printRestroomCleanlinessChartCtx = document.getElementById('printRestroomChart').getContext('2d');
+
+                // Create a mutable copy of the colors array for this chart
+                let printRestroomColors = [...currentChartData.restroomCleanlinessColors];
+
+                // Apply the same color override for the print chart
+                const printVeryGoodRestroomIndex = currentChartData.restroomCleanlinessLabels.indexOf('جيدة جداً');
+                if (printVeryGoodRestroomIndex !== -1) {
+                    printRestroomColors[printVeryGoodRestroomIndex] = chartColors.good; // Make 'جيدة جداً' yellow
+                }
+
+                const printGoodRestroomIndex = currentChartData.restroomCleanlinessLabels.indexOf('جيد');
+                if (printGoodRestroomIndex !== -1) {
+                    printRestroomColors[printGoodRestroomIndex] = chartColors.acceptable; // Make 'جيد' orange
+                }
+
                 new Chart(printRestroomCleanlinessChartCtx, {
-                    type: 'radar',
+                    type: 'doughnut', // Changed to doughnut type
                     data: {
                         labels: currentChartData.restroomCleanlinessLabels, // استخدم التسميات من المتحكم
                         datasets: [{
                             label: 'مستوى النظافة',
                             data: currentChartData.restroomCleanliness,
-                            backgroundColor: currentChartData.restroomCleanlinessColors.map(color => color.replace('0.7', '0.4')), // استخدم الألوان من المتحكم
-                            borderColor: currentChartData.restroomCleanlinessColors, // استخدم الألوان من المتحكم
-                            pointBackgroundColor: currentChartData.restroomCleanlinessColors, // استخدم الألوان من المتحكم
-                            pointBorderColor: '#fff',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: currentChartData.restroomCleanlinessColors, // استخدم الألوان من المتحكم
+                            backgroundColor: printRestroomColors, // استخدم الألوان المعدلة للطباعة
+                            borderColor: '#fff', // Border for doughnut segments
                             borderWidth: 2
                         }]
                     },
                     options: {
                         ...printChartOptions(commonChartOptions),
+                        cutout: '0%', // Changed to 0% for full pie chart
                         plugins: {
                             ...printChartOptions(commonChartOptions).plugins,
-                            legend: { display: false },
+                            legend: { 
+                                position: 'bottom', 
+                                labels: { 
+                                    color: '#495057',
+                                    font: {
+                                        size: 12,
+                                        weight: 'bold'
+                                    }
+                                } 
+                            },
                             datalabels: { 
                                 ...printChartOptions(commonChartOptions).plugins.datalabels, 
                                 color: '#333',
+                                formatter: (value, context) => {
+                                    const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                    return (value / total * 100).toFixed(1) + '%';
+                                },
+                                align: 'center',
+                                anchor: 'center',
                                 font: {
                                     size: 12,
                                     weight: 'bold'
                                 }
                             }
                         },
-                        scales: {
-                            r: {
-                                angleLines: { color: 'rgba(0,0,0,0.1)' },
-                                grid: { color: 'rgba(0,0,0,0.1)' },
-                                pointLabels: { 
-                                    color: '#333', 
-                                    font: { 
-                                        size: 12, 
-                                        weight: 'bold' 
-                                    } 
-                                },
-                                ticks: { 
-                                    backdropColor: 'transparent', 
-                                    color: '#333', 
-                                    beginAtZero: true,
-                                    font: {
-                                        size: 10,
-                                        weight: 'bold'
-                                    }
-                                }
-                            }
-                        }
+                        scales: {} // Removed radar-specific scales
                     }
                 });
 
@@ -1709,7 +1746,7 @@
 
                     // Use html2canvas to capture the printable report div
                     html2canvas(printableReportDiv, {
-                        scale: 2,
+                        scale: 3, // Increased scale for better quality
                         logging: true,
                         useCORS: true,
                         allowTaint: true,
@@ -1754,7 +1791,7 @@
                         document.querySelector('.card-body.p-4').prepend(alertDiv);
                         printableReportDiv.style.display = 'none';
                     });
-                }, 500); // Increased delay to ensure charts are fully rendered
+                }, 2000); // Increased delay to ensure charts are fully rendered
             });
         });
     </script>

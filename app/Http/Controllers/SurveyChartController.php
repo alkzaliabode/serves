@@ -172,11 +172,12 @@ class SurveyChartController extends Controller
             case 'نعم، التهوية ممتازة':
                 return '#28a745'; // excellent-color (أخضر)
             case 'راض':
-            case 'جيدة جدًا':
             case 'نظيفة':
             case 'نعم، ولكن تحتاج إلى مزيد من العناية': // لحالة الفراش
-            case 'جيدة': // للضوء
                 return '#8bc34a'; // very-good-color (أخضر فاتح)
+            case 'جيدة جدًا': // تم تعيين اللون الأصفر هنا
+                return '#ffc107'; // good-color (أصفر)
+            case 'جيدة': // تم تعيين اللون البرتقالي هنا لتمييزها عن "جيدة جداً"
             case 'مقبول':
             case 'مقبولة':
             case 'تحتاج إلى تحسين':
@@ -281,6 +282,7 @@ class SurveyChartController extends Controller
                     'backgroundColor' => $orderedColors, // ألوان متنوعة لكل شريط
                     'borderColor' => $orderedColors,
                     'borderWidth' => 1,
+                    'borderRadius' => 8,
                 ],
             ],
         ];
@@ -331,6 +333,7 @@ class SurveyChartController extends Controller
                     'backgroundColor' => $orderedColors,
                     'borderColor' => $orderedColors,
                     'borderWidth' => 1,
+                    'borderRadius' => 8,
                 ],
             ],
         ];
