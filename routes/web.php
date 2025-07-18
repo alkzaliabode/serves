@@ -227,6 +227,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/water-trams-cleanliness-data', [SurveyChartController::class, 'getWaterTramsCleanlinessChartData'])->name('water-trams-cleanliness-data');
         Route::get('/facilities-cleanliness-data', [SurveyChartController::class, 'getFacilitiesCleanlinessChartData'])->name('facilities-cleanliness-data');
         Route::get('/speed-accuracy-data', [SurveyChartController::class, 'getSpeedAccuracyData'])->name('speed-accuracy-data');
+        Route::get('/table-summary-data', [SurveyChartController::class, 'getTableSummaryData'])->name('table-summary-data');
     });
 
     // مسارات مخطط جلبرت (Gilbert Triangle Chart)
