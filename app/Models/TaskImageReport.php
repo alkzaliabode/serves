@@ -95,22 +95,80 @@ class TaskImageReport extends Model
         }
 
         return collect($images)->filter()->map(function ($path) {
+            // تحقق إذا كان المسار بدأ بـ http/https (يشير إلى URL خارجي)
+            if (filter_var($path, FILTER_VALIDATE_URL)) {
+                return [
+                    'url' => $path,
+                    'path' => $path,
+                    'exists' => true,
+                    'absolute_path_for_pdf' => $path,
+                    'is_external' => true
+                ];
+            }
+
+            // تنظيف المسار وإزالة 'public/' و 'storage/' إذا كانت موجودة
             $cleanPath = str_replace(['public/', 'storage/'], '', $path);
+            
+            // التحقق من وجود الصورة في التخزين العام
             $exists = Storage::disk('public')->exists($cleanPath);
 
+            // إذا لم تكن الصورة موجودة، تحقق من وجودها في المجلدات العامة
+            if (!$exists && file_exists(public_path($path))) {
+                $exists = true;
+                $cleanPath = $path;
+                
+                Log::debug("Image found in public directory", [
+                    'original' => $path,
+                    'cleaned' => $cleanPath,
+                    'exists' => $exists
+                ]);
+                
+                return [
+                    'url' => asset($cleanPath),
+                    'path' => $cleanPath,
+                    'exists' => $exists,
+                    'absolute_path_for_pdf' => public_path($cleanPath),
+                    'is_public' => true
+                ];
+            }
+
+            // محاولة ثانية: البحث في المجلد العام بدون تنظيف
+            if (!$exists && file_exists(public_path($cleanPath))) {
+                $exists = true;
+                
+                Log::debug("Image found in public directory with clean path", [
+                    'original' => $path,
+                    'cleaned' => $cleanPath,
+                    'exists' => $exists
+                ]);
+                
+                return [
+                    'url' => asset($cleanPath),
+                    'path' => $cleanPath,
+                    'exists' => $exists,
+                    'absolute_path_for_pdf' => public_path($cleanPath),
+                    'is_public' => true
+                ];
+            }
+            
+            // أخيراً، إذا كنا غير قادرين على تحديد موقع الصورة، حاول إنشاء URL لها على أي حال
+            $url = $exists ? asset('storage/' . $cleanPath) : asset('storage/' . $path);
+            
             Log::debug("Processing image", [
                 'original' => $path,
                 'cleaned' => $cleanPath,
-                'exists' => $exists
+                'exists' => $exists,
+                'url' => $url
             ]);
 
             return [
-                'url' => $exists ? Storage::disk('public')->url($cleanPath) : null,
+                'url' => $url,
                 'path' => $cleanPath,
                 'exists' => $exists,
                 'absolute_path_for_pdf' => $exists ? public_path('storage/' . $cleanPath) : null,
+                'is_storage' => true
             ];
-        })->filter(fn($item) => $item['exists'])->values()->toArray();
+        })->values()->toArray(); // إزالة الفلتر الذي يزيل الصور غير الموجودة
     }
 
     /**
@@ -120,12 +178,32 @@ class TaskImageReport extends Model
     {
         foreach (['before_images', 'after_images'] as $type) {
             foreach ($this->$type ?? [] as $path) {
+                // تخطي URLs الخارجية
+                if (filter_var($path, FILTER_VALIDATE_URL)) {
+                    Log::info("Skipping deletion of external {$type} image", ['url' => $path, 'report_id' => $this->id]);
+                    continue;
+                }
+                
+                // تنظيف المسار وإزالة 'public/' و 'storage/' إذا كانت موجودة
                 $cleanPath = str_replace(['public/', 'storage/'], '', $path);
-                if (Storage::disk('public')->exists($cleanPath)) {
-                    Storage::disk('public')->delete($cleanPath);
-                    Log::info("Deleted {$type} image", ['path' => $cleanPath, 'report_id' => $this->id]);
-                } else {
-                    Log::warning("{$type} image not found for deletion", ['path' => $cleanPath, 'report_id' => $this->id]);
+                
+                try {
+                    if (Storage::disk('public')->exists($cleanPath)) {
+                        Storage::disk('public')->delete($cleanPath);
+                        Log::info("Deleted {$type} image from storage", ['path' => $cleanPath, 'report_id' => $this->id]);
+                    } else if (file_exists(public_path($path))) {
+                        // التحقق من وجود الملف في المجلد العام
+                        unlink(public_path($path));
+                        Log::info("Deleted {$type} image from public directory", ['path' => $path, 'report_id' => $this->id]);
+                    } else {
+                        Log::warning("{$type} image not found for deletion", ['path' => $path, 'report_id' => $this->id]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error("Error deleting {$type} image", [
+                        'path' => $path, 
+                        'report_id' => $this->id,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
         }

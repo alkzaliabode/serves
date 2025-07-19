@@ -166,13 +166,13 @@ class ImageReportController extends Controller
     /**
      * تحديث تقرير مصور محدد في قاعدة البيانات.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\PhotoReportRequest  $request
      * @param  \App\Models\TaskImageReport  $photo_report
      * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, TaskImageReport $photo_report)
     {
-        $validatedData = $request->validate([ // ✅ استخدام متغير لتخزين البيانات المتحقق منها
+        $validatedData = $request->validate([
             'report_title' => 'required|string|max:255',
             'date' => 'required|date',
             'unit_type' => 'required|string|max:255',
@@ -181,10 +181,10 @@ class ImageReportController extends Controller
             'task_type' => 'nullable|string|max:255',
             'status' => ['required', 'string', Rule::in(['مكتمل', 'قيد التنفيذ', 'ملغى'])],
             'notes' => 'nullable|string',
-            'new_before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:15360', // ✅ تم التعديل إلى 15MB
-            'new_after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:15360',  // ✅ تم التعديل إلى 15MB
-            'deleted_before_images' => 'nullable|json', // الصور التي تم حذفها
-            'deleted_after_images' => 'nullable|json',  // الصور التي تم حذفها
+            'new_before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:15360', 
+            'new_after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:15360',  
+            'deleted_before_images' => 'nullable|json',
+            'deleted_after_images' => 'nullable|json',
         ]);
 
         // التعامل مع الصور الموجودة وحذف الصور المحددة للحذف

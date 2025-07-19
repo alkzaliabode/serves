@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TaskImageReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage; // Import Storage facade
+use Barryvdh\DomPDF\Facade\Pdf; // استيراد واجهة PDF
 
 class PrintImageReportController extends Controller
 {
@@ -57,8 +58,26 @@ class PrintImageReportController extends Controller
             ];
         }
 
-        // تم التعديل هنا: استخدام 'photo_reports.print_only' بدلاً من 'photo_reports.print'
-        // وتمرير $pairedImages
-        return view('photo_reports.print_only', compact('record', 'unitName', 'pairedImages'));
+        // اختيار القالب المناسب بناءً على معلمة الطلب
+        $template = request()->has('print') ? 'photo_reports.print_only' : 'photo_reports.print';
+        
+        // إذا كان هناك طلب لإنشاء ملف PDF
+        if (request()->has('pdf')) {
+            // توليد PDF باستخدام dompdf
+            $pdf = Pdf::loadView($template, compact('record', 'unitName', 'pairedImages'));
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true
+            ]);
+            $pdf->setPaper('A4', 'portrait');
+            
+            // تنزيل الملف أو عرضه مباشرة
+            return request()->has('download')
+                ? $pdf->download('تقرير_صور_' . $record->id . '.pdf')
+                : $pdf->stream('تقرير_صور_' . $record->id . '.pdf');
+        }
+        
+        // عرض الصفحة العادية بدون PDF
+        return view($template, compact('record', 'unitName', 'pairedImages'));
     }
 }

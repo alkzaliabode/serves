@@ -264,3 +264,6 @@ Route::middleware(['auth'])->group(function () {
 
 // هذا السطر ضروري جداً لتحميل جميع مسارات المصادقة (login, register, logout, etc.)
 require __DIR__.'/auth.php';
+
+// تحميل مسارات اختبار الصور
+require __DIR__.'/image-test.php';
