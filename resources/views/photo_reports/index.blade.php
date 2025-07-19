@@ -202,7 +202,9 @@
                                         <div class="d-flex flex-wrap align-items-center">
                                             @foreach($report->before_images_for_table as $image_url)
                                                 {{-- تأكد من تشغيل الأمر 'php artisan storage:link' في سطر الأوامر بمشروعك --}}
-                                                <img src="{{ $image_url }}" class="img-thumbnail mr-1" alt="قبل" onerror="this.onerror=null;this.src='https://placehold.co/50x50/cccccc/333333?text=N/A';">
+                                                <a href="{{ $image_url }}" target="_blank" title="فتح الصورة في نافذة جديدة">
+                                                    <img src="{{ $image_url }}" class="img-thumbnail mr-1" alt="قبل" onerror="this.onerror=null;this.src='https://placehold.co/50x50/cccccc/333333?text=N/A';">
+                                                </a>
                                             @endforeach
                                             @if($report->before_images_count > 3)
                                                 <span class="badge badge-secondary ml-1">+{{ $report->before_images_count - 3 }}</span>
@@ -217,7 +219,9 @@
                                         <div class="d-flex flex-wrap align-items-center">
                                             @foreach($report->after_images_for_table as $image_url)
                                                 {{-- تأكد من تشغيل الأمر 'php artisan storage:link' في سطر الأوامر بمشروعك --}}
-                                                <img src="{{ $image_url }}" class="img-thumbnail mr-1" alt="بعد" onerror="this.onerror=null;this.src='https://placehold.co/50x50/cccccc/333333?text=N/A';">
+                                                <a href="{{ $image_url }}" target="_blank" title="فتح الصورة في نافذة جديدة">
+                                                    <img src="{{ $image_url }}" class="img-thumbnail mr-1" alt="بعد" onerror="this.onerror=null;this.src='https://placehold.co/50x50/cccccc/333333?text=N/A';">
+                                                </a>
                                             @endforeach
                                             @if($report->after_images_count > 3)
                                                 <span class="badge badge-secondary ml-1">+{{ $report->after_images_count - 3 }}</span>

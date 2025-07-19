@@ -400,7 +400,7 @@
                 <div class="gallery-container">
                     @foreach($photo_report->before_images_urls as $image)
                         <div class="gallery-item">
-                            <a href="{{ $image['url'] }}" data-toggle="lightbox" data-gallery="before-task-report-gallery" data-title="قبل التنفيذ: {{ $photo_report->report_title }}">
+                            <a href="{{ $image['url'] }}" data-toggle="lightbox" data-gallery="before-task-report-gallery" data-title="قبل التنفيذ: {{ $photo_report->report_title }}" target="_blank">
                                 <img src="{{ $image['url'] }}" alt="صورة قبل التنفيذ" onerror="this.onerror=null;this.src='https://placehold.co/150x150/cccccc/333333?text=Image+Not+Found';">
                             </a>
                         </div>
@@ -415,7 +415,7 @@
                 <div class="gallery-container">
                     @foreach($photo_report->after_images_urls as $image)
                         <div class="gallery-item">
-                            <a href="{{ $image['url'] }}" data-toggle="lightbox" data-gallery="after-task-report-gallery" data-title="بعد التنفيذ: {{ $photo_report->report_title }}">
+                            <a href="{{ $image['url'] }}" data-toggle="lightbox" data-gallery="after-task-report-gallery" data-title="بعد التنفيذ: {{ $photo_report->report_title }}" target="_blank">
                                 <img src="{{ $image['url'] }}" alt="صورة بعد التنفيذ" onerror="this.onerror=null;this.src='https://placehold.co/150x150/cccccc/333333?text=Image+Not+Found';">
                             </a>
                         </div>

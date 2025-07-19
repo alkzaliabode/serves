@@ -18,6 +18,7 @@
         /* Define an accent color variable for distinctiveness */
         :root {
             --accent-color: #00eaff; /* Light blue/cyan for interactive elements and emphasis */
+            --hover-color: #ff9f1c; /* Orange for hover interactions */
         }
 
         /* أنماط البطاقات لتكون شفافة بالكامل مع تأثير زجاجي وخطوط بارزة (تأثير الزجاج المتجمد) */
@@ -290,11 +291,29 @@
             justify-content: center;
             background-color: rgba(0, 0, 0, 0.2);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* إضافة ظل أوضح */
+            transition: all 0.3s ease;
+        }
+        .image-preview:hover {
+            box-shadow: 0 8px 20px rgba(255, 159, 28, 0.5); /* تأثير ظل برتقالي عند التحويم */
+            transform: scale(1.02); /* تكبير بسيط عند التحويم */
+            border-color: var(--hover-color);
+        }
+        .image-preview a {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-in; /* مؤشر للإشارة أنه يمكن تكبير الصورة */
         }
         .image-preview img {
             max-width: 100%;
             max-height: 100%;
             object-fit: cover;
+            transition: filter 0.3s ease;
+        }
+        .image-preview:hover img {
+            filter: brightness(1.1); /* زيادة السطوع عند التحويم */
         }
         .image-preview .remove-image {
             position: absolute;
@@ -420,7 +439,9 @@
                                 @foreach($photo_report->before_images_urls as $image)
                                     @if($image['url'])
                                         <div class="image-preview" data-path="{{ $image['path'] }}">
-                                            <img src="{{ $image['url'] }}" alt="صورة قبل" onerror="this.onerror=null;this.src='https://placehold.co/300x300/cccccc/333333?text=Image+Not+Found';">
+                                            <a href="{{ $image['url'] }}" target="_blank" title="فتح الصورة في نافذة جديدة">
+                                                <img src="{{ $image['url'] }}" alt="صورة قبل" onerror="this.onerror=null;this.src='https://placehold.co/300x300/cccccc/333333?text=Image+Not+Found';">
+                                            </a>
                                             <button type="button" class="remove-image" data-path="{{ $image['path'] }}">&times;</button>
                                         </div>
                                     @endif
@@ -442,7 +463,9 @@
                                 @foreach($photo_report->after_images_urls as $image)
                                     @if($image['url'])
                                         <div class="image-preview" data-path="{{ $image['path'] }}">
-                                            <img src="{{ $image['url'] }}" alt="صورة بعد" onerror="this.onerror=null;this.src='https://placehold.co/300x300/cccccc/333333?text=Image+Not+Found';">
+                                            <a href="{{ $image['url'] }}" target="_blank" title="فتح الصورة في نافذة جديدة">
+                                                <img src="{{ $image['url'] }}" alt="صورة بعد" onerror="this.onerror=null;this.src='https://placehold.co/300x300/cccccc/333333?text=Image+Not+Found';">
+                                            </a>
                                             <button type="button" class="remove-image" data-path="{{ $image['path'] }}">&times;</button>
                                         </div>
                                     @endif
@@ -484,9 +507,25 @@
                     reader.onload = (e) => {
                         const previewDiv = document.createElement('div');
                         previewDiv.className = 'image-preview';
+                        
+                        // إنشاء رابط للصورة
+                        const link = document.createElement('a');
+                        link.href = e.target.result;
+                        link.target = '_blank'; // فتح في نافذة جديدة
+                        link.title = 'فتح الصورة في نافذة جديدة';
+                        
+                        // إنشاء عنصر الصورة
                         const img = document.createElement('img');
                         img.src = e.target.result;
-                        previewDiv.appendChild(img);
+                        img.alt = 'معاينة الصورة';
+                        
+                        // إضافة الصورة داخل الرابط
+                        link.appendChild(img);
+                        
+                        // إضافة الرابط داخل مربع المعاينة
+                        previewDiv.appendChild(link);
+                        
+                        // إضافة مربع المعاينة إلى الحاوية
                         previewContainer.appendChild(previewDiv);
                     };
                     reader.readAsDataURL(file);
