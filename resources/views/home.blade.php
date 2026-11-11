@@ -67,15 +67,24 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h4 class="mb-0 text-white-75 performance-title">الأداء العام لليوم</h4>
-                                <h1 class="display-4 font-weight-bold mb-0 text-white performance-value">{{ round($todayOverallPerformance, 1) }}%</h1>
+                                <h4 class="mb-0 text-white-75 performance-title">الأداء العام ليوم أمس</h4>
+                                <div class="small text-white-75">{{ $performanceDate }}</div>
+                                <h1 class="display-4 font-weight-bold mb-0 text-white performance-value">{{ $yesterdayOverallPerformance !== null ? round($yesterdayOverallPerformance, 1) . '%' : '—' }}</h1>
                                 <p class="mb-0 text-white-50 performance-comparison">
-                                    @if ($todayOverallPerformance >= $yesterdayOverallPerformance)
-                                        <i class="fas fa-arrow-up text-success-light"></i> أفضل من أمس
+                                    @if ($yesterdayOverallPerformance === null)
+                                        لا توجد بيانات أداء مسجلة ليوم أمس
+                                    @elseif ($dayBeforeYesterdayOverallPerformance === null)
+                                        لا توجد بيانات لليوم السابق للمقارنة
                                     @else
-                                        <i class="fas fa-arrow-down text-danger-light"></i> أقل من أمس
+                                        @if (round($yesterdayOverallPerformance, 1) > round($dayBeforeYesterdayOverallPerformance, 1))
+                                            <i class="fas fa-arrow-up text-success-light"></i> أفضل من اليوم السابق
+                                        @elseif (round($yesterdayOverallPerformance, 1) < round($dayBeforeYesterdayOverallPerformance, 1))
+                                            <i class="fas fa-arrow-down text-danger-light"></i> أقل من اليوم السابق
+                                        @else
+                                            <i class="fas fa-minus"></i> مساوٍ لليوم السابق
+                                        @endif
+                                        ({{ round($dayBeforeYesterdayOverallPerformance, 1) }}% بتاريخ {{ $comparisonDate }})
                                     @endif
-                                    ({{ round($yesterdayOverallPerformance, 1) }}% أمس)
                                 </p>
                             </div>
                             <i class="fas fa-chart-line fa-4x text-white-50 opacity-25 performance-icon"></i>
@@ -333,119 +342,6 @@
                             </div>
                         </div>
                     @endforeach
-                </div>
-            </div>
-        </div>
-
-        {{-- قسم التقارير السريعة --}}
-        <div class="row mt-4" data-animate-section="quick-reports">
-            <div class="col-12">
-                <div class="card card-outline card-secondary shadow-lg rounded-xl">
-                    <div class="card-header border-0 pb-0">
-                        <h3 class="card-title font-weight-bold text-secondary">
-                            <i class="fas fa-file-invoice mr-2"></i> التقارير السريعة
-                        </h3>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-                            <div class="col mb-4">
-                                <a href="#" class="text-decoration-none">
-                                    <div class="card card-general-cleaning text-white h-100 hover-zoom-effect" data-aos="fade-up" data-aos-delay="0">
-                                        <div class="card-body d-flex flex-column justify-content-between align-items-center text-center">
-                                            <i class="fas fa-file-csv fa-4x mb-3"></i>
-                                            <h3 class="card-title text-white font-weight-bold mb-2">تقرير النظافة العامة</h3>
-                                            <p class="card-text flex-grow-1">عرض تقارير يومية وشهرية عن أعمال النظافة.</p>
-                                            <button class="btn btn-card-action btn-block"><i class="fas fa-eye mr-2"></i>عرض التقرير</button>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="col mb-4">
-                                <a href="#" class="text-decoration-none">
-                                    <div class="card card-sanitation-facility text-white h-100 hover-zoom-effect" data-aos="fade-up" data-aos-delay="100">
-                                        <div class="card-body d-flex flex-column justify-content-between align-items-center text-center">
-                                            <i class="fas fa-clipboard-list fa-4x mb-3"></i>
-                                            <h3 class="card-title text-white font-weight-bold mb-2">تقرير المنشآت الصحية</h3>
-                                            <p class="card-text flex-grow-1">متابعة حالة وصيانة المرافق الصحية.</p>
-                                            <button class="btn btn-card-action btn-block"><i class="fas fa-eye mr-2"></i>عرض التقرير</button>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="col mb-4">
-                                <a href="#" class="text-decoration-none">
-                                    <div class="card card-daily-status text-white h-100 hover-zoom-effect" data-aos="fade-up" data-aos-delay="200">
-                                        <div class="card-body d-flex flex-column justify-content-between align-items-center text-center">
-                                            <i class="fas fa-chart-pie fa-4x mb-3"></i>
-                                            <h3 class="card-title text-white font-weight-bold mb-2">تقرير الحالة اليومية</h3>
-                                            <p class="card-text flex-grow-1">نظرة عامة على الأداء والمهام اليومية.</p>
-                                            <button class="btn btn-card-action btn-block"><i class="fas fa-eye mr-2"></i>عرض التقرير</button>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="col mb-4">
-                                <a href="#" class="text-decoration-none">
-                                    <div class="card card-resource-report text-white h-100 hover-zoom-effect" data-aos="fade-up" data-aos-delay="300">
-                                        <div class="card-body d-flex flex-column justify-content-between align-items-center text-center">
-                                            <i class="fas fa-boxes fa-4x mb-3"></i>
-                                            <h3 class="card-title text-white font-weight-bold mb-2">تقرير الموارد والمخزون</h3>
-                                            <p class="card-text flex-grow-1">تتبع استهلاك الموارد المتاحة.</p>
-                                            <button class="btn btn-card-action btn-block"><i class="fas fa-eye mr-2"></i>عرض التقرير</button>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="col mb-4">
-                                <a href="#" class="text-decoration-none">
-                                    <div class="card card-monthly-cleaning-report text-white h-100 hover-zoom-effect" data-aos="fade-up" data-aos-delay="400">
-                                        <div class="card-body d-flex flex-column justify-content-between align-items-center text-center">
-                                            <i class="fas fa-calendar-alt fa-4x mb-3"></i>
-                                            <h3 class="card-title text-white font-weight-bold mb-2">تقرير النظافة الشهري</h3>
-                                            <p class="card-text flex-grow-1">تحليل الأداء الشهري لأعمال النظافة.</p>
-                                            <button class="btn btn-card-action btn-block"><i class="fas fa-eye mr-2"></i>عرض التقرير</button>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="col mb-4">
-                                <a href="#" class="text-decoration-none">
-                                    <div class="card card-monthly-sanitation-report text-white h-100 hover-zoom-effect" data-aos="fade-up" data-aos-delay="500">
-                                        <div class="card-body d-flex flex-column justify-content-between align-items-center text-center">
-                                            <i class="fas fa-chart-bar fa-4x mb-3"></i>
-                                            <h3 class="card-title text-white font-weight-bold mb-2">تقرير المنشآت الشهري</h3>
-                                            <p class="card-text flex-grow-1">ملخص شامل لصيانة وتقييم المرافق الصحية.</p>
-                                            <button class="btn btn-card-action btn-block"><i class="fas fa-eye mr-2"></i>عرض التقرier</button>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="col mb-4">
-                                <a href="#" class="text-decoration-none">
-                                    <div class="card card-employees text-white h-100 hover-zoom-effect" data-aos="fade-up" data-aos-delay="600">
-                                        <div class="card-body d-flex flex-column justify-content-between align-items-center text-center">
-                                            <i class="fas fa-users fa-4x mb-3"></i>
-                                            <h3 class="card-title text-white font-weight-bold mb-2">تقرير الموظفين</h3>
-                                            <p class="card-text flex-grow-1">متابعة أداء وحضور وانصراف الموظفين.</p>
-                                            <button class="btn btn-card-action btn-block"><i class="fas fa-eye mr-2"></i>عرض التقرير</button>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="col mb-4">
-                                <a href="#" class="text-decoration-none">
-                                    <div class="card card-photo-reports text-white h-100 hover-zoom-effect" data-aos="fade-up" data-aos-delay="700">
-                                        <div class="card-body d-flex flex-column justify-content-between align-items-center text-center">
-                                            <i class="fas fa-images fa-4x mb-3"></i>
-                                            <h3 class="card-title text-white font-weight-bold mb-2">تقارير الصور</h3>
-                                            <p class="card-text flex-grow-1">مكتبة للتقارير المرئية المصورة.</p>
-                                            <button class="btn btn-card-action btn-block"><i class="fas fa-eye mr-2"></i>عرض التقرير</button>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

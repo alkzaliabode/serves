@@ -19,16 +19,20 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $today = Carbon::today();
-        $yesterday = Carbon::yesterday();
+        // Derive both reporting days from one Baghdad-local date, including at midnight.
+        $today = Carbon::today(config('app.timezone', 'Asia/Baghdad'));
+        $yesterday = $today->copy()->subDay();
+        $dayBeforeYesterday = $yesterday->copy()->subDay();
+        $performanceDate = $yesterday->toDateString();
+        $comparisonDate = $dayBeforeYesterday->toDateString();
 
-        // جلب الأداء العام لليوم
-        $todayOverallPerformance = ActualResult::whereDate('date', $today)->avg('overall_performance_score') ?? 0;
         $todayQualityRating = ActualResult::whereDate('date', $today)->avg('quality_rating') ?? 0;
-
-        // جلب الأداء العام لأمس
-        $yesterdayOverallPerformance = ActualResult::whereDate('date', $yesterday)->avg('overall_performance_score') ?? 0;
         $yesterdayQualityRating = ActualResult::whereDate('date', $yesterday)->avg('quality_rating') ?? 0;
+
+        // Match the recorded overall scores for each exact reporting date.
+        // Keep missing data distinct from a recorded zero percent.
+        $yesterdayOverallPerformance = ActualResult::whereDate('date', $performanceDate)->avg('overall_performance_score');
+        $dayBeforeYesterdayOverallPerformance = ActualResult::whereDate('date', $comparisonDate)->avg('overall_performance_score');
 
         // --- جلب أهداف الوحدات مع نسبة التحقق الفعلية ---
         $dynamicUnitGoalsList = [];
@@ -174,9 +178,11 @@ class HomeController extends Controller
         ];
 
         return view('home', compact(
-            'todayOverallPerformance',
             'todayQualityRating',
             'yesterdayOverallPerformance',
+            'dayBeforeYesterdayOverallPerformance',
+            'performanceDate',
+            'comparisonDate',
             'yesterdayQualityRating',
             'departmentGoalsList',
             'dynamicUnitGoalsList' // تمرير قائمة أهداف الوحدات الديناميكية
