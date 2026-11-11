@@ -79,8 +79,10 @@ class ImageReportController extends Controller
             'task_type' => 'nullable|string|max:255',
             'status' => ['required', 'string', Rule::in(['مكتمل', 'قيد التنفيذ', 'ملغى'])],
             'notes' => 'nullable|string',
-            'before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:15360', // ✅ تم التعديل إلى 15MB
-            'after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:15360',  // ✅ تم التعديل إلى 15MB
+            'before_images' => 'nullable|array',
+            'before_images.*' => 'nullable|file|mimetypes:image/*|max:15360', // ✅ تم التعديل إلى 15MB
+            'after_images' => 'nullable|array',
+            'after_images.*' => 'nullable|file|mimetypes:image/*|max:15360',  // ✅ تم التعديل إلى 15MB
         ]);
 
         $beforeImagePaths = [];
@@ -181,8 +183,10 @@ class ImageReportController extends Controller
             'task_type' => 'nullable|string|max:255',
             'status' => ['required', 'string', Rule::in(['مكتمل', 'قيد التنفيذ', 'ملغى'])],
             'notes' => 'nullable|string',
-            'new_before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:15360', 
-            'new_after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:15360',  
+            'new_before_images' => 'nullable|array',
+            'new_before_images.*' => 'nullable|file|mimetypes:image/*|max:15360',
+            'new_after_images' => 'nullable|array',
+            'new_after_images.*' => 'nullable|file|mimetypes:image/*|max:15360',
             'deleted_before_images' => 'nullable|json',
             'deleted_after_images' => 'nullable|json',
         ]);

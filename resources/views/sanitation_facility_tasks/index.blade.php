@@ -596,56 +596,10 @@
                                     <td>{{ $task->relatedGoal->goal_text ?? 'N/A' }}</td>
                                     <td>{{ $task->unit->name ?? 'N/A' }}</td>
                                     <td>
-                                        <div class="img-thumbnail-container">
-                                            @if ($task->imageReport && !empty($task->imageReport->before_images))
-                                                @foreach($task->imageReport->before_images as $imagePath)
-                                                    @php
-                                                        $imageUrl = '';
-                                                        // تحقق إذا كان المسار URL كامل
-                                                        if (filter_var($imagePath, FILTER_VALIDATE_URL)) {
-                                                            $imageUrl = $imagePath;
-                                                        } else {
-                                                            // تنظيف المسار وإضافة storage/
-                                                            $cleanPath = str_replace(['public/', 'storage/'], '', $imagePath);
-                                                            $imageUrl = asset('storage/' . $cleanPath);
-                                                        }
-                                                    @endphp
-                                                    
-                                                    <a href="{{ $imageUrl }}" target="_blank" title="عرض الصورة">
-                                                        <img src="{{ $imageUrl }}" alt="صورة قبل المهمة" class="img-thumbnail" 
-                                                             onerror="this.onerror=null; this.src='{{ asset('images/no-image.png') }}';">
-                                                    </a>
-                                                @endforeach
-                                            @else
-                                                <span class="text-muted">لا توجد صور</span>
-                                            @endif
-                                        </div>
+                                        @include('partials.task-image-links', ['images' => $task->before_images])
                                     </td>
                                     <td>
-                                        <div class="img-thumbnail-container">
-                                            @if ($task->imageReport && !empty($task->imageReport->after_images))
-                                                @foreach($task->imageReport->after_images as $imagePath)
-                                                    @php
-                                                        $imageUrl = '';
-                                                        // تحقق إذا كان المسار URL كامل
-                                                        if (filter_var($imagePath, FILTER_VALIDATE_URL)) {
-                                                            $imageUrl = $imagePath;
-                                                        } else {
-                                                            // تنظيف المسار وإضافة storage/
-                                                            $cleanPath = str_replace(['public/', 'storage/'], '', $imagePath);
-                                                            $imageUrl = asset('storage/' . $cleanPath);
-                                                        }
-                                                    @endphp
-                                                    
-                                                    <a href="{{ $imageUrl }}" target="_blank" title="عرض الصورة">
-                                                        <img src="{{ $imageUrl }}" alt="صورة بعد المهمة" class="img-thumbnail" 
-                                                             onerror="this.onerror=null; this.src='{{ asset('images/no-image.png') }}';">
-                                                    </a>
-                                                @endforeach
-                                            @else
-                                                <span class="text-muted">لا توجد صور</span>
-                                            @endif
-                                        </div>
+                                        @include('partials.task-image-links', ['images' => $task->after_images])
                                     </td>
                                     <td>{{ $task->seats_count ?? 0 }}</td>
                                     <td>{{ $task->mirrors_count ?? 0 }}</td>

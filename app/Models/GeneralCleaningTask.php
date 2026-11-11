@@ -51,11 +51,15 @@ class GeneralCleaningTask extends Model
         'created_by',
         'updated_by',
         'external_partitions_count',
+        'before_images',
+        'after_images',
     ];
 
     protected $casts = [
         'date' => 'date',
         'resources_used' => 'array',
+        'before_images' => 'array',
+        'after_images' => 'array',
     ];
 
     public function employeeTasks(): HasMany
@@ -87,6 +91,16 @@ class GeneralCleaningTask extends Model
     {
         return $this->hasOne(TaskImageReport::class, 'task_id', 'id')
                     ->where('unit_type', 'cleaning');
+    }
+
+    public function getBeforeImagesAttribute($value): array
+    {
+        return optional($this->imageReport)->before_images ?? ($value ? $this->fromJson($value) : []);
+    }
+
+    public function getAfterImagesAttribute($value): array
+    {
+        return optional($this->imageReport)->after_images ?? ($value ? $this->fromJson($value) : []);
     }
 
     public function getBeforeImagesUrlsAttribute(): array
@@ -130,6 +144,7 @@ class GeneralCleaningTask extends Model
         });
 
         static::created(function ($task) {
+            self::handleTaskImageReport($task);
             self::recalculateSummaries($task);
             if ($task->status === 'مكتمل' && $task->unit_id && $task->date) {
                 ActualResult::recalculateForUnitAndDate($task->unit_id, $task->date);
@@ -137,6 +152,7 @@ class GeneralCleaningTask extends Model
         });
 
         static::updated(function ($task) {
+            self::handleTaskImageReport($task);
             self::recalculateSummaries($task);
             if ($task->isDirty('status') && $task->status === 'مكتمل') {
                 ActualResult::recalculateForUnitAndDate($task->unit_id, $task->date);
@@ -225,16 +241,14 @@ class GeneralCleaningTask extends Model
 
     private static function handleTaskImageReport(self $task): void
     {
-        $beforeImages = $task->getAttribute('before_images');
-        $afterImages = $task->getAttribute('after_images');
+        $beforeImages = $task->isDirty('before_images')
+            ? $task->fromJson($task->getAttributes()['before_images'] ?? '[]')
+            : $task->before_images;
+        $afterImages = $task->isDirty('after_images')
+            ? $task->fromJson($task->getAttributes()['after_images'] ?? '[]')
+            : $task->after_images;
 
-        if (empty($beforeImages) && empty($afterImages)) {
-            $existingReport = TaskImageReport::where('task_id', $task->id)
-                                             ->where('unit_type', 'cleaning')
-                                             ->first();
-            if ($existingReport && empty($existingReport->before_images) && empty($existingReport->after_images)) {
-                 $existingReport->delete();
-            }
+        if (empty($beforeImages) && empty($afterImages) && !$task->imageReport()->exists()) {
             return;
         }
 
@@ -257,6 +271,7 @@ class GeneralCleaningTask extends Model
             ],
             $reportData
         );
+        $task->unsetRelation('imageReport');
     }
 
     private static function cleanupTaskImages(self $task): void

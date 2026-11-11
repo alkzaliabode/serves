@@ -115,9 +115,9 @@ class SanitationFacilityTask extends Model
      *
      * @return array
      */
-    public function getBeforeImagesAttribute(): array
+    public function getBeforeImagesAttribute($value): array
     {
-        return optional($this->imageReport)->before_images ?? [];
+        return optional($this->imageReport)->before_images ?? ($value ? $this->fromJson($value) : []);
     }
 
     /**
@@ -126,9 +126,9 @@ class SanitationFacilityTask extends Model
      *
      * @return array
      */
-    public function getAfterImagesAttribute(): array
+    public function getAfterImagesAttribute($value): array
     {
-        return optional($this->imageReport)->after_images ?? [];
+        return optional($this->imageReport)->after_images ?? ($value ? $this->fromJson($value) : []);
     }
 
     /**
@@ -245,23 +245,17 @@ class SanitationFacilityTask extends Model
     {
         // افترض أن 'before_images' و 'after_images' يتم تمريرها إلى النموذج
         // كجزء من البيانات عند الإنشاء أو التحديث (مثل Request::all())
-        $beforeImages = $task->getAttribute('before_images');
-        $afterImages = $task->getAttribute('after_images');
+        $beforeImages = $task->isDirty('before_images')
+            ? $task->fromJson($task->getAttributes()['before_images'] ?? '[]')
+            : $task->before_images;
+        $afterImages = $task->isDirty('after_images')
+            ? $task->fromJson($task->getAttributes()['after_images'] ?? '[]')
+            : $task->after_images;
 
-        // إذا لم تكن هناك صور "قبل" أو "بعد" وتم إرسالها (أو كانت فارغة)،
-        // تحقق مما إذا كان هناك تقرير موجود مسبقًا بدون صور واحذفه.
-        if (empty($beforeImages) && empty($afterImages)) {
-            $existingReport = TaskImageReport::where('task_id', $task->id)
-                                             ->where('unit_type', 'sanitation')
-                                             ->first();
-            if ($existingReport && empty($existingReport->before_images) && empty($existingReport->after_images)) {
-                $existingReport->delete();
-                Log::info("Deleted empty Task Image Report for SanitationFacilityTask ID: {$task->id}");
-            }
-            return; // لا يوجد صور للتعامل معها، لذا ننهي الدالة
+        if (empty($beforeImages) && empty($afterImages) && !$task->imageReport()->exists()) {
+            return;
         }
 
-        // إعداد البيانات لإنشاء/تحديث TaskImageReport
         $reportData = [
             'task_id' => $task->id,
             'unit_type' => 'sanitation', // تحديد نوع الوحدة كـ 'sanitation'
@@ -283,6 +277,7 @@ class SanitationFacilityTask extends Model
             $reportData
         );
         Log::info("Task Image Report created/updated for SanitationFacilityTask ID: {$task->id}");
+        $task->unsetRelation('imageReport');
     }
 
     /**

@@ -33,7 +33,7 @@
             background-color: rgba(255, 255, 255, 0.15) !important; /* خلفية رأس البطاقة أكثر شفافية */
             border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; /* حدود سفلية شفافة وواضحة */
         }
-        
+
         /* General text size increase and distinctive color for main texts */
         body,
         .card-body {
@@ -447,7 +447,7 @@
                                     @endif
                                 @endforeach
                             </div>
-                            <input type="file" class="form-control mt-3" id="new_before_images" name="new_before_images[]" multiple accept="image/*">
+                            @include('partials.task-image-upload', ['field' => 'new_before_images', 'label' => 'صور قبل العمل'])
                             <div class="form-text">يمكنك تحميل صور جديدة. الصور الموجودة أعلاه يمكن حذفها بالنقر على زر (x).</div>
                             <div id="new-before-images-preview" class="image-preview-container"></div>
                             <input type="hidden" name="deleted_before_images" id="deleted-before-images-input">
@@ -471,7 +471,7 @@
                                     @endif
                                 @endforeach
                             </div>
-                            <input type="file" class="form-control mt-3" id="new_after_images" name="new_after_images[]" multiple accept="image/*">
+                            @include('partials.task-image-upload', ['field' => 'new_after_images', 'label' => 'صور بعد العمل'])
                             <div class="form-text">يمكنك تحميل صور جديدة. الصور الموجودة أعلاه يمكن حذفها بالنقر على زر (x).</div>
                             <div id="new-after-images-preview" class="image-preview-container"></div>
                             <input type="hidden" name="deleted_after_images" id="deleted-after-images-input">
@@ -497,42 +497,6 @@
         let deletedBeforeImages = [];
         let deletedAfterImages = [];
 
-        function handleNewImagePreview(inputElement, previewContainerId) {
-            const previewContainer = document.getElementById(previewContainerId);
-            previewContainer.innerHTML = ''; // Clear previous previews for new images
-
-            if (inputElement.files) {
-                Array.from(inputElement.files).forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const previewDiv = document.createElement('div');
-                        previewDiv.className = 'image-preview';
-                        
-                        // إنشاء رابط للصورة
-                        const link = document.createElement('a');
-                        link.href = e.target.result;
-                        link.target = '_blank'; // فتح في نافذة جديدة
-                        link.title = 'فتح الصورة في نافذة جديدة';
-                        
-                        // إنشاء عنصر الصورة
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.alt = 'معاينة الصورة';
-                        
-                        // إضافة الصورة داخل الرابط
-                        link.appendChild(img);
-                        
-                        // إضافة الرابط داخل مربع المعاينة
-                        previewDiv.appendChild(link);
-                        
-                        // إضافة مربع المعاينة إلى الحاوية
-                        previewContainer.appendChild(previewDiv);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }
-        }
-
         function setupImageRemoval(containerId, deletedImagesArray, hiddenInputId) {
             const container = document.getElementById(containerId);
             container.addEventListener('click', function(event) {
@@ -550,16 +514,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Setup for new image previews
-            document.getElementById('new_before_images').addEventListener('change', function() {
-                handleNewImagePreview(this, 'new-before-images-preview');
-            });
-
-            document.getElementById('new_after_images').addEventListener('change', function() {
-                handleNewImagePreview(this, 'new-after-images-preview');
-            });
-
-            // Setup for removing existing images
             setupImageRemoval('before-images-current-preview', deletedBeforeImages, 'deleted-before-images-input');
             setupImageRemoval('after-images-current-preview', deletedAfterImages, 'deleted-after-images-input');
         });

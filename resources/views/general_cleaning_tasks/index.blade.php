@@ -501,6 +501,8 @@
                                 <th>الموظفون المنفذون</th>
                                 <th>المنشئ</th>
                                 <th>المعدل</th>
+                                <th>صور قبل العمل</th>
+                                <th>صور بعد العمل</th>
                                 <th>الإجراءات</th>
                             </tr>
                         </thead>
@@ -522,6 +524,8 @@
                                     </td>
                                     <td>{{ $task->creator->name ?? 'N/A' }}</td>
                                     <td>{{ $task->editor->name ?? 'N/A' }}</td>
+                                    <td>@include('partials.task-image-links', ['images' => $task->before_images])</td>
+                                    <td>@include('partials.task-image-links', ['images' => $task->after_images])</td>
                                     <td class="actions">
                                         <div class="btn-group">
                                             <a href="{{ route('general-cleaning-tasks.edit', $task) }}" class="btn btn-info btn-sm" title="تعديل">
@@ -539,7 +543,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="10" class="text-center">لا توجد مهام نظافة عامة حالياً.</td>
+                                    <td colspan="12" class="text-center">لا توجد مهام نظافة عامة حالياً.</td>
                                 </tr>
                             @endforelse
                         </tbody>

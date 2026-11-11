@@ -513,14 +513,14 @@
                         <h2 class="text-xl font-semibold mb-3">المرفقات</h2>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="before_images" class="form-label">صور قبل التنفيذ</label>
-                                <input type="file" class="form-control" id="before_images" name="before_images[]" multiple accept="image/*">
+                                @include('partials.task-image-upload', ['field' => 'before_images', 'label' => 'صور قبل العمل'])
+                                <input type="hidden" name="retain_before_images" value="1">
                                 <div class="form-text text-muted">يمكنك رفع عدة صور توضح حالة الموقع قبل بدء المهمة.</div>
                                 @if ($generalCleaningTask->before_images)
                                     <div class="image-preview mt-2 d-flex flex-wrap gap-2">
                                         @foreach($generalCleaningTask->before_images as $imagePath)
                                             <div class="image-item position-relative me-2 mb-2">
-                                                <img src="{{ Storage::url($imagePath) }}" alt="صورة قبل" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+                                                <a href="{{ Storage::url($imagePath) }}" target="_blank" rel="noopener noreferrer"><img src="{{ Storage::url($imagePath) }}" alt="صورة قبل" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;" onerror="this.style.display='none'"><span class="d-block small">فتح الصورة</span></a>
                                                 <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 remove-existing-image" data-path="{{ $imagePath }}" style="z-index: 1;">&times;</button>
                                                 <input type="hidden" name="existing_before_images[]" value="{{ $imagePath }}">
                                             </div>
@@ -529,14 +529,14 @@
                                 @endif
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="after_images" class="form-label">صور بعد التنفيذ</label>
-                                <input type="file" class="form-control" id="after_images" name="after_images[]" multiple accept="image/*">
+                                @include('partials.task-image-upload', ['field' => 'after_images', 'label' => 'صور بعد العمل'])
+                                <input type="hidden" name="retain_after_images" value="1">
                                 <div class="form-text text-muted">يمكنك رفع عدة صور توضح حالة الموقع بعد انتهاء المهمة.</div>
                                 @if ($generalCleaningTask->after_images)
                                     <div class="image-preview mt-2 d-flex flex-wrap gap-2">
                                         @foreach($generalCleaningTask->after_images as $imagePath)
                                             <div class="image-item position-relative me-2 mb-2">
-                                                <img src="{{ Storage::url($imagePath) }}" alt="صورة بعد" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+                                                <a href="{{ Storage::url($imagePath) }}" target="_blank" rel="noopener noreferrer"><img src="{{ Storage::url($imagePath) }}" alt="صورة بعد" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;" onerror="this.style.display='none'"><span class="d-block small">فتح الصورة</span></a>
                                                 <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 remove-existing-image" data-path="{{ $imagePath }}" style="z-index: 1;">&times;</button>
                                                 <input type="hidden" name="existing_after_images[]" value="{{ $imagePath }}">
                                             </div>

@@ -505,9 +505,11 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="before_images" class="form-label">صور قبل التنفيذ</label>
-                                <input type="file" class="form-control" id="before_images" name="before_images[]" multiple accept="image/*">
+                                @include('partials.task-image-upload', ['field' => 'before_images', 'label' => 'صور قبل العمل'])
                                 <div class="form-text">يمكنك رفع عدة صور توضح حالة الموقع قبل التنفيذ.</div>
+                            </div>
+                            <div class="mb-4">
+                                @include('partials.task-image-upload', ['field' => 'after_images', 'label' => 'صور بعد العمل'])
                             </div>
                         </div>
                     </div>

@@ -30,7 +30,7 @@ class GeneralCleaningTaskController extends Controller
      */
     public function index(Request $request)
     {
-        $query = GeneralCleaningTask::with(['creator', 'editor', 'relatedGoal', 'unit', 'employeeTasks.employee']);
+        $query = GeneralCleaningTask::with(['creator', 'editor', 'relatedGoal', 'unit', 'employeeTasks.employee', 'imageReport']);
 
         // 1. البحث العام
         if ($request->filled('search')) {
@@ -316,9 +316,13 @@ class GeneralCleaningTaskController extends Controller
             'employeeTasks.*.employee_id' => 'required_with:employeeTasks|exists:employees,id',
             'employeeTasks.*.employee_rating' => 'required_with:employeeTasks|integer|min:1|max:5',
             'before_images' => 'nullable|array',
-            'before_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB
+            'before_images.*' => 'file|mimetypes:image/*|max:15360', // 15MB
             'after_images' => 'nullable|array',
-            'after_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB
+            'after_images.*' => 'file|mimetypes:image/*|max:15360', // 15MB
+            'existing_before_images' => 'nullable|array',
+            'existing_before_images.*' => 'string',
+            'existing_after_images' => 'nullable|array',
+            'existing_after_images.*' => 'string',
             'remove_before_images' => 'nullable|boolean', // حقل جديد للإشارة إلى حذف جميع الصور
             'remove_after_images' => 'nullable|boolean',   // حقل جديد للإشارة إلى حذف جميع الصور
         ];
@@ -342,7 +346,7 @@ class GeneralCleaningTaskController extends Controller
                     $imagePaths[] = $path;
                 } catch (\Exception $e) {
                     Log::error("Failed to upload image for field {$fieldName}: " . $e->getMessage());
-                    // يمكنك هنا رمي استثناء أو تخطي هذه الصورة
+                    throw $e;
                 }
             }
         }
@@ -361,26 +365,19 @@ class GeneralCleaningTaskController extends Controller
     private function handleImageUpdate(Request $request, GeneralCleaningTask $task, string $fieldName, string $storagePath): array
     {
         $currentImagePaths = $task->{$fieldName} ?: [];
-        $newImagePaths = [];
-
-        // التحقق مما إذا كان المستخدم يريد إزالة جميع الصور
-        if ($request->input('remove_' . $fieldName) == '1') {
-            foreach ($currentImagePaths as $oldPath) {
-                Storage::disk('public')->delete($oldPath);
-            }
-            return []; // لا توجد صور بعد الآن
+        $keep = $currentImagePaths;
+        if ($request->boolean('remove_' . $fieldName)) {
+            $keep = [];
+        } elseif ($request->boolean('retain_' . $fieldName)) {
+            $keep = array_values(array_intersect($currentImagePaths, $request->input('existing_' . $fieldName, [])));
         }
 
-        // إذا تم رفع ملفات جديدة، احذف القديمة وقم بتحميل الجديدة
-        if ($request->hasFile($fieldName)) {
-            foreach ($currentImagePaths as $oldPath) {
-                Storage::disk('public')->delete($oldPath);
-            }
-            return $this->handleImageUpload($request, $fieldName, $storagePath);
+        $uploaded = $this->handleImageUpload($request, $fieldName, $storagePath);
+        foreach (array_diff($currentImagePaths, $keep) as $oldPath) {
+            Storage::disk('public')->delete($oldPath);
         }
 
-        // إذا لم يتم رفع ملفات جديدة ولم يطلب المستخدم الإزالة، احتفظ بالصور الحالية
-        return $currentImagePaths;
+        return array_merge($keep, $uploaded);
     }
 
     /**

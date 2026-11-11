@@ -134,20 +134,11 @@ class SanitationFacilityTaskController extends Controller
 
         $resourcesUsed = $request->input('resources_used') ?: [];
 
-        // ✅ لا تقم بتمرير 'before_images' و 'after_images' مباشرة إلى create
-        // قم بإنشاء المهمة أولاً
         $task = SanitationFacilityTask::create(array_merge($validatedData, [
             'resources_used' => $resourcesUsed,
+            'before_images' => $beforeImagePaths,
+            'after_images' => $afterImagePaths,
         ]));
-
-        // ✅ الآن، قم بتعيين مسارات الصور للنموذج لتتم معالجتها بواسطة booted()
-        // هذا هو الجزء الذي يربط Request -> Model -> TaskImageReport
-        $task->before_images = $beforeImagePaths;
-        $task->after_images = $afterImagePaths;
-        // قم بحفظ النموذج مرة أخرى لتشغيل هوك `updated`، أو يمكنك استدعاء handleTaskImageReport مباشرة هنا
-        // لكن الأفضل هو الاعتماد على هوكات النموذج لتجنب تكرار الكود
-        $task->save(); // تشغيل هوك `updated` بعد حفظ العلاقات
-
 
         if ($request->has('employeeTasks')) {
             foreach ($request->input('employeeTasks') as $employeeTaskData) {
@@ -206,46 +197,24 @@ class SanitationFacilityTaskController extends Controller
             return redirect()->back()->withErrors($e->errors())->withInput();
         }
 
-        $oldBeforeImagePaths = optional($sanitationFacilityTask->imageReport)->before_images ?? [];
-        $oldAfterImagePaths = optional($sanitationFacilityTask->imageReport)->after_images ?? [];
-
-        $newBeforeImagePaths = $oldBeforeImagePaths;
-        $newAfterImagePaths = $oldAfterImagePaths;
-
-        // معالجة صور ما قبل التنفيذ
-        if ($request->hasFile('before_images')) {
-            // حذف الصور القديمة المرتبطة بالتقرير
-            foreach ($oldBeforeImagePaths as $oldPath) {
-                Storage::disk('public')->delete($oldPath);
+        $newBeforeImagePaths = $sanitationFacilityTask->before_images;
+        $newAfterImagePaths = $sanitationFacilityTask->after_images;
+        foreach (['before_images', 'after_images'] as $field) {
+            $oldPaths = $sanitationFacilityTask->{$field};
+            $paths = $request->boolean('remove_' . $field) ? [] : $oldPaths;
+            foreach ($request->file($field, []) as $image) {
+                $paths[] = $image->store('sanitation_facility_tasks/' . ($field === 'before_images' ? 'before' : 'after'), 'public');
             }
-            $newBeforeImagePaths = []; // إعادة تعيين المسارات للجديدة
-            foreach ($request->file('before_images') as $image) {
-                $path = $image->store('sanitation_facility_tasks/before', 'public');
-                $newBeforeImagePaths[] = $path;
+            if ($request->boolean('remove_' . $field)) {
+                foreach ($oldPaths as $oldPath) {
+                    Storage::disk('public')->delete($oldPath);
+                }
             }
-        } else if ($request->boolean('remove_before_images')) {
-            foreach ($oldBeforeImagePaths as $oldPath) {
-                Storage::disk('public')->delete($oldPath);
+            if ($field === 'before_images') {
+                $newBeforeImagePaths = $paths;
+            } else {
+                $newAfterImagePaths = $paths;
             }
-            $newBeforeImagePaths = [];
-        }
-
-        // معالجة صور ما بعد التنفيذ
-        if ($request->hasFile('after_images')) {
-            // حذف الصور القديمة المرتبطة بالتقرير
-            foreach ($oldAfterImagePaths as $oldPath) {
-                Storage::disk('public')->delete($oldPath);
-            }
-            $newAfterImagePaths = []; // إعادة تعيين المسارات للجديدة
-            foreach ($request->file('after_images') as $image) {
-                $path = $image->store('sanitation_facility_tasks/after', 'public');
-                $newAfterImagePaths[] = $path;
-            }
-        } else if ($request->boolean('remove_after_images')) {
-            foreach ($oldAfterImagePaths as $oldPath) {
-                Storage::disk('public')->delete($oldPath);
-            }
-            $newAfterImagePaths = [];
         }
 
         $resourcesUsed = $request->input('resources_used') ?: [];
@@ -330,9 +299,9 @@ class SanitationFacilityTaskController extends Controller
             'resources_used.*.quantity' => 'required_with:resources_used|numeric|min:0',
             'resources_used.*.unit' => 'required_with:resources_used|string|max:255',
             'before_images' => 'nullable|array',
-            'before_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB لكل صورة
+            'before_images.*' => 'file|mimetypes:image/*|max:15360', // 15MB لكل صورة
             'after_images' => 'nullable|array',
-            'after_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB لكل صورة
+            'after_images.*' => 'file|mimetypes:image/*|max:15360', // 15MB لكل صورة
             'remove_before_images' => 'nullable|boolean',
             'remove_after_images' => 'nullable|boolean',
             'seats_count' => 'nullable|integer|min:0',

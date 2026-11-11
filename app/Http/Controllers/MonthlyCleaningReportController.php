@@ -173,8 +173,10 @@ class MonthlyCleaningReportController extends Controller
             'small_containers_count' => 'nullable|integer|min:0',
             'maintenance_details' => 'nullable|string',
             'external_partitions_count' => 'nullable|integer|min:0', // ✅ إضافة هذا الحقل لقواعد التحقق
-            'before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // لتحميل الصور
-            'after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'before_images' => 'nullable|array',
+            'before_images.*' => 'nullable|file|mimetypes:image/*|max:15360', // لتحميل الصور
+            'after_images' => 'nullable|array',
+            'after_images.*' => 'nullable|file|mimetypes:image/*|max:15360',
         ]);
 
         // التعامل مع تحميل الصور
@@ -251,8 +253,10 @@ class MonthlyCleaningReportController extends Controller
             'small_containers_count' => 'nullable|integer|min:0',
             'maintenance_details' => 'nullable|string',
             'external_partitions_count' => 'nullable|integer|min:0', // ✅ إضافة هذا الحقل لقواعد التحقق
-            'before_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'after_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'before_images' => 'nullable|array',
+            'before_images.*' => 'nullable|file|mimetypes:image/*|max:15360',
+            'after_images' => 'nullable|array',
+            'after_images.*' => 'nullable|file|mimetypes:image/*|max:15360',
             'existing_before_images' => 'nullable|array', // للتعامل مع حذف الصور الموجودة
             'existing_after_images' => 'nullable|array',
         ]);

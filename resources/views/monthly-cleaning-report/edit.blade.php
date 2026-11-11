@@ -446,14 +446,13 @@
                             </div>
                             {{-- 💡 حقول الصور --}}
                             <div class="mb-4">
-                                <label for="before_images" class="form-label">صور قبل المهمة</label>
-                                <input type="file" class="form-control" id="before_images" name="before_images[]" multiple accept="image/*">
+                                @include('partials.task-image-upload', ['field' => 'before_images', 'label' => 'صور قبل العمل'])
                                 <div class="form-text">يمكنك رفع صور متعددة قبل بدء المهمة.</div>
                                 <div class="mt-2 d-flex flex-wrap gap-2">
                                     @if ($task->before_images)
                                         @foreach ($task->before_images as $imagePath)
                                             <div class="position-relative d-inline-block me-2 mb-2">
-                                                <img src="{{ Storage::url($imagePath) }}" alt="صورة قبل" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                                <a href="{{ Storage::url($imagePath) }}" target="_blank" rel="noopener noreferrer"><img src="{{ Storage::url($imagePath) }}" alt="صورة قبل" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;" onerror="this.style.display='none'"><span class="d-block small">فتح الصورة</span></a>
                                                 <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 remove-image" data-path="{{ $imagePath }}" style="border-radius: 50%; width: 25px; height: 25px; padding: 0; font-size: 0.7rem; line-height: 1; text-align: center;">&times;</button>
                                                 <input type="hidden" name="existing_before_images[]" value="{{ $imagePath }}">
                                             </div>
@@ -462,14 +461,13 @@
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label for="after_images" class="form-label">صور بعد المهمة</label>
-                                <input type="file" class="form-control" id="after_images" name="after_images[]" multiple accept="image/*">
+                                @include('partials.task-image-upload', ['field' => 'after_images', 'label' => 'صور بعد العمل'])
                                 <div class="form-text">يمكنك رفع صور متعددة بعد انتهاء المهمة.</div>
                                 <div class="mt-2 d-flex flex-wrap gap-2">
                                     @if ($task->after_images)
                                         @foreach ($task->after_images as $imagePath)
                                             <div class="position-relative d-inline-block me-2 mb-2">
-                                                <img src="{{ Storage::url($imagePath) }}" alt="صورة بعد" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                                <a href="{{ Storage::url($imagePath) }}" target="_blank" rel="noopener noreferrer"><img src="{{ Storage::url($imagePath) }}" alt="صورة بعد" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;" onerror="this.style.display='none'"><span class="d-block small">فتح الصورة</span></a>
                                                 <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 remove-image" data-path="{{ $imagePath }}" style="border-radius: 50%; width: 25px; height: 25px; padding: 0; font-size: 0.7rem; line-height: 1; text-align: center;">&times;</button>
                                                 <input type="hidden" name="existing_after_images[]" value="{{ $imagePath }}">
                                             </div>

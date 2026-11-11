@@ -412,7 +412,7 @@
                             <h2 class="card-title">الصور قبل التنفيذ</h2>
                         </div>
                         <div class="card-body">
-                            <input type="file" class="form-control" id="before_images" name="before_images[]" multiple accept="image/*">
+                            @include('partials.task-image-upload', ['field' => 'before_images', 'label' => 'صور قبل العمل'])
                             <div class="form-text">يمكنك تحميل صورة واحدة أو أكثر.</div>
                             <div id="before-images-preview" class="image-preview-container"></div>
                         </div>
@@ -423,7 +423,7 @@
                             <h2 class="card-title">الصور بعد التنفيذ</h2>
                         </div>
                         <div class="card-body">
-                            <input type="file" class="form-control" id="after_images" name="after_images[]" multiple accept="image/*">
+                            @include('partials.task-image-upload', ['field' => 'after_images', 'label' => 'صور بعد العمل'])
                             <div class="form-text">يمكنك تحميل صورة واحدة أو أكثر.</div>
                             <div id="after-images-preview" class="image-preview-container"></div>
                         </div>
@@ -442,37 +442,3 @@
         </div>
     </div>
 @endsection
-
-@section('scripts')
-    <script>
-        // Function to handle image previews
-        function handleImagePreview(inputElement, previewContainerId) {
-            const previewContainer = document.getElementById(previewContainerId);
-            previewContainer.innerHTML = ''; // Clear previous previews
-
-            if (inputElement.files) {
-                Array.from(inputElement.files).forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const previewDiv = document.createElement('div');
-                        previewDiv.className = 'image-preview'; // Changed from image-preview-item to image-preview
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        previewDiv.appendChild(img);
-                        previewContainer.appendChild(previewDiv);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }
-        }
-
-        // Event listeners for image input changes
-        document.getElementById('before_images').addEventListener('change', function() {
-            handleImagePreview(this, 'before-images-preview');
-        });
-
-        document.getElementById('after_images').addEventListener('change', function() {
-            handleImagePreview(this, 'after-images-preview');
-        });
-    </script>
-@endsect
