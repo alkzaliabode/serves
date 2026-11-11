@@ -80,6 +80,16 @@ class MonthlyCleaningReportController extends Controller
         $query->orderBy($sortBy, $sortOrder);
 
         // جلب النتائج مع الترقيم
+        // Export uses the same filters and ordering as the report, without pagination.
+        if ($request->boolean('_excel')) {
+            return response()->json([
+                'headers' => ['التاريخ', 'الشفت', 'الوحدة', 'الموقع', 'نوع المهمة', 'الحصران', 'الوسائد', 'المراوح', 'النوافذ', 'السجاد', 'البطانيات', 'الأسرة', 'المستفيدون', 'الترامز', 'السجاد المفروش', 'حاويات كبيرة', 'حاويات صغيرة', 'ساعات العمل', 'الملاحظات'],
+                'rows' => $query->with('unit')->get()->map(function ($task) {
+                    return [Carbon::parse($task->date)->format('Y-m-d'), data_get($task, 'shift'), data_get($task, 'unit.name'), data_get($task, 'location'), data_get($task, 'task_type'), data_get($task, 'mats_count'), data_get($task, 'pillows_count'), data_get($task, 'fans_count'), data_get($task, 'windows_count'), data_get($task, 'carpets_count'), data_get($task, 'blankets_count'), data_get($task, 'beds_count'), data_get($task, 'beneficiaries_count'), data_get($task, 'filled_trams_count'), data_get($task, 'carpets_laid_count'), data_get($task, 'large_containers_count'), data_get($task, 'small_containers_count'), data_get($task, 'working_hours'), data_get($task, 'notes')];
+                }),
+            ]);
+        }
+
         $tasks = $query->with('unit')->paginate(10); // استخدام paginate() و eager load 'unit'
 
         // جلب خيارات الفلاتر المتاحة من GeneralCleaningTask
@@ -314,94 +324,9 @@ class MonthlyCleaningReportController extends Controller
      */
     public function export(Request $request)
     {
-        $query = GeneralCleaningTask::query(); // الاستعلام من GeneralCleaningTask
+        $request->merge(['_excel' => true]);
 
-        // تطبيق نفس الفلاتر المستخدمة في دالة index
-        if ($request->filled('date')) {
-            $query->whereDate('date', $request->input('date'));
-        }
-        if ($request->filled('month')) {
-            $query->whereYear('date', Carbon::parse($request->input('month'))->year)
-                  ->whereMonth('date', Carbon::parse($request->input('month'))->month);
-        }
-        if ($request->filled('shift')) {
-            $query->where('shift', $request->input('shift'));
-        }
-        if ($request->filled('location')) {
-            $query->where('location', 'like', '%' . $request->input('location') . '%');
-        }
-        if ($request->filled('task_type')) {
-            $query->where('task_type', $request->input('task_type'));
-        }
-        if ($request->filled('unit_id')) {
-            $query->where('unit_id', $request->input('unit_id'));
-        }
-        if ($request->filled('search')) {
-            $searchQuery = $request->input('search');
-            $query->where(function ($q) use ($searchQuery) {
-                $q->where('location', 'like', '%' . $searchQuery . '%')
-                  ->orWhere('task_type', 'like', '%' . $searchQuery . '%')
-                  ->orWhere('notes', 'like', '%' . $searchQuery . '%')
-                  ->orWhere('shift', 'like', '%' . $searchQuery . '%');
-            });
-        }
-
-        $dataToExport = $query->with('unit')->orderBy('date', 'desc')->orderBy('shift', 'asc')->get();
-
-        $fileName = 'تقرير_النظافة_التفصيلي_' . now()->format('Y-m-d_H-i-s') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Encoding' => 'UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-        ];
-
-        $callback = function() use ($dataToExport) {
-            $file = fopen('php://output', 'w');
-            fwrite($file, "\xEF\xBB\xBF"); // BOM for UTF-8
-
-            // رؤوس الأعمدة باللغة العربية
-            fputcsv($file, [
-                'التاريخ', 'الشفت', 'الوحدة', 'الموقع', 'نوع المهمة',
-                'المنادر', 'الوسائد', 'المراوح', 'النوافذ', 'السجاد',
-                'البطانيات', 'الأسرة', 'المستفيدون', 'الترامز', 'السجاد المفروش',
-                'حاويات كبيرة', 'حاويات صغيرة', 'ساعات العمل', 'الملاحظات', 'تفاصيل الصيانة',
-                'حالة التحقق', 'الموارد المستخدمة', 'التقدم', 'قيمة النتيجة', 'القواطع الخارجية المدامة' // ✅ إضافة رأس العمود هنا
-            ]);
-
-            foreach ($dataToExport as $row) {
-                $unitName = $row->unit->name ?? 'N/A';
-                fputcsv($file, [
-                    Carbon::parse($row->date)->format('Y-m-d'),
-                    $row->shift,
-                    $unitName,
-                    $row->location,
-                    $row->task_type,
-                    $row->mats_count,
-                    $row->pillows_count,
-                    $row->fans_count,
-                    $row->windows_count,
-                    $row->carpets_count,
-                    $row->blankets_count,
-                    $row->beds_count,
-                    $row->beneficiaries_count,
-                    $row->filled_trams_count,
-                    $row->carpets_laid_count,
-                    $row->large_containers_count,
-                    $row->small_containers_count,
-                    $row->working_hours,
-                    $row->notes,
-                    $row->maintenance_details,
-                    $row->verification_status,
-                    is_array($row->resources_used) ? implode(', ', $row->resources_used) : $row->resources_used,
-                    $row->progress,
-                    $row->result_value,
-                    $row->external_partitions_count, // ✅ إضافة قيمة الحقل هنا
-                ]);
-            }
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return $this->index($request);
     }
 
     /**

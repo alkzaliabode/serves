@@ -406,8 +406,8 @@
                         <button type="button" onclick="printReport()" class="btn btn-success me-2"> {{-- زر طباعة --}}
                             <i class="fas fa-print"></i> طباعة التقرير
                         </button>
-                        <button type="button" onclick="exportToCsv()" class="btn btn-info btn-export-print"> {{-- زر تصدير --}}
-                            <i class="fas fa-file-excel"></i> تصدير CSV
+                        <button type="button" onclick="ReportExcel.download(this, 'تقرير_النظافة', '{{ route('monthly-cleaning-report.export') }}')" class="btn btn-info btn-export-print"> {{-- زر تصدير --}}
+                            <i class="fas fa-file-excel"></i> تصدير Excel
                         </button>
                     </div>
                 </div>
@@ -603,7 +603,8 @@
     </div>
 @endsection {{-- نهاية قسم المحتوى --}}
 
-@section('scripts') {{-- لربط سكربتات خاصة بهذه الصفحة --}}
+@section('scripts')
+    <script src="{{ asset('js/report-excel.js') }}"></script> {{-- لربط سكربتات خاصة بهذه الصفحة --}}
     <script>
         function printReport() {
             // توجيه المستخدم إلى صفحة الطباعة مع تمرير نفس الفلاتر
@@ -612,60 +613,5 @@
             window.open(printUrl, '_blank');
         }
 
-        function exportToCsv() {
-            const actualTable = document.querySelector('.table-responsive table'); // استهداف الجدول الفعلي في هذا الملف
-
-            if (!actualTable) {
-                console.error('Table not found for CSV export.');
-                return;
-            }
-
-            let csv = [];
-            // Get headers from <thead>
-            let headers = [];
-            actualTable.querySelectorAll('thead th').forEach(th => {
-                // Exclude the "الإجراءات" column
-                if (th.innerText.trim() !== 'الإجراءات') {
-                    headers.push('"' + th.innerText.trim().replace(/"/g, '""') + '"');
-                }
-            });
-            csv.push(headers.join(','));
-
-            // Get data from <tbody>
-            actualTable.querySelectorAll('tbody tr').forEach(row => {
-                let rowData = [];
-                row.querySelectorAll('td').forEach((td, index) => {
-                    // Exclude the "الإجراءات" column (last column)
-                    if (index < row.querySelectorAll('td').length - 1) {
-                        let data = td.innerText.replace(/(\r\n|\n|\r)/gm, '').replace(/(\s\s)/gm, ' ');
-                        data = data.replace(/"/g, '""');
-                        rowData.push('"' + data + '"');
-                    }
-                });
-                csv.push(rowData.join(','));
-            });
-
-            const csvString = csv.join('\n');
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-            const filename = 'تقرير_النظافة_التفصيلي_' + new Date().toISOString().slice(0,10) + '.csv'; // 💡 تغيير اسم الملف
-
-            // Check if navigator.msSaveBlob exists (for IE10+)
-            if (navigator.msSaveBlob) {
-                navigator.msSaveBlob(blob, filename);
-            } else {
-                const link = document.createElement('a');
-                if (link.download !== undefined) { // Feature detection
-                    const url = URL.createObjectURL(blob);
-                    link.setAttribute('href', url);
-                    link.setAttribute('download', filename);
-                    link.style.visibility = 'hidden';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                } else {
-                    console.error('المتصفح لا يدعم تصدير CSV بهذه الطريقة. يرجى استخدام متصفح أحدث.');
-                }
-            }
-        }
     </script>
 @endsection {{-- نهاية قسم السكربتات --}}

@@ -385,8 +385,8 @@
                         <button type="button" onclick="printReport()" class="btn btn-success me-2">
                             <i class="fas fa-print"></i> طباعة التقرير
                         </button>
-                        <button type="button" onclick="exportToCsv()" class="btn btn-info btn-export-print">
-                            <i class="fas fa-file-excel"></i> تصدير CSV
+                        <button type="button" onclick="ReportExcel.download(this, 'تقرير_المنشآت_الصحية', '{{ route('monthly-sanitation-report.export') }}')" class="btn btn-info btn-export-print">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
                         </button>
                     </div>
                 </div>
@@ -539,6 +539,7 @@
 @endsection
 
 @section('scripts')
+    <script src="{{ asset('js/report-excel.js') }}"></script>
 <script>
     function printReport() {
         // Get current filter parameters from the form
@@ -563,27 +564,5 @@
         window.open(printUrl, '_blank');
     }
 
-    function exportToCsv() {
-        // Get current filter parameters from the form
-        const form = document.getElementById('filter-form');
-        const formData = new FormData(form);
-        const params = new URLSearchParams();
-        for (const [key, value] of formData.entries()) {
-            if (value) { // Only add non-empty values
-                params.append(key, value);
-            }
-        }
-        // Add sorting parameters if present
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('sort_by')) {
-            params.append('sort_by', urlParams.get('sort_by'));
-        }
-        if (urlParams.has('sort_order')) {
-            params.append('sort_order', urlParams.get('sort_order'));
-        }
-
-        const exportUrl = "{{ route('monthly-sanitation-report.export') }}?" + params.toString();
-        window.location.href = exportUrl;
-    }
 </script>
 @endsection

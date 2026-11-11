@@ -159,6 +159,9 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title text-white">التقارير المصورة</h3>
                 <div class="btn-group-custom">
+                    <button type="button" class="btn btn-success" onclick="ReportExcel.download(this, 'التقارير_المصورة')">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
                     <a href="{{ route('photo_reports.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> إضافة تقرير مصور جديد
                     </a>
@@ -169,7 +172,7 @@
                 </div>
             </div>
             <div class="card-body p-0">
-                <table class="table table-striped table-bordered table-hover">
+                <table id="excel-report-table" data-exclude-last="true" class="table table-striped table-bordered table-hover">
                     <thead>
                         <tr>
                             <th style="width: 10px">#</th>
@@ -269,5 +272,5 @@
 @endsection
 
 @section('scripts')
-    {{-- لا توجد حاجة لسكريبتات مخصصة هنا حالياً --}}
+    <script src="{{ asset('js/report-excel.js') }}"></script>
 @endsection

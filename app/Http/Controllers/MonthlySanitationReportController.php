@@ -75,6 +75,16 @@ class MonthlySanitationReportController extends Controller
         }
 
         // جلب المهام مع الترحيل (pagination)
+        // Export uses the same filters and ordering as the report, without pagination.
+        if ($request->boolean('_excel')) {
+            return response()->json([
+                'headers' => ['التاريخ', 'اسم المنشأة', 'نوع المهمة', 'الوحدة', 'المقاعد', 'المرايا', 'الخلاطات', 'الأبواب', 'المغاسل', 'الحمامات', 'ملاحظات'],
+                'rows' => $query->with('unit')->get()->map(function ($task) {
+                    return [Carbon::parse($task->date)->format('Y-m-d'), data_get($task, 'facility_name'), data_get($task, 'task_type'), data_get($task, 'unit.name'), data_get($task, 'seats_count'), data_get($task, 'mirrors_count'), data_get($task, 'mixers_count'), data_get($task, 'doors_count'), data_get($task, 'sinks_count'), data_get($task, 'toilets_count'), data_get($task, 'notes')];
+                }),
+            ]);
+        }
+
         $tasks = $query->with('unit')->paginate(10); // تحميل علاقة الوحدة
 
         // جلب الوحدات وأسماء المنشآت وأنواع المهام المتاحة للفلاتر من جدول المهام الفردية
@@ -188,75 +198,9 @@ class MonthlySanitationReportController extends Controller
      */
     public function export(Request $request)
     {
-        $query = SanitationFacilityTask::query(); // الاستعلام من جدول المهام الفردية الصحيح
+        $request->merge(['_excel' => true]);
 
-        // تطبيق نفس الفلاتر المستخدمة في دالة index
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('date', [$request->input('start_date'), $request->input('end_date')]);
-        } elseif ($request->filled('date')) {
-            $query->whereDate('date', $request->input('date'));
-        }
-
-        if ($request->filled('facility_name')) {
-            $query->where('facility_name', 'like', '%' . $request->input('facility_name') . '%');
-        }
-        if ($request->filled('task_type')) {
-            $query->where('task_type', $request->input('task_type'));
-        }
-        if ($request->filled('unit_id')) {
-            $query->where('unit_id', $request->unit_id);
-        }
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('facility_name', 'like', '%' . $search . '%')
-                  ->orWhere('task_type', 'like', '%' . $search . '%')
-                  ->orWhere('notes', 'like', '%' . $search . '%');
-            });
-        }
-
-        $dataToExport = $query->get();
-
-        $fileName = 'تقرير_المنشآت_الصحية_' . now()->format('Y-m-d_H-i-s') . '.csv';
-
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Encoding' => 'UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-        ];
-
-        $callback = function() use ($dataToExport) {
-            $file = fopen('php://output', 'w');
-            // Add BOM for UTF-8 compatibility with Excel
-            fwrite($file, "\xEF\xBB\xBF");
-
-            // Column headers for individual tasks
-            fputcsv($file, [
-                'التاريخ', 'اسم المنشأة', 'نوع المهمة', 'الوحدة', 'المقاعد', 'المرايا',
-                'الخلاطات', 'الأبواب', 'الأحواض', 'المراحيض', 'ملاحظات'
-            ]);
-
-            // Row data
-            foreach ($dataToExport as $row) {
-                $unitName = $row->unit->name ?? 'N/A';
-                fputcsv($file, [
-                    Carbon::parse($row->date)->format('Y / m / d'),
-                    $row->facility_name,
-                    $row->task_type,
-                    $unitName,
-                    $row->seats_count,
-                    $row->mirrors_count,
-                    $row->mixers_count,
-                    $row->doors_count,
-                    $row->sinks_count,
-                    $row->toilets_count,
-                    $row->notes,
-                ]);
-            }
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return $this->index($request);
     }
 
     /**

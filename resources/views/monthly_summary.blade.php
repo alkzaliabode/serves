@@ -236,6 +236,9 @@
             <div class="card-header no-print"> {{-- Add no-print to hide this header during print --}}
                 <h3 class="card-title">ملخص الحضور والانصراف للمنتسبين</h3>
                 <div class="card-tools">
+                    <button type="button" class="btn btn-success btn-sm" onclick="ReportExcel.download(this, 'ملخص_الحضور')">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
                     <button class="btn btn-secondary btn-sm mr-2" onclick="goBack()">
                         <i class="fas fa-arrow-right"></i> الرجوع
                     </button>
@@ -327,7 +330,7 @@
                     </div>
                 @else
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped table-hover">
+                        <table id="excel-report-table" data-text-columns="2" class="table table-bordered table-striped table-hover">
                             <thead>
                                 <tr>
                                     <th>ت</th>
@@ -396,6 +399,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 
+    <script src="{{ asset('js/report-excel.js') }}"></script>
     <script>
         // This function is for navigating between months/years on screen, not directly for print.
         function navigateToDate() {
