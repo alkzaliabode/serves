@@ -159,7 +159,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title text-white">التقارير المصورة</h3>
                 <div class="btn-group-custom">
-                    <button type="button" class="btn btn-success" onclick="ReportExcel.download(this, 'التقارير_المصورة')">
+                    <button type="button" class="btn btn-success" onclick="ReportPrintExcel.downloadPhotos(this)">
                         <i class="fas fa-file-excel"></i> تصدير Excel
                     </button>
                     <a href="{{ route('photo_reports.create') }}" class="btn btn-primary">
@@ -257,6 +257,9 @@
                                     <a href="{{ route('photo_reports.print', $report->id) }}?print=1" target="_blank" class="btn btn-sm btn-secondary" title="طباعة">
                                         <i class="fas fa-print"></i> طباعة
                                     </a>
+                                    <button type="button" class="btn btn-sm btn-success" data-print-excel="{{ route('photo_reports.print', $report->id) }}?print=1" onclick="ReportPrintExcel.download(this, 'تقرير_المهام_المصور_{{ $report->id }}', '{{ route('photo_reports.print', $report->id) }}?print=1', false)">
+                                        <i class="fas fa-file-excel"></i> Excel
+                                    </button>
                                 </td>
                             </tr>
                         @empty
@@ -272,5 +275,6 @@
 @endsection
 
 @section('scripts')
+    <script src="{{ asset('js/report-print-excel.js') }}"></script>
     <script src="{{ asset('js/report-excel.js') }}"></script>
 @endsection

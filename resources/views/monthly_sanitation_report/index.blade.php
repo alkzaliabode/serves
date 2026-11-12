@@ -385,7 +385,7 @@
                         <button type="button" onclick="printReport()" class="btn btn-success me-2">
                             <i class="fas fa-print"></i> طباعة التقرير
                         </button>
-                        <button type="button" onclick="ReportExcel.download(this, 'تقرير_المنشآت_الصحية', '{{ route('monthly-sanitation-report.export') }}')" class="btn btn-info btn-export-print">
+                        <button type="button" onclick="ReportPrintExcel.download(this, 'تقرير_المنشآت_الصحية', '{{ route('monthly-sanitation-report.print') }}')" class="btn btn-info btn-export-print">
                             <i class="fas fa-file-excel"></i> تصدير Excel
                         </button>
                     </div>
@@ -540,6 +540,7 @@
 
 @section('scripts')
     <script src="{{ asset('js/report-excel.js') }}"></script>
+    <script src="{{ asset('js/report-print-excel.js') }}"></script>
 <script>
     function printReport() {
         // Get current filter parameters from the form

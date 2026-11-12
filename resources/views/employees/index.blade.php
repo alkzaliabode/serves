@@ -330,9 +330,9 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <a href="{{ route('employees.export', request()->query()) }}" class="btn btn-success me-2">
-                        <i class="fas fa-file-excel"></i> تصدير (CSV)
-                    </a>
+                    <button type="button" onclick="ReportPrintExcel.download(this, 'تقرير_الموظفين', '{{ route('employees.print') }}')" class="btn btn-success me-2">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
                     <a href="{{ route('employees.print', request()->query()) }}" target="_blank" class="btn btn-info">
                         <i class="fas fa-print"></i> طباعة
                     </a>
@@ -438,6 +438,8 @@
 @endsection
 
 @section('scripts')
+    <script src="{{ asset('js/report-excel.js') }}"></script>
+    <script src="{{ asset('js/report-print-excel.js') }}"></script>
     <script>
         // دالة لعرض نافذة التأكيد المخصصة
         function showCustomConfirm(message, actionUrl, method) {

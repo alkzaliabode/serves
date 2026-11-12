@@ -406,7 +406,7 @@
                         <button type="button" onclick="printReport()" class="btn btn-success me-2"> {{-- زر طباعة --}}
                             <i class="fas fa-print"></i> طباعة التقرير
                         </button>
-                        <button type="button" onclick="ReportExcel.download(this, 'تقرير_النظافة', '{{ route('monthly-cleaning-report.export') }}')" class="btn btn-info btn-export-print"> {{-- زر تصدير --}}
+                        <button type="button" onclick="ReportPrintExcel.download(this, 'تقرير_النظافة', '{{ route('monthly-cleaning-report.print') }}')" class="btn btn-info btn-export-print"> {{-- زر تصدير --}}
                             <i class="fas fa-file-excel"></i> تصدير Excel
                         </button>
                     </div>
@@ -604,7 +604,8 @@
 @endsection {{-- نهاية قسم المحتوى --}}
 
 @section('scripts')
-    <script src="{{ asset('js/report-excel.js') }}"></script> {{-- لربط سكربتات خاصة بهذه الصفحة --}}
+    <script src="{{ asset('js/report-excel.js') }}"></script>
+    <script src="{{ asset('js/report-print-excel.js') }}"></script> {{-- لربط سكربتات خاصة بهذه الصفحة --}}
     <script>
         function printReport() {
             // توجيه المستخدم إلى صفحة الطباعة مع تمرير نفس الفلاتر

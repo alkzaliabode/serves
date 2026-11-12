@@ -351,6 +351,9 @@
                 <a href="{{ route('photo_reports.edit', $photo_report->id) }}" class="btn btn-info btn-sm">
                     <i class="fas fa-edit"></i> تعديل
                 </a>
+                <button type="button" class="btn btn-success btn-sm" onclick="ReportPrintExcel.download(this, 'تقرير_المهام_المصور_{{ $photo_report->id }}', '{{ route('photo_reports.print', $photo_report->id) }}?print=1', false)">
+                    <i class="fas fa-file-excel"></i> تصدير Excel
+                </button>
                 {{-- تم تعديل هذا الرابط ليتضمن ?print=1 --}}
                <a href="{{ route('photo_reports.print_standalone', $photo_report->id) }}?print=true" class="btn btn-primary btn-sm" target="_blank">
     <i class="fas fa-print"></i> طباعة
@@ -429,6 +432,8 @@
 @endsection
 
 @section('scripts')
+    <script src="{{ asset('js/report-excel.js') }}"></script>
+    <script src="{{ asset('js/report-print-excel.js') }}"></script>
     {{--
         روابط JavaScript إضافية.
         - jQuery (ضروري لـ Ekko Lightbox).

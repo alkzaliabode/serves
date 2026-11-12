@@ -63,7 +63,7 @@ test('exports all server rows, preserves filters, Arabic, numbers and safe strin
     const sheet = files['xl/worksheets/sheet1.xml'];
     assert.equal((sheet.match(/<row /g) || []).length, 26);
     assert.match(sheet, /عربي &amp; &lt;نص&gt; =1\+1/);
-    assert.match(sheet, /<c><v>24<\/v><\/c>/);
+    assert.match(sheet, /<c r="B26"><v>24<\/v><\/c>/);
     assert.match(sheet, /rightToLeft="1"/);
     assert.deepEqual(env.alerts, []);
 });
@@ -86,4 +86,28 @@ test('empty reports show a message and restore the button', async () => {
     assert.equal(env.blob(), undefined);
     assert.equal(env.alerts.length, 1);
     assert.equal(button.disabled, false);
+});
+
+test('formatted workbooks preserve report order, merged titles, summaries and embedded image bytes', async () => {
+    const env = setup(null);
+    const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+    const blob = env.api.workbook([
+        ['تقرير المنشآت الصحية'], ['الفترة: أكتوبر'], [],
+        ['التاريخ', 'المقاعد'], ['2026-10-31', 10], [],
+        ['ملخص إحصائي للفترة المحددة'], ['إجمالي المقاعد:', 10],
+    ], {
+        styled: true, widths: [28, 18], styles: { 0: 3, 3: 2, 6: 4, 7: 4 },
+        merges: ['A1:B1', 'A2:B2', 'A7:B7'], heights: { 0: 36 },
+        images: [{ bytes: png, width: 100, height: 80, row: 9, column: 0 }],
+    });
+    const files = await entries(blob), sheet = files['xl/worksheets/sheet1.xml'];
+    assert.match(sheet, /<mergeCell ref="A7:B7"/);
+    assert.match(sheet, /<c r="B8" s="4"><v>10<\/v>/);
+    assert.match(sheet, /orientation="landscape"/);
+    assert.match(sheet, /rightToLeft="1"/);
+    assert.ok(sheet.indexOf('2026-10-31') < sheet.indexOf('ملخص إحصائي'));
+    assert.match(files['xl/styles.xml'], /wrapText="1"/);
+    assert.match(files['xl/drawings/drawing1.xml'], /<xdr:row>9<\/xdr:row>/);
+    assert.match(files['xl/drawings/_rels/drawing1.xml.rels'], /Target="..\/media\/image1.png"/);
+    assert.equal(files['xl/media/image1.png'], Buffer.from(png).toString());
 });

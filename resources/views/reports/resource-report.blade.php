@@ -331,7 +331,7 @@
                         <button type="button" onclick="printReport()" class="btn btn-success flex-fill">
                             <i class="fas fa-print"></i> طباعة التقرير
                         </button>
-                        <button type="button" onclick="ReportExcel.download(this, 'تقرير_الموارد')" class="btn btn-info flex-fill">
+                        <button type="button" onclick="ReportPrintExcel.download(this, 'تقرير_الموارد', '{{ route('resource-report.print') }}')" class="btn btn-info flex-fill">
                             <i class="fas fa-file-excel"></i> تصدير Excel
                         </button>
                     </div>
@@ -413,6 +413,7 @@
 
 @section('scripts') {{-- لربط سكربتات خاصة بهذه الصفحة --}}
     <script src="{{ asset('js/report-excel.js') }}"></script>
+    <script src="{{ asset('js/report-print-excel.js') }}"></script>
     <script>
         function printReport() {
             // توجيه المستخدم إلى صفحة الطباعة مع تمرير نفس الفلاتر
