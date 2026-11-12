@@ -312,24 +312,27 @@
         <div class="card-body">
             <form id="filter-form" action="{{ route('resource-report.index') }}" method="GET" class="form-filters-print">
                 <div class="row g-3 align-items-end mb-3"> {{-- استخدام g-3 و align-items-end --}}
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <label for="searchItem" class="form-label">البحث باسم المورد</label>
                         <input type="text" id="searchItem" name="searchItem"
                                class="form-control" placeholder="ابحث باسم المورد..."
                                value="{{ $searchItem }}">
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <label for="selectedMonth" class="form-label">اختيار الشهر</label>
                         <input type="month" id="selectedMonth" name="selectedMonth"
                                class="form-control" value="{{ $selectedMonth }}">
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100 me-2">
+                    <div class="col-md-4 d-flex flex-wrap gap-2 align-items-end">
+                        <button type="submit" class="btn btn-primary flex-fill">
                             <i class="fas fa-filter"></i> تطبيق الفلاتر
                         </button>
                         {{-- زر طباعة - سيفتح نافذة جديدة لصفحة الطباعة --}}
-                        <button type="button" onclick="printReport()" class="btn btn-success w-100">
+                        <button type="button" onclick="printReport()" class="btn btn-success flex-fill">
                             <i class="fas fa-print"></i> طباعة التقرير
+                        </button>
+                        <button type="button" onclick="ReportExcel.download(this, 'تقرير_الموارد')" class="btn btn-info flex-fill">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
                         </button>
                     </div>
                 </div>
@@ -376,7 +379,7 @@
                         لا توجد موارد مستخدمة لعرضها بهذه المعايير.
                     </div>
                 @else
-                    <table class="table table-bordered table-striped table-hover text-center table-sm"> {{-- Bootstrap table classes --}}
+                    <table id="excel-report-table" data-text-columns="0,1,2,3,5,6" class="table table-bordered table-striped table-hover text-center table-sm"> {{-- Bootstrap table classes --}}
                         <thead>
                             <tr class="bg-light"> {{-- bg-light for header background --}}
                                 <th class="text-nowrap">التاريخ</th>
@@ -409,6 +412,7 @@
 @endsection {{-- نهاية قسم المحتوى --}}
 
 @section('scripts') {{-- لربط سكربتات خاصة بهذه الصفحة --}}
+    <script src="{{ asset('js/report-excel.js') }}"></script>
     <script>
         function printReport() {
             // توجيه المستخدم إلى صفحة الطباعة مع تمرير نفس الفلاتر
