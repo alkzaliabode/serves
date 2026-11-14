@@ -119,7 +119,7 @@ class SanitationFacilityTaskController extends Controller
         $beforeImagePaths = [];
         if ($request->hasFile('before_images')) {
             foreach ($request->file('before_images') as $image) {
-                $path = $image->store('sanitation_facility_tasks/before', 'public');
+                $path = $this->storeImage($image, 'before_images');
                 $beforeImagePaths[] = $path;
             }
         }
@@ -127,7 +127,7 @@ class SanitationFacilityTaskController extends Controller
         $afterImagePaths = [];
         if ($request->hasFile('after_images')) {
             foreach ($request->file('after_images') as $image) {
-                $path = $image->store('sanitation_facility_tasks/after', 'public');
+                $path = $this->storeImage($image, 'after_images');
                 $afterImagePaths[] = $path;
             }
         }
@@ -203,7 +203,7 @@ class SanitationFacilityTaskController extends Controller
             $oldPaths = $sanitationFacilityTask->{$field};
             $paths = $request->boolean('remove_' . $field) ? [] : $oldPaths;
             foreach ($request->file($field, []) as $image) {
-                $paths[] = $image->store('sanitation_facility_tasks/' . ($field === 'before_images' ? 'before' : 'after'), 'public');
+                $paths[] = $this->storeImage($image, $field);
             }
             if ($request->boolean('remove_' . $field)) {
                 foreach ($oldPaths as $oldPath) {
@@ -281,6 +281,28 @@ class SanitationFacilityTaskController extends Controller
     /**
      * Define validation rules.
      */
+    private function storeImage(\Illuminate\Http\UploadedFile $image, string $field): string
+    {
+        $directory = 'sanitation_facility_tasks/' . ($field === 'before_images' ? 'before' : 'after');
+        try {
+            $path = $image->store($directory, 'public');
+            if (!is_string($path) || trim($path) === '') {
+                throw new \RuntimeException('Unable to save uploaded image');
+            }
+
+            return $path;
+        } catch (\Exception $e) {
+            Log::error('Failed to upload sanitation image: ' . $e->getMessage(), [
+                'field' => $field,
+                'directory' => Storage::disk('public')->path($directory),
+                'upload_error' => $image->getError(),
+            ]);
+            throw ValidationException::withMessages([
+                $field => 'تعذر حفظ الصور على الخادم. يرجى التحقق من صلاحية الكتابة في مجلد الصور والمساحة المتاحة.',
+            ]);
+        }
+    }
+
     private function rules()
     {
         return [

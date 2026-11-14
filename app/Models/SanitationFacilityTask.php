@@ -117,7 +117,9 @@ class SanitationFacilityTask extends Model
      */
     public function getBeforeImagesAttribute($value): array
     {
-        return optional($this->imageReport)->before_images ?? ($value ? $this->fromJson($value) : []);
+        $paths = $this->validImagePaths(optional($this->imageReport)->before_images ?? []);
+
+        return $paths ?: $this->validImagePaths($value ? $this->fromJson($value) : []);
     }
 
     /**
@@ -128,7 +130,21 @@ class SanitationFacilityTask extends Model
      */
     public function getAfterImagesAttribute($value): array
     {
-        return optional($this->imageReport)->after_images ?? ($value ? $this->fromJson($value) : []);
+        $paths = $this->validImagePaths(optional($this->imageReport)->after_images ?? []);
+
+        return $paths ?: $this->validImagePaths($value ? $this->fromJson($value) : []);
+    }
+
+    private function validImagePaths(array $paths): array
+    {
+        return array_values(array_filter($paths, static function ($path) {
+            if (!is_string($path)) {
+                return false;
+            }
+            $path = preg_replace('~^(?:public/|storage/)+~', '', ltrim(trim($path), '/'));
+
+            return $path !== '' && $path !== 'storage' && $path !== 'public';
+        }));
     }
 
     /**
