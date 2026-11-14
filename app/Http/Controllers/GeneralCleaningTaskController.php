@@ -320,9 +320,9 @@ class GeneralCleaningTaskController extends Controller
             'after_images' => 'nullable|array',
             'after_images.*' => 'file|mimetypes:image/*|max:15360', // 15MB
             'existing_before_images' => 'nullable|array',
-            'existing_before_images.*' => 'string',
+            'existing_before_images.*' => 'nullable|string',
             'existing_after_images' => 'nullable|array',
-            'existing_after_images.*' => 'string',
+            'existing_after_images.*' => 'nullable|string',
             'remove_before_images' => 'nullable|boolean', // حقل جديد للإشارة إلى حذف جميع الصور
             'remove_after_images' => 'nullable|boolean',   // حقل جديد للإشارة إلى حذف جميع الصور
         ];

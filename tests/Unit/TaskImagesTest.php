@@ -81,6 +81,34 @@ class TaskImagesTest extends TestCase
         self::assertSame(2, TaskImageReport::count());
     }
 
+    public function test_cleaning_images_ignore_empty_legacy_paths_and_accept_empty_retained_fields(): void
+    {
+        $task = new GeneralCleaningTask;
+        $paths = [null, '', ' ', '/storage/', 'public/', 'before.jpg'];
+        $task->setRawAttributes(['before_images' => json_encode($paths), 'after_images' => json_encode($paths)]);
+        $task->setRelation('imageReport', null);
+        self::assertSame(['before.jpg'], $task->before_images);
+        self::assertSame(['before.jpg'], $task->after_images);
+
+        $report = new TaskImageReport(['before_images' => $paths, 'after_images' => $paths]);
+        $task->setRelation('imageReport', $report);
+        self::assertSame(['before.jpg'], $task->before_images);
+        self::assertSame(['before.jpg'], $task->after_images);
+
+        $controller = new GeneralCleaningTaskController;
+        $rules = (new \ReflectionMethod($controller, 'rules'))->invoke($controller);
+        $rules = array_intersect_key($rules, array_flip([
+            'existing_before_images', 'existing_before_images.*',
+            'existing_after_images', 'existing_after_images.*',
+        ]));
+        $validator = new Factory(new Translator(new ArrayLoader, 'en'));
+        self::assertTrue($validator->make([
+            'existing_before_images' => [null, 'before.jpg'],
+            'existing_after_images' => [null],
+        ], $rules)->passes());
+        self::assertFalse($validator->make(['existing_before_images' => [['invalid']]], $rules)->passes());
+    }
+
     public function test_upload_rules_accept_image_mime_families_and_reject_disguised_files(): void
     {
         $validator = new Factory(new Translator(new ArrayLoader, 'en'));
