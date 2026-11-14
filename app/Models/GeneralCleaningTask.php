@@ -95,12 +95,16 @@ class GeneralCleaningTask extends Model
 
     public function getBeforeImagesAttribute($value): array
     {
-        return $this->validImagePaths(optional($this->imageReport)->before_images ?? ($value ? $this->fromJson($value) : []));
+        $reportPaths = $this->validImagePaths(optional($this->imageReport)->before_images ?? []);
+
+        return $reportPaths ?: $this->validImagePaths($value ? $this->fromJson($value) : []);
     }
 
     public function getAfterImagesAttribute($value): array
     {
-        return $this->validImagePaths(optional($this->imageReport)->after_images ?? ($value ? $this->fromJson($value) : []));
+        $reportPaths = $this->validImagePaths(optional($this->imageReport)->after_images ?? []);
+
+        return $reportPaths ?: $this->validImagePaths($value ? $this->fromJson($value) : []);
     }
 
     private function validImagePaths(array $paths): array

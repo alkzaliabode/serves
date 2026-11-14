@@ -109,6 +109,22 @@ class TaskImagesTest extends TestCase
         self::assertFalse($validator->make(['existing_before_images' => [['invalid']]], $rules)->passes());
     }
 
+    public function test_empty_report_images_do_not_hide_saved_task_images(): void
+    {
+        $task = new GeneralCleaningTask;
+        $task->setRawAttributes([
+            'before_images' => json_encode(['saved-before.jpg']),
+            'after_images' => json_encode(['saved-after.jpg']),
+        ]);
+        $report = new TaskImageReport(['before_images' => [null, ''], 'after_images' => []]);
+        $task->setRelation('imageReport', $report);
+        self::assertSame(['saved-before.jpg'], $task->before_images);
+        self::assertSame(['saved-after.jpg'], $task->after_images);
+
+        $report->before_images = ['report-before.jpg'];
+        self::assertSame(['report-before.jpg'], $task->before_images);
+    }
+
     public function test_upload_rules_accept_image_mime_families_and_reject_disguised_files(): void
     {
         $validator = new Factory(new Translator(new ArrayLoader, 'en'));
