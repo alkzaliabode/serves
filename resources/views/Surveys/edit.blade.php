@@ -20,7 +20,7 @@
             </div>
             <form action="{{ route('surveys.update', $survey->id) }}" method="POST">
                 {{-- استخدام الـ partial الذي يحتوي على الفورم --}}
-                @include('surveys._form', ['survey' => $survey])
+                @include('Surveys._form', ['survey' => $survey])
             </form>
         </div>
     </div>

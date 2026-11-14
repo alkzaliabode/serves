@@ -20,7 +20,7 @@
             </div>
             <form action="{{ route('surveys.store') }}" method="POST">
                 {{-- استخدام الـ partial الذي يحتوي على الفورم --}}
-                @include('surveys._form', ['survey' => new \App\Models\Survey()])
+                @include('Surveys._form', ['survey' => new \App\Models\Survey()])
             </form>
         </div>
     </div>

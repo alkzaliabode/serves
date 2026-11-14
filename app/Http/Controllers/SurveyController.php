@@ -75,7 +75,7 @@ class SurveyController extends Controller
             'over_60' => 'أكثر من 60',
         ];
 
-        return view('surveys.index', compact(
+        return view('Surveys.index', compact(
             'surveys',
             'satisfactionOptions',
             'visitCountOptions',
@@ -90,7 +90,7 @@ class SurveyController extends Controller
     public function create()
     {
         // تمرير كائن Survey فارغ لنموذج الإنشاء
-        return view('surveys.create', ['survey' => new Survey()]);
+        return view('Surveys.create', ['survey' => new Survey()]);
     }
 
     /**
@@ -111,7 +111,7 @@ class SurveyController extends Controller
      */
     public function show(Survey $survey)
     {
-        return view('surveys.show', compact('survey'));
+        return view('Surveys.show', compact('survey'));
     }
 
     /**
@@ -119,7 +119,7 @@ class SurveyController extends Controller
      */
     public function edit(Survey $survey)
     {
-        return view('surveys.edit', compact('survey'));
+        return view('Surveys.edit', compact('survey'));
     }
 
     /**
