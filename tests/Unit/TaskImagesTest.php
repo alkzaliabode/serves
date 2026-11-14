@@ -125,6 +125,58 @@ class TaskImagesTest extends TestCase
         self::assertSame(['report-before.jpg'], $task->before_images);
     }
 
+    public function test_edit_uploads_png_and_preserves_existing_images(): void
+    {
+        $previous = \Illuminate\Container\Container::getInstance();
+        $container = new \Illuminate\Container\Container;
+        $root = sys_get_temp_dir().'/cleaning-upload-'.bin2hex(random_bytes(6));
+        $container->instance('config', new \Illuminate\Config\Repository([
+            'filesystems' => ['disks' => ['public' => ['driver' => 'local', 'root' => $root]]],
+        ]));
+        $manager = new \Illuminate\Filesystem\FilesystemManager($container);
+        $container->instance(\Illuminate\Contracts\Filesystem\Factory::class, $manager);
+        \Illuminate\Container\Container::setInstance($container);
+        try {
+            $task = new GeneralCleaningTask;
+            $task->setRawAttributes(['before_images' => json_encode(['existing.jpg']), 'after_images' => '[]']);
+            $task->setRelation('imageReport', null);
+            $task->date = '2026-11-14';
+            $task->shift = 'صباحي';
+            $task->status = 'قيد التنفيذ';
+            $task->location = 'test';
+            $task->task_type = 'test';
+            $task->save();
+            $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=');
+            $request = new \Illuminate\Http\Request([
+                'retain_before_images' => '1', 'existing_before_images' => ['existing.jpg'],
+                'retain_after_images' => '1',
+            ]);
+            $request->files->set('before_images', [UploadedFile::fake()->createWithContent('before.png', $png)]);
+            $request->files->set('after_images', [UploadedFile::fake()->createWithContent('after.png', $png)]);
+            $controller = new GeneralCleaningTaskController;
+            $method = new \ReflectionMethod($controller, 'handleImageUpdate');
+            $before = $method->invoke($controller, $request, $task, 'before_images', 'general_cleaning_tasks/before');
+            $after = $method->invoke($controller, $request, $task, 'after_images', 'general_cleaning_tasks/after');
+            self::assertSame('existing.jpg', $before[0]);
+            self::assertCount(2, $before);
+            self::assertCount(1, $after);
+            self::assertFileExists($root.'/'.$before[1]);
+            self::assertFileExists($root.'/'.$after[0]);
+            self::assertStringEndsWith('.png', $before[1]);
+            $task->date = '2026-11-14';
+            $task->location = 'test';
+            $task->task_type = 'test';
+            $task->before_images = $before;
+            $task->after_images = $after;
+            $task->save();
+            self::assertSame($before, $task->fresh()->before_images);
+            self::assertSame($after, $task->fresh()->after_images);
+        } finally {
+            \Illuminate\Container\Container::setInstance($previous);
+            (new \Illuminate\Filesystem\Filesystem)->deleteDirectory($root);
+        }
+    }
+
     public function test_upload_rules_accept_image_mime_families_and_reject_disguised_files(): void
     {
         $validator = new Factory(new Translator(new ArrayLoader, 'en'));

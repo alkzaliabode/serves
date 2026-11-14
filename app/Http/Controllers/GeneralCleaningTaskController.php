@@ -348,8 +348,13 @@ class GeneralCleaningTaskController extends Controller
                     }
                     $imagePaths[] = $path;
                 } catch (\Exception $e) {
-                    Log::error("Failed to upload image for field {$fieldName}: " . $e->getMessage());
-                    throw $e;
+                    Log::error("Failed to upload image for field {$fieldName}: " . $e->getMessage(), [
+                        'directory' => Storage::disk('public')->path($storagePath),
+                        'upload_error' => $image->getError(),
+                    ]);
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        $fieldName => 'تعذر حفظ الصور على الخادم. يرجى التحقق من صلاحية الكتابة في مجلد الصور والمساحة المتاحة.',
+                    ]);
                 }
             }
         }

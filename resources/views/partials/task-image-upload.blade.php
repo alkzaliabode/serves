@@ -3,7 +3,7 @@
         <i class="fas fa-images" aria-hidden="true"></i> {{ $label }}
     </button>
     <input type="file" id="{{ $field }}" name="{{ $field }}[]" multiple
-           accept="image/*,.heic,.heif,.avif,.tif,.tiff,.webp,.bmp,.ico,.svg"
+           accept="image/*,.png,.jpg,.jpeg,.gif,.heic,.heif,.avif,.tif,.tiff,.webp,.bmp,.ico,.svg"
            class="task-image-input" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden"
            aria-label="{{ $label }}" aria-describedby="{{ $field }}_help">
     <span class="task-image-count mx-2" aria-live="polite">لم يتم اختيار صور</span>
