@@ -1,4 +1,16 @@
-@forelse (($images ?? []) as $imagePath)
+@php
+    $validImages = collect($images ?? [])->filter(function ($path) {
+        if (!is_string($path)) {
+            return false;
+        }
+
+        $path = trim($path);
+        $relativePath = preg_replace('~^(?:public/|storage/)+~', '', ltrim($path, '/'));
+
+        return $relativePath !== '' && $relativePath !== 'storage' && $relativePath !== 'public';
+    })->map(fn ($path) => trim($path));
+@endphp
+@forelse ($validImages as $imagePath)
     @php
         $imageUrl = preg_match('~^https?://~i', $imagePath)
             ? $imagePath
