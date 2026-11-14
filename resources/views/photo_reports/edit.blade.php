@@ -381,7 +381,7 @@
                             <div class="row mb-4">
                                 <div class="col-md-6 mb-3">
                                     <label for="report_title" class="form-label">عنوان التقرير</label>
-                                    <input type="text" class="form-control" id="report_title" name="report_title" value="{{ old('report_title', $photo_report->report_title) }}" required>
+                                    <input type="text" class="form-control" id="report_title" name="report_title" value="{{ filled(old('report_title')) ? old('report_title') : $photo_report->report_title }}" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="date" class="form-label">التاريخ</label>

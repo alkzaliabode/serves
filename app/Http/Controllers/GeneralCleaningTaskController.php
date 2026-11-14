@@ -343,6 +343,9 @@ class GeneralCleaningTaskController extends Controller
             foreach ($request->file($fieldName) as $image) {
                 try {
                     $path = $image->store($storagePath, 'public');
+                    if (!is_string($path) || trim($path) === '') {
+                        throw new \RuntimeException('Unable to save uploaded image to the public disk: ' . $storagePath);
+                    }
                     $imagePaths[] = $path;
                 } catch (\Exception $e) {
                     Log::error("Failed to upload image for field {$fieldName}: " . $e->getMessage());

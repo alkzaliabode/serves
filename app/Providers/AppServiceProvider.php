@@ -5,8 +5,6 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\App;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,11 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // تجاوز MySQL وقت البناء باستخدام SQLite داخل الذاكرة
-        if (App::environment('production') && App::runningInConsole()) {
-            Config::set('database.default', 'sqlite');
-            Config::set('database.connections.sqlite.database', ':memory:');
-        }
+        // Use the configured database connection for console commands as well.
     }
 
     /**
@@ -27,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->runningInConsole()) {
+            return;
+        }
+
         // تحميل إعدادات الخلفية فقط إذا كان جدول settings موجودًا
         if (Schema::hasTable('settings')) {
             $backgroundImageUrl = Setting::get('background_image_url');
