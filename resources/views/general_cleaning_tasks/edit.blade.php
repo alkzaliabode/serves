@@ -313,7 +313,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-4">
                                     <label for="date" class="form-label">التاريخ</label>
-                                    <input type="date" class="form-control" id="date" name="date" value="{{ old('date', $generalCleaningTask->date) }}" required>
+                                    <input type="date" class="form-control" id="date" name="date" value="{{ old('date', $generalCleaningTask->date?->format('Y-m-d')) }}" required>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="shift" class="form-label">الوجبة</label>
