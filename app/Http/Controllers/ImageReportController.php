@@ -17,38 +17,58 @@ class ImageReportController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
+        $filters = $this->dateFilters($request);
         // تم تحديث اسم المتغير الذي يتم تمريره ليتوافق مع $photo_reports في View
-        $photo_reports = TaskImageReport::latest()->get();
+        $photo_reports = $this->filteredReports($filters)->latest()->get();
 
         // 💡 جديد: معالجة مسارات الصور لعرضها كصور مصغرة في جدول القائمة
         foreach ($photo_reports as $report) {
-            // التأكد من أن before_images و after_images هي مصفوفات
-            // إذا كان النموذج يستخدم $casts لـ 'array' للحقول 'before_images' و 'after_images'
-            // فلن تحتاج إلى json_decode هنا، Laravel سيتعامل معها تلقائياً.
-            // ولكن لضمان التوافقية القصوى، سنقوم بإجراء فحص دفاعي
             $beforeImages = $report->before_images;
-            if (!is_array($beforeImages)) {
-                $beforeImages = json_decode($beforeImages, true) ?? [];
-            }
-
             $afterImages = $report->after_images;
-            if (!is_array($afterImages)) {
-                $afterImages = json_decode($afterImages, true) ?? [];
-            }
-
-            // تحويل مسارات الصور إلى URLs قابلة للاستخدام في الواجهة
-            $report->before_images_display_urls = collect($beforeImages)->map(function ($path) {
-                return Storage::url($path);
-            })->all();
-
-            $report->after_images_display_urls = collect($afterImages)->map(function ($path) {
-                return Storage::url($path);
-            })->all();
+            if (!is_array($beforeImages)) $beforeImages = json_decode($beforeImages ?? '[]', true) ?? [];
+            if (!is_array($afterImages)) $afterImages = json_decode($afterImages ?? '[]', true) ?? [];
+            $report->before_images_display_urls = collect($beforeImages)->map(fn ($path) => Storage::url($path))->all();
+            $report->after_images_display_urls = collect($afterImages)->map(fn ($path) => Storage::url($path))->all();
         }
 
         return view('photo_reports.index', compact('photo_reports'));
+    }
+
+    public function exportLinks(Request $request)
+    {
+        $filters = $this->dateFilters($request);
+        $links = $this->filteredReports($filters)->latest()->pluck('id')->map(
+            fn ($id) => route('photo_reports.print', ['record' => $id, 'print' => 1])
+        );
+
+        return response()->json(['reports' => $links->values()]);
+    }
+
+    private function dateFilters(Request $request): array
+    {
+        return $request->validate([
+            'from_date' => ['nullable', 'date_format:Y-m-d'],
+            'to_date' => array_filter(['nullable', 'date_format:Y-m-d', $request->filled('from_date') ? 'after_or_equal:from_date' : null]),
+        ], [
+            'from_date.date_format' => 'يرجى إدخال تاريخ بداية صحيح.',
+            'to_date.date_format' => 'يرجى إدخال تاريخ نهاية صحيح.',
+            'to_date.after_or_equal' => 'تاريخ النهاية يجب أن يكون مساوياً لتاريخ البداية أو بعده.',
+        ]);
+    }
+
+    protected function filteredReports(array $filters)
+    {
+        $query = TaskImageReport::query();
+        if (!empty($filters['from_date'])) {
+            $query->whereDate('date', '>=', $filters['from_date']);
+        }
+        if (!empty($filters['to_date'])) {
+            $query->whereDate('date', '<=', $filters['to_date']);
+        }
+
+        return $query;
     }
 
     /**

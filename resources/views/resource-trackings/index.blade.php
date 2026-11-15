@@ -17,6 +17,7 @@
                     <i class="fas fa-clipboard-list mr-2"></i> سجلات تتبع الموارد
                 </h3>
                 <div class="card-tools">
+                    @include('transfers.buttons', ['transferRoute' => 'resource-trackings'])
                     <a href="{{ route('resource-trackings.create') }}" class="btn btn-success btn-sm">
                         <i class="fas fa-plus mr-1"></i> إضافة سجل جديد
                     </a>
@@ -26,6 +27,7 @@
                 </div>
             </div>
             <div class="card-body p-4">
+                @include('transfers.import', ['transferRoute' => 'resource-trackings', 'transferKind' => 'resources'])
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}

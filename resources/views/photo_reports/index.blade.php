@@ -17,6 +17,7 @@
 @endsection
 
 @section('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
     <style>
         /* Define an accent color variable for distinctiveness */
         :root {
@@ -159,7 +160,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title text-white">التقارير المصورة</h3>
                 <div class="btn-group-custom">
-                    <button type="button" class="btn btn-success" onclick="ReportPrintExcel.downloadPhotos(this)">
+                    <button type="button" class="btn btn-success" data-export-url="{{ route('photo_reports.export-links') }}" onclick="ReportPrintExcel.downloadPhotos(this)">
                         <i class="fas fa-file-excel"></i> تصدير Excel
                     </button>
                     <a href="{{ route('photo_reports.create') }}" class="btn btn-primary">
@@ -172,6 +173,30 @@
                 </div>
             </div>
             <div class="card-body p-0">
+                <div class="p-3 border-bottom">
+                    @if ($errors->any())
+                        <div class="alert alert-danger" role="alert">
+                            <ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                        </div>
+                    @endif
+                    <form method="GET" action="{{ route('photo_reports.index') }}" id="photo-report-date-filter">
+                        <div class="form-row align-items-end">
+                            <div class="form-group col-md-4">
+                                <label for="from_date">من تاريخ</label>
+                                <input type="date" id="from_date" name="from_date" class="form-control" value="{{ old('from_date', request('from_date')) }}" autocomplete="off">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="to_date">إلى تاريخ</label>
+                                <input type="date" id="to_date" name="to_date" class="form-control" value="{{ old('to_date', request('to_date')) }}" autocomplete="off">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> تطبيق الفلتر</button>
+                                <a href="{{ route('photo_reports.index') }}" class="btn btn-secondary">إعادة تعيين</a>
+                            </div>
+                        </div>
+                        <small class="d-block">التصفية حسب تاريخ التقرير، وتشمل يوم البداية ويوم النهاية. التنسيق: يوم/شهر/سنة.</small>
+                    </form>
+                </div>
                 <table id="excel-report-table" data-exclude-last="true" class="table table-striped table-bordered table-hover">
                     <thead>
                         <tr>
@@ -195,7 +220,7 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $report->report_title }}</td>
-                                <td>{{ $report->date->format('Y-m-d') }}</td>
+                                <td>{{ $report->date->format('d/m/Y') }}</td>
                                 <td>{{ $report->unit_type == 'cleaning' ? 'نظافة عامة' : 'منشآت صحية' }}</td>
                                 <td>{{ $report->location }}</td>
                                 <td>{{ $report->task_type ?? 'N/A' }}</td>
@@ -275,6 +300,8 @@
 @endsection
 
 @section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <script src="{{ asset('js/photo-report-date-filter.js') }}"></script>
     <script src="{{ asset('js/report-print-excel.js') }}"></script>
     <script src="{{ asset('js/report-excel.js') }}"></script>
 @endsection

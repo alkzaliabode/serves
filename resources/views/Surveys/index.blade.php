@@ -20,12 +20,40 @@
                     <a href="{{ route('surveys.create') }}" class="btn btn-success btn-sm">
                         <i class="fas fa-plus mr-1"></i> إضافة استبيان جديد
                     </a>
-                    <a href="{{ route('surveys.export', request()->query()) }}" class="btn btn-primary btn-sm ml-2">
-                        <i class="fas fa-file-export mr-1"></i> تصدير البيانات
+                    <a href="{{ route('surveys.export', array_merge(request()->query(), ['format' => 'excel'])) }}" class="btn btn-primary btn-sm ml-2">
+                        <i class="fas fa-file-excel mr-1"></i> تصدير Excel
                     </a>
+                    <a href="{{ route('surveys.export', array_merge(request()->query(), ['format' => 'pdf'])) }}" target="_blank" rel="noopener" class="btn btn-danger btn-sm ml-2">
+                        <i class="fas fa-file-pdf mr-1"></i> تصدير PDF
+                    </a>
+                    <a href="{{ route('surveys.template') }}" class="btn btn-outline-success btn-sm ml-2">تنزيل نموذج Excel</a>
                 </div>
             </div>
             <div class="card-body p-4">
+                @if ($errors->any())
+                    <div class="alert alert-danger" role="alert">
+                        <strong>لم يتم استيراد أي بيانات. صحّح الأخطاء التالية:</strong>
+                        <ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                    </div>
+                @endif
+                <details class="border rounded p-3 mb-4" {{ $errors->any() ? 'open' : '' }}>
+                    <summary class="font-weight-bold">استيراد من Excel وخيارات تعبئة النموذج</summary>
+                    <form action="{{ route('surveys.import') }}" method="POST" enctype="multipart/form-data" class="mt-3">
+                        @csrf
+                        <p>استخدم النموذج المرفق بصيغة xlsx. اترك رؤوس الأعمدة وترتيبها كما هي، واكتب كل استبيان في صف مستقل. الحد الأقصى 5000 استبيان وحجم الملف 10 ميغابايت. تُضاف البيانات كاستبيانات جديدة بعد التحقق من جميع الصفوف.</p>
+                        <label for="survey-import">ملف Excel</label>
+                        <input type="file" name="file" id="survey-import" accept=".xlsx" required>
+                        <button type="submit" class="btn btn-success btn-sm">استيراد Excel</button>
+                    </form>
+                    <table class="table table-sm table-bordered mt-3">
+                        <thead><tr><th>الحقل</th><th>الخيارات المسموحة كما تظهر في صفحة الإضافة</th></tr></thead>
+                        <tbody>
+                        @foreach (\App\Support\SurveyFields::all() as $field)
+                            <tr><td>{{ $field['label'] }} {{ $field['required'] ? '*' : '(اختياري)' }}</td><td>{{ $field['options'] ? implode('، ', $field['options']) : 'نص حر' }}</td></tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </details>
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}

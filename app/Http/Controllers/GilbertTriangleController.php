@@ -38,13 +38,15 @@ class GilbertTriangleController extends Controller
         $yesterday = Carbon::yesterday()->toDateString();
 
         // جلب النتائج الفعلية لليوم
-        $todayResult = ActualResult::where('date', $today)
+        $todayResult = ActualResult::with('unitGoal')->whereDate('date', $today)
             ->where('unit_id', $unitId)
+            ->orderByDesc('id')
             ->first();
 
         // جلب النتائج الفعلية للأمس
-        $yesterdayResult = ActualResult::where('date', $yesterday)
+        $yesterdayResult = ActualResult::with('unitGoal')->whereDate('date', $yesterday)
             ->where('unit_id', $unitId)
+            ->orderByDesc('id')
             ->first();
 
         // القيم الافتراضية إذا لم تكن البيانات موجودة
@@ -119,12 +121,12 @@ class GilbertTriangleController extends Controller
             [
                 'label' => 'اليوم',
                 'data' => [
-                    $todayResultPercentage, // النتائج
-                    $todayGoalPercentage,   // الأهداف
-                    $todayResourcePercentage, // الموارد
-                    $todayEfficiency, // الكفاءة المحسوبة
-                    $todayEffectiveness, // الفعالية المحسوبة
-                    $todayRelevance // الملاءمة المحسوبة
+                    $todayResultPercentage,
+                    $todayEffectiveness,
+                    $todayGoalPercentage,
+                    $todayRelevance,
+                    $todayResourcePercentage,
+                    $todayEfficiency,
                 ],
                 'backgroundColor' => $this->hexToRgba('#3B82F6', 0.18), // أزرق
                 'borderColor' => '#3B82F6',
@@ -140,12 +142,12 @@ class GilbertTriangleController extends Controller
             [
                 'label' => 'الأمس',
                 'data' => [
-                    $yesterdayResultPercentage, // النتائج
-                    $yesterdayGoalPercentage,   // الأهداف
-                    $yesterdayResourcePercentage, // الموارد
-                    $yesterdayEfficiency, // الكفاءة المحسوبة
-                    $yesterdayEffectiveness, // الفعالية المحسوبة
-                    $yesterdayRelevance // الملاءمة المحسوبة
+                    $yesterdayResultPercentage,
+                    $yesterdayEffectiveness,
+                    $yesterdayGoalPercentage,
+                    $yesterdayRelevance,
+                    $yesterdayResourcePercentage,
+                    $yesterdayEfficiency,
                 ],
                 'backgroundColor' => $this->hexToRgba('#EF4444', 0.14), // أحمر
                 'borderColor' => '#EF4444',

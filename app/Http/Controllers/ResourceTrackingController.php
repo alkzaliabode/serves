@@ -18,28 +18,9 @@ class ResourceTrackingController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ResourceTracking::query()->with('unit');
+        $query = app(\App\Support\PerformanceTransfer::class)->query('resources', $request);
 
-        // تطبيق الفلاتر
-        if ($request->filled('unit_id')) {
-            $query->where('unit_id', $request->input('unit_id'));
-        }
-        if ($request->filled('from_date')) {
-            $query->whereDate('date', '>=', $request->input('from_date'));
-        }
-        if ($request->filled('to_date')) {
-            $query->whereDate('date', '<=', $request->input('to_date'));
-        }
-
-        // البحث (يمكن إضافة منطق بحث أكثر تعقيدًا هنا إذا لزم الأمر)
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->whereHas('unit', function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%');
-            })->orWhere('notes', 'like', '%' . $search . '%');
-        }
-
-        $resourceTrackings = $query->orderBy('date', 'desc')->paginate(10);
+        $resourceTrackings = $query->orderBy('date', 'desc')->paginate(10)->withQueryString();
         $units = Unit::all(); // لجلب الوحدات لفلتر الاختيار
 
         return view('resource-trackings.index', compact('resourceTrackings', 'units'));

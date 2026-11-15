@@ -149,6 +149,29 @@
             window.alert(error.message === 'empty' ? 'لا توجد بيانات للتصدير.' : error.message === 'image' ? 'تعذر تحميل إحدى صور التقرير. يرجى التحقق من الصور والمحاولة مجدداً.' : 'تعذر تصدير التقرير. يرجى المحاولة مرة أخرى.');
         } finally { button.disabled = false; }
     }
-    const downloadPhotos = button => download(button, 'التقارير_المصورة', Array.from(document.querySelectorAll('[data-print-excel]'), node => node.dataset.printExcel), false);
+    async function downloadPhotos(button) {
+        button.disabled = true;
+        try {
+            const form = document.getElementById('photo-report-date-filter');
+            if (!form || !button.dataset.exportUrl) throw new Error('تعذر تحديد فلاتر التصدير. أعد تحميل الصفحة.');
+            const url = new URL(button.dataset.exportUrl, window.location.href);
+            const values = new FormData(form);
+            for (const key of ['from_date', 'to_date']) {
+                const value = values.get(key);
+                if (value) url.searchParams.set(key, value);
+            }
+            const response = await fetch(url, { headers: { Accept: 'application/json' } });
+            if (response.redirected) throw new Error('يرجى تسجيل الدخول مجدداً.');
+            const data = await response.json();
+            if (!response.ok) throw new Error(Object.values(data.errors || {}).flat().join('\n') || 'تعذر تصدير التقارير.');
+            if (!Array.isArray(data.reports)) throw new Error('تعذر قراءة بيانات التصدير.');
+            if (!data.reports.length) throw new Error('لا توجد تقارير مطابقة للفلتر المحدد.');
+            await download(button, 'التقارير_المصورة', data.reports, false);
+        } catch (error) {
+            window.alert(error.message || 'تعذر تصدير التقارير. يرجى المحاولة مجدداً.');
+        } finally {
+            button.disabled = false;
+        }
+    }
     window.ReportPrintExcel = { download, downloadPhotos };
 }());

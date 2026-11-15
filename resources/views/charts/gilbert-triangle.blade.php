@@ -18,10 +18,11 @@
                     <i class="fas fa-project-diagram mr-2"></i> تحليل الأداء باستخدام مثلث جلبرت
                 </h3>
                 <div class="card-tools">
-                    {{-- يمكنك إضافة أزرار هنا مثل تحديث البيانات يدوياً أو اختيار نطاق زمني --}}
+                    @include('transfers.buttons', ['transferRoute' => 'charts.gilbert-triangle'])
                 </div>
             </div>
             <div class="card-body p-4">
+                @include('transfers.import', ['transferRoute' => 'charts.gilbert-triangle', 'transferKind' => 'gilbert'])
                 {{-- رسائل الفلاش --}}
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">

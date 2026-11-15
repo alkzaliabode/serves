@@ -17,6 +17,7 @@
                     <i class="fas fa-clipboard-list mr-2"></i> سجلات النتائج الفعلية
                 </h3>
                 <div class="card-tools">
+                    @include('transfers.buttons', ['transferRoute' => 'actual-results'])
                     <a href="{{ route('actual-results.create') }}" class="btn btn-success btn-sm custom-btn-glow">
                         <i class="fas fa-plus mr-1"></i> إضافة سجل جديد
                     </a>
@@ -26,6 +27,7 @@
                 </div>
             </div>
             <div class="card-body p-4">
+                @include('transfers.import', ['transferRoute' => 'actual-results', 'transferKind' => 'results'])
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}

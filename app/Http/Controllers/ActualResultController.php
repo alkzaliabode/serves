@@ -18,40 +18,9 @@ class ActualResultController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ActualResult::query()->with(['unit', 'unitGoal']);
+        $query = app(\App\Support\PerformanceTransfer::class)->query('results', $request);
 
-        // تطبيق الفلاتر
-        if ($request->filled('unit_id')) {
-            $query->where('unit_id', $request->input('unit_id'));
-        }
-
-        if ($request->filled('performance_level')) {
-            $performanceLevel = $request->input('performance_level');
-            switch ($performanceLevel) {
-                case 'excellent':
-                    $query->where('overall_performance_score', '>=', 90);
-                    break;
-                case 'good':
-                    $query->whereBetween('overall_performance_score', [70, 89]);
-                    break;
-                case 'average':
-                    $query->whereBetween('overall_performance_score', [50, 69]);
-                    break;
-                case 'poor':
-                    $query->where('overall_performance_score', '<', 50);
-                    break;
-            }
-        }
-
-        // البحث (يمكن إضافة منطق بحث أكثر تعقيدًا هنا إذا لزم الأمر)
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->whereHas('unit', function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%');
-            })->orWhere('notes', 'like', '%' . $search . '%');
-        }
-
-        $actualResults = $query->orderBy('date', 'desc')->paginate(10); // 10 عناصر في الصفحة
+        $actualResults = $query->orderBy('date', 'desc')->paginate(10)->withQueryString(); // 10 عناصر في الصفحة
         $units = Unit::all(); // لجلب الوحدات لفلتر الاختيار
         $performanceLevels = [
             'excellent' => 'ممتاز (90% فأكثر)',

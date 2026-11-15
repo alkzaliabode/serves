@@ -22,6 +22,7 @@ use App\Models\UnitGoal; // ✅ تم تصحيح هذا الاستيراد لمو
 use App\Http\Controllers\UnitGoalController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\SurveyChartController;
+use App\Http\Controllers\PerformanceTransferController;
 use App\Http\Controllers\UserProfilePhotoController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MonthlySummaryController;
@@ -124,6 +125,7 @@ Route::middleware(['auth'])->group(function () {
     // مسارات التقارير المصورة (Image Reports)
     // 💡 ملاحظة: Route::resource ينشئ مسارات index, create, store, show, edit, update, destroy
     // لذلك، لا تكرر تعريفات هذه المسارات يدوياً.
+    Route::get('photo_reports/export-links', [ImageReportController::class, 'exportLinks'])->name('photo_reports.export-links');
     Route::resource('photo_reports', ImageReportController::class);
 
     // المسار الخاص بعرض نموذج التقرير الشهري (GET)
@@ -176,6 +178,9 @@ Route::middleware(['auth'])->group(function () {
 
     // مسارات النتائج الفعلية (Actual Results)
     Route::prefix('actual-results')->name('actual-results.')->group(function () {
+        Route::get('/export', [PerformanceTransferController::class, 'export'])->defaults('kind', 'results')->name('export');
+        Route::get('/template', [PerformanceTransferController::class, 'template'])->defaults('kind', 'results')->name('template');
+        Route::post('/import', [PerformanceTransferController::class, 'import'])->defaults('kind', 'results')->name('import');
         Route::get('/', [ActualResultController::class, 'index'])->name('index');
         Route::get('/create', [ActualResultController::class, 'create'])->name('create');
         Route::post('/', [ActualResultController::class, 'store'])->name('store');
@@ -188,6 +193,9 @@ Route::middleware(['auth'])->group(function () {
 
     // مسارات تتبع الموارد (Resource Tracking)
     Route::prefix('resource-trackings')->name('resource-trackings.')->group(function () {
+        Route::get('/export', [PerformanceTransferController::class, 'export'])->defaults('kind', 'resources')->name('export');
+        Route::get('/template', [PerformanceTransferController::class, 'template'])->defaults('kind', 'resources')->name('template');
+        Route::post('/import', [PerformanceTransferController::class, 'import'])->defaults('kind', 'resources')->name('import');
         Route::get('/', [ResourceTrackingController::class, 'index'])->name('index');
         Route::get('/create', [ResourceTrackingController::class, 'create'])->name('create');
         Route::post('/', [ResourceTrackingController::class, 'store'])->name('store');
@@ -212,11 +220,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [SurveyController::class, 'index'])->name('index');
         Route::get('/create', [SurveyController::class, 'create'])->name('create');
         Route::post('/', [SurveyController::class, 'store'])->name('store');
+        Route::get('/export', [SurveyController::class, 'export'])->name('export');
+        Route::get('/template', [SurveyController::class, 'template'])->name('template');
+        Route::post('/import', [SurveyController::class, 'import'])->name('import');
         Route::get('/{survey}', [SurveyController::class, 'show'])->name('show');
         Route::get('/{survey}/edit', [SurveyController::class, 'edit'])->name('edit');
         Route::put('/{survey}', [SurveyController::class, 'update'])->name('update');
         Route::delete('/{survey}', [SurveyController::class, 'destroy'])->name('destroy');
-        Route::get('/export', [SurveyController::class, 'export'])->name('export');
     });
 
     // مسارات مخططات الاستبيانات (Survey Charts)
@@ -233,6 +243,9 @@ Route::middleware(['auth'])->group(function () {
     // مسارات مخطط جلبرت (Gilbert Triangle Chart)
     Route::prefix('charts')->name('charts.')->group(function () {
         Route::get('/gilbert-triangle', [GilbertTriangleController::class, 'index'])->name('gilbert-triangle.index');
+        Route::get('/gilbert-triangle/export', [PerformanceTransferController::class, 'export'])->defaults('kind', 'gilbert')->name('gilbert-triangle.export');
+        Route::get('/gilbert-triangle/template', [PerformanceTransferController::class, 'template'])->defaults('kind', 'gilbert')->name('gilbert-triangle.template');
+        Route::post('/gilbert-triangle/import', [PerformanceTransferController::class, 'import'])->defaults('kind', 'gilbert')->name('gilbert-triangle.import');
         Route::get('/gilbert-triangle-data', [GilbertTriangleController::class, 'getChartData'])->name('gilbert-triangle.data');
     });
 
