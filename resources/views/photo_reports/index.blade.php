@@ -19,6 +19,17 @@
 @section('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
     <style>
+        .photo-report-filters {
+            display: block;
+            background: #263442;
+            border: 1px solid #526575;
+            border-radius: 12px;
+            color: #fff;
+        }
+        .photo-report-filters label { display: block; color: #fff; font-weight: bold; }
+        .photo-report-filters .form-control { background: #fff; color: #172b4d; min-height: 42px; }
+        .photo-report-filters small { color: #e0e8ef; }
+
         /* Define an accent color variable for distinctiveness */
         :root {
             --accent-color: #00eaff; /* Light blue/cyan for interactive elements and emphasis */
@@ -156,24 +167,8 @@
             </div>
         @endif
 
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title text-white">التقارير المصورة</h3>
-                <div class="btn-group-custom">
-                    <button type="button" class="btn btn-success" data-export-url="{{ route('photo_reports.export-links') }}" onclick="ReportPrintExcel.downloadPhotos(this)">
-                        <i class="fas fa-file-excel"></i> تصدير Excel
-                    </button>
-                    <a href="{{ route('photo_reports.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> إضافة تقرير مصور جديد
-                    </a>
-                    {{-- NEW: زر لإنشاء تقرير شهري --}}
-                    <a href="{{ route('photo_reports.monthly_report_form') }}" class="btn btn-info">
-                        <i class="fas fa-file-pdf"></i> إنشاء تقرير شهري
-                    </a>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                <div class="p-3 border-bottom">
+                <section id="photo-report-filters" class="photo-report-filters p-4 mb-4" aria-labelledby="photo-report-filter-title">
+                    <h4 id="photo-report-filter-title" class="mb-3"><i class="fas fa-filter"></i> فلترة التقارير حسب التاريخ</h4>
                     @if ($errors->any())
                         <div class="alert alert-danger" role="alert">
                             <ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
@@ -196,7 +191,25 @@
                         </div>
                         <small class="d-block">التصفية حسب تاريخ التقرير، وتشمل يوم البداية ويوم النهاية. التنسيق: يوم/شهر/سنة.</small>
                     </form>
+                </section>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title text-white">التقارير المصورة</h3>
+                <div class="btn-group-custom">
+                    <button type="button" class="btn btn-success" data-export-url="{{ route('photo_reports.export-links') }}" onclick="ReportPrintExcel.downloadPhotos(this)">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+                    <a href="{{ route('photo_reports.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> إضافة تقرير مصور جديد
+                    </a>
+                    {{-- NEW: زر لإنشاء تقرير شهري --}}
+                    <a href="{{ route('photo_reports.monthly_report_form') }}" class="btn btn-info">
+                        <i class="fas fa-file-pdf"></i> إنشاء تقرير شهري
+                    </a>
                 </div>
+            </div>
+            <div class="card-body p-0">
                 <table id="excel-report-table" data-exclude-last="true" class="table table-striped table-bordered table-hover">
                     <thead>
                         <tr>
