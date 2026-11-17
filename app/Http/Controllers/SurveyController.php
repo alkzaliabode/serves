@@ -212,7 +212,10 @@ class SurveyController extends Controller
             }
         });
 
-        return redirect()->route('surveys.index')->with('success', 'تم استيراد '.count($records).' استبيان بنجاح.');
+        $route = $request->input('return_to') === 'charts' ? 'charts.surveys.index' : 'surveys.index';
+        $filters = $route === 'charts.surveys.index' ? $request->only(['from_date', 'to_date']) : [];
+
+        return redirect()->route($route, $filters)->with('success', 'تم استيراد '.count($records).' استبيان بنجاح.');
     }
 
     protected function validateImportRows(array $rows): array

@@ -17,12 +17,37 @@
                     <i class="fas fa-chart-line mr-2"></i> لوحة معلومات إحصائيات رضا الزائرين
                 </h3>
                 <div class="card-tools">
+                    <a id="exportSurveyExcel" href="{{ route('surveys.export', ['format' => 'excel']) }}" class="btn btn-primary btn-sm shadow-sm">
+                        <i class="fas fa-file-excel mr-1"></i> تصدير Excel
+                    </a>
+                    <button type="button" class="btn btn-info btn-sm shadow-sm" data-toggle="collapse" data-target="#surveyExcelImport" aria-expanded="false" aria-controls="surveyExcelImport">
+                        <i class="fas fa-file-upload mr-1"></i> استيراد Excel
+                    </button>
                     <button id="printReportBtn" class="btn btn-success btn-sm shadow-sm animate__animated animate__pulse animate__infinite">
                         <i class="fas fa-file-pdf mr-2"></i> طباعة التقرير / PDF
                     </button>
                 </div>
             </div>
             <div class="card-body p-4 bg-dark-custom">
+                @if ($errors->any())
+                    <div class="alert alert-danger" role="alert">
+                        <strong>لم يتم استيراد أي بيانات. صحّح الأخطاء التالية:</strong>
+                        <ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                    </div>
+                @endif
+                <div id="surveyExcelImport" class="collapse {{ $errors->any() ? 'show' : '' }}">
+                    <form id="surveyExcelImportForm" action="{{ route('surveys.import') }}" method="POST" enctype="multipart/form-data" class="border rounded p-3 mb-4">
+                        @csrf
+                        <input type="hidden" name="return_to" value="charts">
+                        <input type="hidden" name="from_date" value="{{ request('from_date') }}">
+                        <input type="hidden" name="to_date" value="{{ request('to_date') }}">
+                        <p>استخدم نموذج Excel بصيغة xlsx مع الحفاظ على ترتيب الأعمدة. تُضاف الاستبيانات كسجلات جديدة بعد التحقق من جميع الصفوف. الحد الأقصى 5000 استبيان وحجم الملف 10 ميغابايت.</p>
+                        <a href="{{ route('surveys.template') }}" class="btn btn-outline-success btn-sm">تنزيل نموذج Excel</a>
+                        <label for="chart-survey-import" class="mx-2">ملف Excel</label>
+                        <input type="file" name="file" id="chart-survey-import" accept=".xlsx" required>
+                        <button type="submit" class="btn btn-success btn-sm">استيراد Excel</button>
+                    </form>
+                </div>
                 {{-- رسائل الفلاش --}}
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show animated--grow-in" role="alert">
@@ -823,6 +848,18 @@
             const fromDateInput = document.getElementById('from_date');
             const toDateInput = document.getElementById('to_date');
             const applyFiltersButton = document.getElementById('applyFilters');
+            const exportSurveyExcel = document.getElementById('exportSurveyExcel');
+            const surveyExcelImportForm = document.getElementById('surveyExcelImportForm');
+            const syncExcelFilters = () => {
+                const url = new URL(exportSurveyExcel.href);
+                for (const input of [fromDateInput, toDateInput]) {
+                    url.searchParams.set(input.id, input.value);
+                    surveyExcelImportForm.elements[input.id].value = input.value;
+                }
+                exportSurveyExcel.href = url.toString();
+            };
+            exportSurveyExcel.addEventListener('click', syncExcelFilters);
+            surveyExcelImportForm.addEventListener('submit', syncExcelFilters);
             const printReportBtn = document.getElementById('printReportBtn');
             const chartErrorAlert = document.getElementById('chartErrorAlert');
 

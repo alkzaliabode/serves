@@ -115,6 +115,17 @@ class SurveyTransferTest extends TestCase
         $method = new \ReflectionMethod(SurveyController::class, 'filteredQuery');
         $query = $method->invoke(new SurveyController, Request::create('/', 'GET', ['gender' => 'female', 'search' => 'match']));
         $this->assertSame(['female'], $query->pluck('gender')->all());
+
+        Survey::query()->update(['created_at' => '2026-11-17 23:59:59']);
+        $database->table('surveys')->insert([
+            ['gender' => 'female', 'suggestions' => 'match', 'created_at' => '2026-11-18 00:00:00'],
+            ['gender' => 'female', 'suggestions' => 'match', 'created_at' => '2026-11-16 23:59:59'],
+        ]);
+        $query = $method->invoke(new SurveyController, Request::create('/', 'GET', [
+            'gender' => 'female', 'search' => 'match',
+            'from_date' => '2026-11-17', 'to_date' => '2026-11-17',
+        ]));
+        $this->assertSame(['2026-11-17 23:59:59'], $query->pluck('created_at')->map->format('Y-m-d H:i:s')->all());
     }
 
     public function test_transfer_routes_precede_the_survey_binding(): void
